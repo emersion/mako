@@ -1,0 +1,2 @@
+# mako
+A notification daemon
