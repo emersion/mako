@@ -1,2 +1,7 @@
 # mako
-A notification daemon
+
+A lightweight notification daemon for Wayland.
+
+## License
+
+MIT
