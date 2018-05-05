@@ -20,6 +20,7 @@ libsystemd = dependency('libsystemd')
 executable(
 	'mako',
 	files([
+		'dbus.c',
 		'main.c',
 	]),
 	dependencies: [libsystemd],
