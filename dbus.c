@@ -81,25 +81,26 @@ static const sd_bus_vtable notifications_vtable[] = {
 	SD_BUS_VTABLE_END
 };
 
-bool init_dbus(sd_bus **bus, sd_bus_slot **slot) {
+bool init_dbus(struct mako_state *state) {
 	int ret = 0;
-	*bus = NULL;
-	*slot = NULL;
+	state->bus = NULL;
+	state->slot = NULL;
 
-	ret = sd_bus_open_user(bus);
+	ret = sd_bus_open_user(&state->bus);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-ret));
 		goto error;
 	}
 
-	ret = sd_bus_add_object_vtable(*bus, slot, "/org/freedesktop/Notifications",
-		"org.freedesktop.Notifications", notifications_vtable, NULL);
+	ret = sd_bus_add_object_vtable(state->bus, &state->slot,
+		"/org/freedesktop/Notifications", "org.freedesktop.Notifications",
+		notifications_vtable, NULL);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to issue method call: %s\n", strerror(-ret));
 		goto error;
 	}
 
-	ret = sd_bus_request_name(*bus, "org.freedesktop.Notifications", 0);
+	ret = sd_bus_request_name(state->bus, "org.freedesktop.Notifications", 0);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to acquire service name: %s\n", strerror(-ret));
 		goto error;
@@ -108,7 +109,11 @@ bool init_dbus(sd_bus **bus, sd_bus_slot **slot) {
 	return true;
 
 error:
-	sd_bus_slot_unref(*slot);
-	sd_bus_unref(*bus);
+	finish_dbus(state);
 	return false;
+}
+
+void finish_dbus(struct mako_state *state) {
+	sd_bus_slot_unref(state->slot);
+	sd_bus_unref(state->bus);
 }

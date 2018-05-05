@@ -16,14 +16,19 @@ add_project_arguments('-Wno-unused-parameter', language: 'c')
 mako_inc = include_directories('include')
 
 libsystemd = dependency('libsystemd')
+wayland_client = dependency('wayland-client')
+wayland_protos = dependency('wayland-protocols')
+
+subdir('protocol')
 
 executable(
 	'mako',
 	files([
 		'dbus.c',
 		'main.c',
+		'wayland.c',
 	]),
-	dependencies: [libsystemd],
+	dependencies: [libsystemd, wayland_client, client_protos],
 	include_directories: [mako_inc],
 	install: true,
 )
