@@ -36,7 +36,7 @@ struct mako_state {
 
 struct mako_config {
 	char *font;
-	int32_t margin;
+	int32_t margin, padding;
 
 	struct {
 		uint32_t background;

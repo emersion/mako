@@ -33,6 +33,7 @@ void render(struct mako_state *state) {
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		set_cairo_source_u32(cairo, config->colors.text);
+		cairo_move_to(cairo, config->padding, config->padding);
 		printf_pango(cairo, config->font, 1, true, "%s", notif->summary);
 		break; // TODO: support multiple notifications
 	}

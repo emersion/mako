@@ -86,6 +86,7 @@ int main(int argc, char *argv[]) {
 	struct mako_config config = {
 		.font = "",
 		.margin = 10,
+		.padding = 5,
 		.colors = {
 			.background = 0x000000FF,
 			.text = 0xFFFFFFFF,
