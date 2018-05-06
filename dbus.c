@@ -13,19 +13,31 @@ static const char *service_path = "/org/freedesktop/Notifications";
 static const char *service_interface = "org.freedesktop.Notifications";
 static const char *service_name = "org.freedesktop.Notifications";
 
+// TODO: support capabilities
+static const char *capabilities[] = {};
+
 static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
-	// TODO: support capabilities
-	char *capabilities[] = {};
-
 	sd_bus_message *reply = NULL;
 	int ret = sd_bus_message_new_method_return(msg, &reply);
 	if (ret < 0) {
 		return ret;
 	}
 
-	ret = sd_bus_message_append_array(reply, 's', capabilities,
-		sizeof(capabilities)/sizeof(capabilities[0]));
+	ret = sd_bus_message_open_container(reply, 'a', "s");
+	if (ret < 0) {
+		return ret;
+	}
+
+	size_t capabilities_len = sizeof(capabilities) / sizeof(capabilities[0]);
+	for (size_t i = 0; i < capabilities_len; ++i) {
+		ret = sd_bus_message_append(reply, "s", capabilities[i]);
+		if (ret < 0) {
+			return ret;
+		}
+	}
+
+	ret = sd_bus_message_close_container(reply);
 	if (ret < 0) {
 		return ret;
 	}
