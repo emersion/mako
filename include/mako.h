@@ -9,6 +9,8 @@
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 struct mako_state {
+	bool running;
+
 	sd_bus *bus;
 	sd_bus_slot *slot;
 
@@ -17,6 +19,13 @@ struct mako_state {
 	struct wl_compositor *compositor;
 	struct zwlr_layer_shell_v1 *layer_shell;
 	struct wl_shm *shm;
+
+	struct wl_surface *surface;
+	struct zwlr_layer_surface_v1 *layer_surface;
+
+	int32_t width, height;
+	struct pool_buffer buffers[2];
+	struct pool_buffer *current_buffer;
 
 	uint32_t last_id;
 	struct wl_list notifications; // mako_notification::link
@@ -31,13 +40,6 @@ struct mako_notification {
 	char *app_icon;
 	char *summary;
 	char *body;
-
-	struct wl_surface *surface;
-	struct zwlr_layer_surface_v1 *layer_surface;
-
-	int32_t width, height;
-	struct pool_buffer buffers[2];
-	struct pool_buffer *current_buffer;
 };
 
 struct mako_notification *create_notification(struct mako_state *state);

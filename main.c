@@ -16,24 +16,14 @@ struct mako_notification *create_notification(struct mako_state *state) {
 		return NULL;
 	}
 	notif->state = state;
-	return notif;
-}
-
-void insert_notification(struct mako_notification *notif) {
-	struct mako_state *state = notif->state;
-
-	if (!init_wayland_notification(notif)) {
-		return;
-	}
-
 	++state->last_id;
 	notif->id = state->last_id;
 	wl_list_insert(&state->notifications, &notif->link);
+	return notif;
 }
 
 void destroy_notification(struct mako_notification *notif) {
 	wl_list_remove(&notif->link);
-	finish_wayland_notification(notif);
 	free(notif->app_name);
 	free(notif->app_icon);
 	free(notif->summary);
@@ -50,6 +40,7 @@ static bool init(struct mako_state *state) {
 		return false;
 	}
 	wl_list_init(&state->notifications);
+	state->running = true;
 	return true;
 }
 
@@ -82,7 +73,7 @@ int main(int argc, char *argv[]) {
 	};
 
 	int ret = 0;
-	while (1) {
+	while (state.running) {
 		while (wl_display_prepare_read(state.display) != 0) {
 			wl_display_dispatch_pending(state.display);
 		}

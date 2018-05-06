@@ -4,6 +4,7 @@
 
 #include "mako.h"
 #include "dbus.h"
+#include "render.h"
 
 static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
@@ -52,7 +53,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	notif->app_icon = app_icon;
 	notif->summary = summary;
 	notif->body = body;
-	insert_notification(notif);
+	render(state);
 
 	return sd_bus_reply_method_return(msg, "u", notif->id);
 }

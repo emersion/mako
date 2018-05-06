@@ -3,6 +3,6 @@
 
 struct mako_state;
 
-void render_notification(struct mako_notification *notif);
+void render(struct mako_state *state);
 
 #endif
