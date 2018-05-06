@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "mako.h"
+#include "notification.h"
 #include "render.h"
 
 static void noop() {

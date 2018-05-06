@@ -6,6 +6,7 @@
 
 #include "dbus.h"
 #include "mako.h"
+#include "notification.h"
 #include "render.h"
 
 static const char *service_path = "/org/freedesktop/Notifications";

@@ -30,6 +30,7 @@ executable(
 		'config.c',
 		'dbus.c',
 		'main.c',
+		'notification.c',
 		'pool-buffer.c',
 		'render.c',
 		'wayland.c',

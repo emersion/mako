@@ -2,6 +2,7 @@
 #include <pango/pangocairo.h>
 
 #include "mako.h"
+#include "notification.h"
 #include "render.h"
 
 static void set_cairo_source_u32(cairo_t *cairo, uint32_t color) {
