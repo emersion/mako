@@ -18,10 +18,9 @@ static void pointer_handle_button(void *data, struct wl_pointer *pointer,
 		return;
 	}
 
-	struct mako_notification *notif =
-		wl_container_of(state->notifications.next, notif, link);
-	destroy_notification(notif);
-
+	struct mako_notification *first_notif =
+		wl_container_of(state->notifications.next, first_notif, link);
+	close_notification(first_notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 	render(state);
 }
 

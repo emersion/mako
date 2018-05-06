@@ -64,9 +64,18 @@ struct mako_action {
 	char *title;
 };
 
+enum mako_notification_close_reason {
+	MAKO_NOTIFICATION_CLOSE_EXPIRED = 1,
+	MAKO_NOTIFICATION_CLOSE_DISMISSED = 2,
+	MAKO_NOTIFICATION_CLOSE_REQUEST = 3,
+	MAKO_NOTIFICATION_CLOSE_UNKNOWN = 4,
+};
+
 struct mako_notification *create_notification(struct mako_state *state);
 void insert_notification(struct mako_notification *notif);
 void destroy_notification(struct mako_notification *notif);
+void close_notification(struct mako_notification *notif,
+	enum mako_notification_close_reason reason);
 struct mako_notification *get_notification(struct mako_state *state, uint32_t id);
 
 #endif

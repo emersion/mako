@@ -40,6 +40,12 @@ void destroy_notification(struct mako_notification *notif) {
 	free(notif);
 }
 
+void close_notification(struct mako_notification *notif,
+		enum mako_notification_close_reason reason) {
+	notify_notification_closed(notif, reason);
+	destroy_notification(notif);
+}
+
 struct mako_notification *get_notification(struct mako_state *state,
 		uint32_t id) {
 	struct mako_notification *notif;

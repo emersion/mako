@@ -8,6 +8,10 @@
 #include "mako.h"
 #include "render.h"
 
+static const char *service_path = "/org/freedesktop/Notifications";
+static const char *service_interface = "org.freedesktop.Notifications";
+static const char *service_name = "org.freedesktop.Notifications";
+
 static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	// TODO: support capabilities
@@ -57,7 +61,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		struct mako_notification *replaces =
 			get_notification(state, replaces_id);
 		if (replaces) {
-			destroy_notification(replaces);
+			close_notification(replaces, MAKO_NOTIFICATION_CLOSE_REQUEST);
 		}
 	}
 
@@ -158,7 +162,8 @@ static int handle_close_notification(sd_bus_message *msg, void *data,
 	// TODO: check client
 	struct mako_notification *notif = get_notification(state, id);
 	if (notif) {
-		destroy_notification(notif);
+		close_notification(notif, MAKO_NOTIFICATION_CLOSE_REQUEST);
+		render(state);
 	}
 	return 0;
 }
@@ -195,15 +200,14 @@ bool init_dbus(struct mako_state *state) {
 		goto error;
 	}
 
-	ret = sd_bus_add_object_vtable(state->bus, &state->slot,
-		"/org/freedesktop/Notifications", "org.freedesktop.Notifications",
-		notifications_vtable, state);
+	ret = sd_bus_add_object_vtable(state->bus, &state->slot, service_path,
+		service_interface, notifications_vtable, state);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to issue method call: %s\n", strerror(-ret));
 		goto error;
 	}
 
-	ret = sd_bus_request_name(state->bus, "org.freedesktop.Notifications", 0);
+	ret = sd_bus_request_name(state->bus, service_name, 0);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to acquire service name: %s\n", strerror(-ret));
 		goto error;
@@ -219,4 +223,13 @@ error:
 void finish_dbus(struct mako_state *state) {
 	sd_bus_slot_unref(state->slot);
 	sd_bus_unref(state->bus);
+}
+
+void notify_notification_closed(struct mako_notification *notif,
+		enum mako_notification_close_reason reason) {
+	struct mako_state *state = notif->state;
+
+	uint32_t reason_u32 = reason;
+	sd_bus_emit_signal(state->bus, service_path, service_interface,
+		"NotificationClosed", "uu", notif->id, reason_u32);
 }
