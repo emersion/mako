@@ -45,6 +45,14 @@ static int handle_notify(sd_bus_message *msg, void *data,
 
 	// TODO: read the other parameters
 
+	if (replaces_id > 0) {
+		struct mako_notification *replaces =
+			get_notification(state, replaces_id);
+		if (replaces) {
+			destroy_notification(replaces);
+		}
+	}
+
 	struct mako_notification *notif = create_notification(state);
 	if (notif == NULL) {
 		return -1;

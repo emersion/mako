@@ -6,6 +6,13 @@
 #include "render.h"
 
 void render(struct mako_state *state) {
+	if (wl_list_empty(&state->notifications)) {
+		// Unmap the surface
+		wl_surface_attach(state->surface, NULL, 0, 0);
+		wl_surface_commit(state->surface);
+		return;
+	}
+
 	state->current_buffer = get_next_buffer(state->shm, state->buffers,
 		state->width, state->height);
 

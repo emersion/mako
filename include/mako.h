@@ -45,5 +45,6 @@ struct mako_notification {
 struct mako_notification *create_notification(struct mako_state *state);
 void insert_notification(struct mako_notification *notif);
 void destroy_notification(struct mako_notification *notif);
+struct mako_notification *get_notification(struct mako_state *state, uint32_t id);
 
 #endif

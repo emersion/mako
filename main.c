@@ -31,6 +31,17 @@ void destroy_notification(struct mako_notification *notif) {
 	free(notif);
 }
 
+struct mako_notification *get_notification(struct mako_state *state,
+		uint32_t id) {
+	struct mako_notification *notif;
+	wl_list_for_each(notif, &state->notifications, link) {
+		if (notif->id == id) {
+			return notif;
+		}
+	}
+	return NULL;
+}
+
 static bool init(struct mako_state *state) {
 	if (!init_dbus(state)) {
 		return false;
