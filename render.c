@@ -2,7 +2,6 @@
 #include <pango/pangocairo.h>
 
 #include "mako.h"
-#include "pango.h"
 #include "render.h"
 
 static void set_cairo_source_u32(cairo_t *cairo, uint32_t color) {
@@ -32,9 +31,25 @@ void render(struct mako_state *state) {
 
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
+		PangoLayout *layout = pango_cairo_create_layout(cairo);
+		pango_layout_set_text(layout, notif->summary, -1);
+		pango_layout_set_width(layout,
+			(state->width - 2 * config->padding) * PANGO_SCALE);
+		pango_layout_set_height(layout,
+			(state->height - 2 * config->padding) * PANGO_SCALE);
+		pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
+		PangoFontDescription *desc =
+			pango_font_description_from_string(config->font);
+		pango_layout_set_font_description(layout, desc);
+		pango_font_description_free(desc);
+
 		set_cairo_source_u32(cairo, config->colors.text);
 		cairo_move_to(cairo, config->padding, config->padding);
-		printf_pango(cairo, config->font, 1, true, "%s", notif->summary);
+		pango_cairo_update_layout(cairo, layout);
+		pango_cairo_show_layout(cairo, layout);
+
+		g_object_unref(layout);
+
 		break; // TODO: support multiple notifications
 	}
 

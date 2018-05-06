@@ -29,7 +29,6 @@ executable(
 	files([
 		'dbus.c',
 		'main.c',
-		'pango.c',
 		'pool-buffer.c',
 		'render.c',
 		'wayland.c',
