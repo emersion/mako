@@ -27,6 +27,7 @@ subdir('protocol')
 executable(
 	'mako',
 	files([
+		'config.c',
 		'dbus.c',
 		'main.c',
 		'pool-buffer.c',

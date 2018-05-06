@@ -115,7 +115,7 @@ bool init_wayland(struct mako_state *state) {
 	zwlr_layer_surface_v1_add_listener(state->layer_surface,
 		&layer_surface_listener, state);
 
-	int32_t margin = state->config->margin;
+	int32_t margin = state->config.margin;
 	// TODO: size
 	zwlr_layer_surface_v1_set_size(state->layer_surface, 300, 100);
 	zwlr_layer_surface_v1_set_anchor(state->layer_surface,

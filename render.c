@@ -13,7 +13,7 @@ static void set_cairo_source_u32(cairo_t *cairo, uint32_t color) {
 }
 
 void render(struct mako_state *state) {
-	struct mako_config *config = state->config;
+	struct mako_config *config = &state->config;
 
 	if (wl_list_empty(&state->notifications)) {
 		// Unmap the surface

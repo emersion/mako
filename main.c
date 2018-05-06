@@ -1,7 +1,9 @@
+#define _POSIX_C_SOURCE 200809L
 #include <errno.h>
 #include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "dbus.h"
 #include "mako.h"
@@ -78,13 +80,14 @@ static void finish(struct mako_state *state) {
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
 		destroy_notification(notif);
 	}
+	finish_config(&state->config);
 }
 
 int main(int argc, char *argv[]) {
 	struct mako_state state = { 0 };
 
-	struct mako_config config = {
-		.font = "",
+	state.config = (struct mako_config){
+		.font = strdup(""),
 		.margin = 10,
 		.padding = 5,
 		.colors = {
@@ -92,7 +95,8 @@ int main(int argc, char *argv[]) {
 			.text = 0xFFFFFFFF,
 		},
 	};
-	state.config = &config;
+
+	parse_config_arguments(&state.config, argc, argv);
 
 	if (!init(&state)) {
 		return EXIT_FAILURE;
@@ -108,6 +112,7 @@ int main(int argc, char *argv[]) {
 			.events = POLLIN,
 		},
 	};
+	size_t fds_len = sizeof(fds) / sizeof(fds[0]);
 
 	int ret = 0;
 	while (state.running) {
@@ -116,7 +121,7 @@ int main(int argc, char *argv[]) {
 		}
 		wl_display_flush(state.display);
 
-		ret = poll(fds, 2, -1);
+		ret = poll(fds, fds_len, -1);
 		if (ret < 0) {
 			wl_display_cancel_read(state.display);
 			fprintf(stderr, "failed to poll(): %s\n", strerror(-ret));
