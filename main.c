@@ -146,6 +146,10 @@ int main(int argc, char *argv[]) {
 				}
 				// We processed a request, try to process another one, right-away
 			}
+
+			if (ret < 0) {
+				break;
+			}
 		}
 
 		if (fds[1].revents & POLLIN) {
