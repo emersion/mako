@@ -19,7 +19,7 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	++state->last_id;
 	notif->id = state->last_id;
 	wl_list_init(&notif->actions);
-	notif->urgency = -1;
+	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNWON;
 	wl_list_insert(&state->notifications, &notif->link);
 	return notif;
 }

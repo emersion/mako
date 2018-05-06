@@ -44,6 +44,13 @@ struct mako_config {
 	} colors;
 };
 
+enum mako_notification_urgency {
+	MAKO_NOTIFICATION_URGENCY_LOW = 0,
+	MAKO_NOTIFICATION_URGENCY_NORMAL = 1,
+	MAKO_NOTIFICATION_URGENCY_HIGH = 2,
+	MAKO_NOTIFICATION_URGENCY_UNKNWON = -1,
+};
+
 struct mako_notification {
 	struct mako_state *state;
 	struct wl_list link; // mako_state::notifications
@@ -55,7 +62,7 @@ struct mako_notification {
 	char *body;
 	struct wl_list actions; // mako_action::link
 
-	int urgency;
+	enum mako_notification_urgency urgency;
 };
 
 struct mako_action {
