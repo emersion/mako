@@ -10,6 +10,18 @@
 #include "render.h"
 #include "wayland.h"
 
+const char *usage =
+	"Usage: mako [options...]\n"
+	"\n"
+	"  -h, --help                     Show help message and quit.\n"
+	"      --font <font>              Font family and size.\n"
+	"      --background-color <color> Background color.\n"
+	"      --text-color <color>       Text color.\n"
+	"      --margin <px>              Margin.\n"
+	"      --padding <px>             Padding.\n"
+	"\n"
+	"Colors can be specified with the format #RRGGBB or #RRGGBBAA.\n";
+
 struct mako_notification *create_notification(struct mako_state *state) {
 	struct mako_notification *notif =
 		calloc(1, sizeof(struct mako_notification));
@@ -96,8 +108,12 @@ int main(int argc, char *argv[]) {
 		},
 	};
 
-	if (!parse_config_arguments(&state.config, argc, argv)) {
+	int ret = parse_config_arguments(&state.config, argc, argv);
+	if (ret < 0) {
 		return EXIT_FAILURE;
+	} else if (ret > 0) {
+		printf("%s", usage);
+		return EXIT_SUCCESS;
 	}
 
 	if (!init(&state)) {
@@ -116,7 +132,6 @@ int main(int argc, char *argv[]) {
 	};
 	size_t fds_len = sizeof(fds) / sizeof(fds[0]);
 
-	int ret = 0;
 	while (state.running) {
 		while (wl_display_prepare_read(state.display) != 0) {
 			wl_display_dispatch_pending(state.display);

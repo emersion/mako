@@ -26,8 +26,9 @@ static uint32_t parse_color(const char *color) {
 	return res;
 }
 
-bool parse_config_arguments(struct mako_config *config, int argc, char **argv) {
+int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 	static const struct option long_options[] = {
+		{"help", no_argument, 0, 'h'},
 		{"font", required_argument, 0, 0},
 		{"background-color", required_argument, 0, 0},
 		{"text-color", required_argument, 0, 0},
@@ -41,8 +42,10 @@ bool parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		int c = getopt_long(argc, argv, "f", long_options, &option_index);
 		if (c < 0) {
 			break;
+		} else if (c == 'h') {
+			return 1;
 		} else if (c != 0) {
-			return false;
+			return -1;
 		}
 
 		const char *name = long_options[option_index].name;
@@ -60,5 +63,5 @@ bool parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		}
 	}
 
-	return true;
+	return 0;
 }

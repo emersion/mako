@@ -1,7 +1,6 @@
 #ifndef _MAKO_CONFIG_H
 #define _MAKO_CONFIG_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
 struct mako_config {
@@ -14,7 +13,7 @@ struct mako_config {
 	} colors;
 };
 
-bool parse_config_arguments(struct mako_config *config, int argc, char **argv);
+int parse_config_arguments(struct mako_config *config, int argc, char **argv);
 void finish_config(struct mako_config *config);
 
 #endif
