@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "main.h"
+#include "mako.h"
+#include "dbus.h"
 
 static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
@@ -28,6 +29,7 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 
 static int handle_notify(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
+	struct mako_state *state = data;
 	fprintf(stderr, "notify\n");
 
 	int ret = 0;
@@ -42,13 +44,17 @@ static int handle_notify(sd_bus_message *msg, void *data,
 
 	// TODO: read the other parameters
 
-	fprintf(stderr, "app_name: %s\n", app_name);
-	fprintf(stderr, "app_icon: %s\n", app_icon);
-	fprintf(stderr, "summary: %s\n", summary);
-	fprintf(stderr, "body: %s\n", body);
+	struct mako_notification *notif = create_notification(state);
+	if (notif == NULL) {
+		return -1;
+	}
+	notif->app_name = app_name;
+	notif->app_icon = app_icon;
+	notif->summary = summary;
+	notif->body = body;
+	insert_notification(notif);
 
-	++mako.last_id;
-	return sd_bus_reply_method_return(msg, "u", mako.last_id);
+	return sd_bus_reply_method_return(msg, "u", notif->id);
 }
 
 static int handle_close_notification(sd_bus_message *msg, void *data,
@@ -94,7 +100,7 @@ bool init_dbus(struct mako_state *state) {
 
 	ret = sd_bus_add_object_vtable(state->bus, &state->slot,
 		"/org/freedesktop/Notifications", "org.freedesktop.Notifications",
-		notifications_vtable, NULL);
+		notifications_vtable, state);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to issue method call: %s\n", strerror(-ret));
 		goto error;
