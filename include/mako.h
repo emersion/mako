@@ -40,6 +40,15 @@ struct mako_notification {
 	char *app_icon;
 	char *summary;
 	char *body;
+	struct wl_list actions; // mako_action::link
+
+	int urgency;
+};
+
+struct mako_action {
+	struct wl_list link; // mako_notification::actions
+	char *id;
+	char *title;
 };
 
 struct mako_notification *create_notification(struct mako_state *state);

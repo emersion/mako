@@ -1,9 +1,11 @@
+#define _POSIX_C_SOURCE 200809L
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
+#include <string.h>
 
-#include "mako.h"
 #include "dbus.h"
+#include "mako.h"
 #include "render.h"
 
 static int handle_get_capabilities(sd_bus_message *msg, void *data,
@@ -33,15 +35,24 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	struct mako_state *state = data;
 	fprintf(stderr, "notify\n");
 
+	struct mako_notification *notif = create_notification(state);
+	if (notif == NULL) {
+		return -1;
+	}
+
 	int ret = 0;
 
-	char *app_name, *app_icon, *summary, *body;
+	const char *app_name, *app_icon, *summary, *body;
 	uint32_t replaces_id;
 	ret = sd_bus_message_read(msg, "susss", &app_name, &replaces_id, &app_icon,
 		&summary, &body);
 	if (ret < 0) {
 		return ret;
 	}
+	notif->app_name = strdup(app_name);
+	notif->app_icon = strdup(app_icon);
+	notif->summary = strdup(summary);
+	notif->body = strdup(body);
 
 	// TODO: read the other parameters
 
@@ -53,14 +64,85 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		}
 	}
 
-	struct mako_notification *notif = create_notification(state);
-	if (notif == NULL) {
-		return -1;
+	ret = sd_bus_message_enter_container(msg, 'a', "s");
+	if (ret < 0) {
+		return ret;
 	}
-	notif->app_name = app_name;
-	notif->app_icon = app_icon;
-	notif->summary = summary;
-	notif->body = body;
+
+	while (1) {
+		const char *action_id, *action_title;
+		ret = sd_bus_message_read(msg, "ss", &action_id, &action_title);
+		if (ret < 0) {
+			return ret;
+		} else if (ret == 0) {
+			break;
+		}
+
+		struct mako_action *action = calloc(1, sizeof(struct mako_action));
+		if (action == NULL) {
+			return -1;
+		}
+		action->id = strdup(action_id);
+		action->title = strdup(action_title);
+		wl_list_insert(&notif->actions, &action->link);
+	}
+
+	ret = sd_bus_message_exit_container(msg);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_enter_container(msg, 'a', "{sv}");
+	if (ret < 0) {
+		return ret;
+	}
+
+	while (1) {
+		ret = sd_bus_message_enter_container(msg, 'e', "sv");
+		if (ret < 0) {
+			return ret;
+		} else if (ret == 0) {
+			break;
+		}
+
+		const char *hint;
+		ret = sd_bus_message_read(msg, "s", &hint);
+		if (ret < 0) {
+			return ret;
+		}
+
+		if (strcmp(hint, "urgency") == 0) {
+			uint8_t urgency = 0;
+			ret = sd_bus_message_read(msg, "v", "y", &urgency);
+			if (ret < 0) {
+				return ret;
+			}
+			notif->urgency = urgency;
+		} else {
+			ret = sd_bus_message_skip(msg, "v");
+			if (ret < 0) {
+				return ret;
+			}
+		}
+
+		ret = sd_bus_message_exit_container(msg);
+		if (ret < 0) {
+			return ret;
+		}
+	}
+
+	ret = sd_bus_message_exit_container(msg);
+	if (ret < 0) {
+		return ret;
+	}
+
+	int32_t expire_timeout;
+	ret = sd_bus_message_read(msg, "i", &expire_timeout);
+	if (ret < 0) {
+		return ret;
+	}
+	// TODO: timeout
+
 	render(state);
 
 	return sd_bus_reply_method_return(msg, "u", notif->id);

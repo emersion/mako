@@ -18,12 +18,21 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	notif->state = state;
 	++state->last_id;
 	notif->id = state->last_id;
+	wl_list_init(&notif->actions);
+	notif->urgency = -1;
 	wl_list_insert(&state->notifications, &notif->link);
 	return notif;
 }
 
 void destroy_notification(struct mako_notification *notif) {
 	wl_list_remove(&notif->link);
+	struct mako_action *action, *tmp;
+	wl_list_for_each_safe(action, tmp, &notif->actions, link) {
+		wl_list_remove(&action->link);
+		free(action->id);
+		free(action->title);
+		free(action);
+	}
 	free(notif->app_name);
 	free(notif->app_icon);
 	free(notif->summary);
