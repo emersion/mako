@@ -17,12 +17,12 @@ void render(struct mako_state *state) {
 		state->width, state->height);
 
 	cairo_t *cairo = state->current_buffer->cairo;
-	cairo_set_source_rgb(cairo, 1.0, 1.0, 0.0);
+	cairo_set_source_rgb(cairo, 0.0, 0.0, 0.0);
 	cairo_paint(cairo);
 
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
-		cairo_set_source_rgb(cairo, 0.0, 0.0, 0.0);
+		cairo_set_source_rgb(cairo, 1.0, 1.0, 1.0);
 		printf_pango(cairo, "", 1, true, "%s", notif->summary);
 		break; // TODO
 	}
