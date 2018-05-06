@@ -95,6 +95,10 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 
+		if (!(fds[1].revents & POLLIN)) {
+			wl_display_cancel_read(state.display);
+		}
+
 		if (fds[0].revents & POLLIN) {
 			while (1) {
 				ret = sd_bus_process(state.bus, NULL);
@@ -116,8 +120,6 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 			wl_display_dispatch_pending(state.display);
-		} else {
-			wl_display_cancel_read(state.display);
 		}
 	}
 
