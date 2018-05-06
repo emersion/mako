@@ -150,8 +150,20 @@ static int handle_notify(sd_bus_message *msg, void *data,
 
 static int handle_close_notification(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
+	struct mako_state *state = data;
 	fprintf(stderr, "close notification\n");
-	// TODO
+
+	uint32_t id;
+	int ret = sd_bus_message_read(msg, "u", &id);
+	if (ret < 0) {
+		return ret;
+	}
+
+	// TODO: check client
+	struct mako_notification *notif = get_notification(state, id);
+	if (notif) {
+		destroy_notification(notif);
+	}
 	return 0;
 }
 
