@@ -10,8 +10,6 @@
 
 static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
-	fprintf(stderr, "get capabilities\n");
-
 	// TODO: support capabilities
 	char *capabilities[] = {};
 
@@ -33,7 +31,6 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 static int handle_notify(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
-	fprintf(stderr, "notify\n");
 
 	struct mako_notification *notif = create_notification(state);
 	if (notif == NULL) {
@@ -151,7 +148,6 @@ static int handle_notify(sd_bus_message *msg, void *data,
 static int handle_close_notification(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
-	fprintf(stderr, "close notification\n");
 
 	uint32_t id;
 	int ret = sd_bus_message_read(msg, "u", &id);
@@ -169,8 +165,6 @@ static int handle_close_notification(sd_bus_message *msg, void *data,
 
 static int handle_get_server_information(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
-	fprintf(stderr, "get server information\n");
-
 	const char *name = "mako";
 	const char *vendor = "emersion";
 	const char *version = "0.0.0";

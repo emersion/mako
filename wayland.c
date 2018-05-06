@@ -53,7 +53,6 @@ static void layer_surface_configure(void *data,
 		struct zwlr_layer_surface_v1 *surface,
 		uint32_t serial, uint32_t width, uint32_t height) {
 	struct mako_state *state = data;
-	fprintf(stderr, "configure\n");
 	state->width = width;
 	state->height = height;
 	zwlr_layer_surface_v1_ack_configure(surface, serial);
@@ -63,7 +62,6 @@ static void layer_surface_configure(void *data,
 static void layer_surface_closed(void *data,
 		struct zwlr_layer_surface_v1 *surface) {
 	struct mako_state *state = data;
-	fprintf(stderr, "closed\n");
 	state->running = false;
 }
 
