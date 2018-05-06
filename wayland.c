@@ -68,11 +68,13 @@ bool init_wayland(struct mako_state *state) {
 	zwlr_layer_surface_v1_add_listener(state->layer_surface,
 		&layer_surface_listener, state);
 
+	int32_t margin = state->config->margin;
 	// TODO: size
 	zwlr_layer_surface_v1_set_size(state->layer_surface, 300, 100);
 	zwlr_layer_surface_v1_set_anchor(state->layer_surface,
 		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
-	zwlr_layer_surface_v1_set_margin(state->layer_surface, 10, 10, 10, 10);
+	zwlr_layer_surface_v1_set_margin(state->layer_surface,
+		margin, margin, margin, margin);
 	wl_surface_commit(state->surface);
 
 	return true;

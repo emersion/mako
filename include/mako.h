@@ -8,8 +8,11 @@
 #include "pool-buffer.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
+struct mako_config;
+
 struct mako_state {
 	bool running;
+	struct mako_config *config;
 
 	sd_bus *bus;
 	sd_bus_slot *slot;
@@ -29,6 +32,16 @@ struct mako_state {
 
 	uint32_t last_id;
 	struct wl_list notifications; // mako_notification::link
+};
+
+struct mako_config {
+	char *font;
+	int32_t margin;
+
+	struct {
+		uint32_t background;
+		uint32_t text;
+	} colors;
 };
 
 struct mako_notification {

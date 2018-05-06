@@ -77,6 +77,16 @@ static void finish(struct mako_state *state) {
 int main(int argc, char *argv[]) {
 	struct mako_state state = { 0 };
 
+	struct mako_config config = {
+		.font = "",
+		.margin = 10,
+		.colors = {
+			.background = 0x000000FF,
+			.text = 0xFFFFFFFF,
+		},
+	};
+	state.config = &config;
+
 	if (!init(&state)) {
 		return EXIT_FAILURE;
 	}
