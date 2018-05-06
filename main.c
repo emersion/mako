@@ -96,7 +96,9 @@ int main(int argc, char *argv[]) {
 		},
 	};
 
-	parse_config_arguments(&state.config, argc, argv);
+	if (!parse_config_arguments(&state.config, argc, argv)) {
+		return EXIT_FAILURE;
+	}
 
 	if (!init(&state)) {
 		return EXIT_FAILURE;
