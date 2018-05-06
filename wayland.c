@@ -3,6 +3,52 @@
 #include "mako.h"
 #include "render.h"
 
+static void noop() {
+	// This space intentionally left blank
+}
+
+
+static void pointer_handle_button(void *data, struct wl_pointer *pointer,
+		uint32_t serial, uint32_t time, uint32_t button,
+		uint32_t button_state) {
+	struct mako_state *state = data;
+
+	if (button_state != WL_POINTER_BUTTON_STATE_PRESSED ||
+			wl_list_empty(&state->notifications)) {
+		return;
+	}
+
+	struct mako_notification *notif =
+		wl_container_of(state->notifications.next, notif, link);
+	destroy_notification(notif);
+
+	render(state);
+}
+
+static const struct wl_pointer_listener pointer_listener = {
+	.enter = noop,
+	.leave = noop,
+	.motion = noop,
+	.button = pointer_handle_button,
+	.axis = noop,
+};
+
+
+static void seat_handle_capabilities(void *data, struct wl_seat *seat,
+		uint32_t capabilities) {
+	struct mako_state *state = data;
+
+	if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
+		struct wl_pointer *pointer = wl_seat_get_pointer(seat);
+		wl_pointer_add_listener(pointer, &pointer_listener, state);
+	}
+}
+
+static const struct wl_seat_listener seat_listener = {
+	.capabilities = seat_handle_capabilities,
+};
+
+
 static void layer_surface_configure(void *data,
 		struct zwlr_layer_surface_v1 *surface,
 		uint32_t serial, uint32_t width, uint32_t height) {
@@ -40,6 +86,10 @@ static void handle_global(void *data, struct wl_registry *registry,
 	} else if (strcmp(interface, zwlr_layer_shell_v1_interface.name) == 0) {
 		state->layer_shell = wl_registry_bind(registry, name,
 			&zwlr_layer_shell_v1_interface, 1);
+	} else if (strcmp(interface, wl_seat_interface.name) == 0) {
+		struct wl_seat *seat =
+			wl_registry_bind(registry, name, &wl_seat_interface, 1);
+		wl_seat_add_listener(seat, &seat_listener, state);
 	}
 }
 
