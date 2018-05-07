@@ -42,6 +42,13 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		}
 	}
 
+	if (state->config.actions) {
+		ret = sd_bus_message_append(reply, "s", "actions");
+		if (ret < 0) {
+			return ret;
+		}
+	}
+
 	ret = sd_bus_message_close_container(reply);
 	if (ret < 0) {
 		return ret;

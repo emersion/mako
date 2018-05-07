@@ -9,6 +9,7 @@ struct mako_config {
 	int32_t margin, padding;
 	bool markup;
 	char *format;
+	bool actions;
 
 	struct {
 		uint32_t background;

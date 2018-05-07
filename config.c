@@ -11,6 +11,7 @@ void init_config(struct mako_config *config) {
 	config->padding = 5;
 	config->markup = true;
 	config->format = strdup("<b>%s</b>\n%b");
+	config->actions = true;
 	config->colors.background = 0x000000FF;
 	config->colors.text = 0xFFFFFFFF;
 }
