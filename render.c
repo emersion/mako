@@ -33,7 +33,6 @@ void render(struct mako_state *state) {
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		PangoLayout *layout = pango_cairo_create_layout(cairo);
-		pango_layout_set_text(layout, notif->summary, -1);
 		pango_layout_set_width(layout,
 			(state->width - 2 * config->padding) * PANGO_SCALE);
 		pango_layout_set_height(layout,
@@ -43,6 +42,29 @@ void render(struct mako_state *state) {
 			pango_font_description_from_string(config->font);
 		pango_layout_set_font_description(layout, desc);
 		pango_font_description_free(desc);
+
+		char *text = format_notification(notif, config->format);
+		if (text == NULL) {
+			return;
+		}
+
+		if (config->markup) {
+			PangoAttrList *attrs = NULL;
+			char *buf = NULL;
+			GError *error = NULL;
+			if (!pango_parse_markup(text, -1, 0, &attrs, &buf, NULL, &error)) {
+				fprintf(stderr, "cannot parse pango markup: %s\n",
+					error->message);
+				return; // TODO: better error handling
+			}
+			pango_layout_set_markup(layout, buf, -1);
+			pango_layout_set_attributes(layout, attrs);
+			pango_attr_list_unref(attrs);
+			free(buf);
+		} else {
+			pango_layout_set_text(layout, text, -1);
+		}
+		free(text);
 
 		set_cairo_source_u32(cairo, config->colors.text);
 		cairo_move_to(cairo, config->padding, config->padding);

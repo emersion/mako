@@ -53,3 +53,69 @@ struct mako_notification *get_notification(struct mako_state *state,
 	}
 	return NULL;
 }
+
+static bool append_string(char **dst, size_t *dst_cap, const char *src,
+		size_t src_len) {
+	size_t dst_len = 0;
+	if (*dst != NULL) {
+		dst_len = strlen(*dst);
+	}
+
+	size_t required_cap = dst_len + src_len + 1;
+	if (*dst_cap < required_cap) {
+		*dst_cap *= 2;
+		if (*dst_cap < required_cap) {
+			*dst_cap = required_cap;
+		}
+		if (*dst_cap < 128) {
+			*dst_cap = 128;
+		}
+
+		*dst = realloc(*dst, *dst_cap);
+		if (*dst == NULL) {
+			*dst_cap = 0;
+			fprintf(stderr, "allocation failed\n");
+			return false;
+		}
+	}
+
+	memcpy(*dst + dst_len, src, src_len);
+	(*dst)[dst_len + src_len] = '\0';
+	return true;
+}
+
+char *format_notification(struct mako_notification *notif, const char *format) {
+	char *formatted = NULL;
+	size_t formatted_cap = 0;
+
+	const char *last = format;
+	while (1) {
+		char *current = strchr(last, '%');
+		if (current == NULL || current[1] == '\0') {
+			append_string(&formatted, &formatted_cap, last, strlen(last));
+			break;
+		}
+		append_string(&formatted, &formatted_cap, last, current - last);
+
+		const char *value = NULL;
+		switch (current[1]) {
+		case '%':
+			value = "%";
+			break;
+		case 's':
+			value = notif->summary;
+			break;
+		case 'b':
+			value = notif->body;
+			break;
+		}
+		if (value == NULL) {
+			value = "";
+		}
+
+		append_string(&formatted, &formatted_cap, value, strlen(value));
+		last = current + 2;
+	}
+
+	return formatted;
+}

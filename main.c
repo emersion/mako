@@ -20,6 +20,8 @@ const char *usage =
 	"      --text-color <color>       Text color.\n"
 	"      --margin <px>              Margin.\n"
 	"      --padding <px>             Padding.\n"
+	"      --markup <0|1>             Enable/disable markup.\n"
+	"      --format <format>          Format string.\n"
 	"\n"
 	"Colors can be specified with the format #RRGGBB or #RRGGBBAA.\n";
 
@@ -44,21 +46,12 @@ static void finish(struct mako_state *state) {
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
 		destroy_notification(notif);
 	}
-	finish_config(&state->config);
 }
 
 int main(int argc, char *argv[]) {
 	struct mako_state state = { 0 };
 
-	state.config = (struct mako_config){
-		.font = strdup(""),
-		.margin = 10,
-		.padding = 5,
-		.colors = {
-			.background = 0x000000FF,
-			.text = 0xFFFFFFFF,
-		},
-	};
+	init_config(&state.config);
 
 	int ret = parse_config_arguments(&state.config, argc, argv);
 	if (ret < 0) {
@@ -130,6 +123,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	finish(&state);
+	finish_config(&state.config);
 
 	return ret < 0 ? EXIT_FAILURE : EXIT_SUCCESS;
 }

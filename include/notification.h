@@ -40,10 +40,10 @@ enum mako_notification_close_reason {
 };
 
 struct mako_notification *create_notification(struct mako_state *state);
-void insert_notification(struct mako_notification *notif);
 void destroy_notification(struct mako_notification *notif);
 void close_notification(struct mako_notification *notif,
 	enum mako_notification_close_reason reason);
 struct mako_notification *get_notification(struct mako_state *state, uint32_t id);
+char *format_notification(struct mako_notification *notif, const char *format);
 
 #endif

@@ -5,6 +5,16 @@
 
 #include "config.h"
 
+void init_config(struct mako_config *config) {
+	config->font = strdup("");
+	config->margin = 10;
+	config->padding = 5;
+	config->markup = true;
+	config->format = strdup("<b>%s</b>\n%b");
+	config->colors.background = 0x000000FF;
+	config->colors.text = 0xFFFFFFFF;
+}
+
 void finish_config(struct mako_config *config) {
 	free(config->font);
 }
@@ -34,6 +44,8 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"text-color", required_argument, 0, 0},
 		{"margin", required_argument, 0, 0},
 		{"padding", required_argument, 0, 0},
+		{"markup", required_argument, 0, 0},
+		{"format", required_argument, 0, 0},
 		{0},
 	};
 
@@ -60,6 +72,11 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 			config->margin = strtol(optarg, NULL, 10);
 		} else if (strcmp(name, "padding") == 0) {
 			config->padding = strtol(optarg, NULL, 10);
+		} else if (strcmp(name, "markup") == 0) {
+			config->markup = strcmp(optarg, "1") == 0;
+		} else if (strcmp(name, "format") == 0) {
+			free(config->format);
+			config->format = strdup(optarg);
 		}
 	}
 
