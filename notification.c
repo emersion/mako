@@ -102,6 +102,9 @@ char *format_notification(struct mako_notification *notif, const char *format) {
 		case '%':
 			value = "%";
 			break;
+		case 'a':
+			value = notif->app_name;
+			break;
 		case 's':
 			value = notif->summary;
 			break;
