@@ -9,6 +9,8 @@ void init_config(struct mako_config *config) {
 	config->font = strdup("");
 	config->margin = 10;
 	config->padding = 5;
+	config->width = 300;
+	config->height = 100;
 	config->markup = true;
 	config->format = strdup("<b>%s</b>\n%b");
 	config->actions = true;
@@ -18,6 +20,7 @@ void init_config(struct mako_config *config) {
 
 void finish_config(struct mako_config *config) {
 	free(config->font);
+	free(config->format);
 }
 
 static uint32_t parse_color(const char *color) {

@@ -3,6 +3,7 @@
 #include "mako.h"
 #include "notification.h"
 #include "render.h"
+#include "wayland.h"
 
 static void noop() {
 	// This space intentionally left blank
@@ -22,7 +23,7 @@ static void pointer_handle_button(void *data, struct wl_pointer *pointer,
 	struct mako_notification *first_notif =
 		wl_container_of(state->notifications.next, first_notif, link);
 	close_notification(first_notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
-	render(state);
+	send_frame(state);
 }
 
 static const struct wl_pointer_listener pointer_listener = {
@@ -53,10 +54,12 @@ static void layer_surface_configure(void *data,
 		struct zwlr_layer_surface_v1 *surface,
 		uint32_t serial, uint32_t width, uint32_t height) {
 	struct mako_state *state = data;
+
 	state->width = width;
 	state->height = height;
+
 	zwlr_layer_surface_v1_ack_configure(surface, serial);
-	render(state);
+	send_frame(state);
 }
 
 static void layer_surface_closed(void *data,
@@ -116,9 +119,10 @@ bool init_wayland(struct mako_state *state) {
 	zwlr_layer_surface_v1_add_listener(state->layer_surface,
 		&layer_surface_listener, state);
 
-	int32_t margin = state->config.margin;
-	// TODO: size
-	zwlr_layer_surface_v1_set_size(state->layer_surface, 300, 100);
+	struct mako_config *config = &state->config;
+	int32_t margin = config->margin;
+	zwlr_layer_surface_v1_set_size(state->layer_surface,
+		config->width, config->height);
 	zwlr_layer_surface_v1_set_anchor(state->layer_surface,
 		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
 	zwlr_layer_surface_v1_set_margin(state->layer_surface,
@@ -137,4 +141,31 @@ void finish_wayland(struct mako_state *state) {
 	wl_compositor_destroy(state->compositor);
 	wl_registry_destroy(state->registry);
 	wl_display_disconnect(state->display);
+}
+
+void send_frame(struct mako_state *state) {
+	state->current_buffer = get_next_buffer(state->shm, state->buffers,
+		state->width, state->height);
+
+	int height = render(state, state->current_buffer);
+
+	if (height == 0) {
+		// Unmap the surface
+		wl_surface_attach(state->surface, NULL, 0, 0);
+		wl_surface_commit(state->surface);
+		return;
+	}
+
+	// TODO: if the compositor doesn't send a configure with the size we
+	// requested, we'll enter an infinite loop
+	if (state->height != height) {
+		zwlr_layer_surface_v1_set_size(state->layer_surface,
+			state->config.width, height);
+		wl_surface_commit(state->surface);
+		return;
+	}
+
+	wl_surface_attach(state->surface, state->current_buffer->buffer, 0, 0);
+	wl_surface_damage(state->surface, 0, 0, state->width, state->height);
+	wl_surface_commit(state->surface);
 }

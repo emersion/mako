@@ -3,6 +3,6 @@
 
 struct mako_state;
 
-void render(struct mako_state *state);
+int render(struct mako_state *state, struct pool_buffer *buffer);
 
 #endif

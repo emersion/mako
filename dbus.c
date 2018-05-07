@@ -7,7 +7,7 @@
 #include "dbus.h"
 #include "mako.h"
 #include "notification.h"
-#include "render.h"
+#include "wayland.h"
 
 static const char *service_path = "/org/freedesktop/Notifications";
 static const char *service_interface = "org.freedesktop.Notifications";
@@ -181,7 +181,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	}
 	// TODO: timeout
 
-	render(state);
+	send_frame(state);
 
 	return sd_bus_reply_method_return(msg, "u", notif->id);
 }
@@ -200,7 +200,7 @@ static int handle_close_notification(sd_bus_message *msg, void *data,
 	struct mako_notification *notif = get_notification(state, id);
 	if (notif) {
 		close_notification(notif, MAKO_NOTIFICATION_CLOSE_REQUEST);
-		render(state);
+		send_frame(state);
 	}
 	return 0;
 }
