@@ -132,6 +132,13 @@ static int handle_notify(sd_bus_message *msg, void *data,
 				return ret;
 			}
 			notif->urgency = urgency;
+		} else if (strcmp(hint, "category") == 0) {
+			const char *category;
+			ret = sd_bus_message_read(msg, "v", "s", &category);
+			if (ret < 0) {
+				return ret;
+			}
+			notif->category = strdup(category);
 		} else {
 			ret = sd_bus_message_skip(msg, "v");
 			if (ret < 0) {

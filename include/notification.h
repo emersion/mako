@@ -24,6 +24,7 @@ struct mako_notification {
 	struct wl_list actions; // mako_action::link
 
 	enum mako_notification_urgency urgency;
+	char *category;
 };
 
 struct mako_action {
