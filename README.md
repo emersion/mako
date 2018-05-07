@@ -4,6 +4,10 @@ A lightweight notification daemon for Wayland.
 
 It currently works on Sway 1.0 alpha.
 
+<p align="center">
+  <img src="https://sr.ht/frOL.jpg" alt="mako"/>
+</p>
+
 ## Building
 
 Install dependencies:
