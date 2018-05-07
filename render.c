@@ -56,6 +56,7 @@ void render(struct mako_state *state) {
 			if (!pango_parse_markup(text, -1, 0, &attrs, &buf, NULL, &error)) {
 				fprintf(stderr, "cannot parse pango markup: %s\n",
 					error->message);
+				g_error_free(error);
 				return; // TODO: better error handling
 			}
 			pango_layout_set_markup(layout, buf, -1);
