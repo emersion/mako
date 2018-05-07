@@ -13,11 +13,10 @@ static const char *service_path = "/org/freedesktop/Notifications";
 static const char *service_interface = "org.freedesktop.Notifications";
 static const char *service_name = "org.freedesktop.Notifications";
 
-// TODO: support capabilities
-static const char *capabilities[] = {};
-
 static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
+	struct mako_state *state = data;
+
 	sd_bus_message *reply = NULL;
 	int ret = sd_bus_message_new_method_return(msg, &reply);
 	if (ret < 0) {
@@ -29,9 +28,15 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	size_t capabilities_len = sizeof(capabilities) / sizeof(capabilities[0]);
-	for (size_t i = 0; i < capabilities_len; ++i) {
-		ret = sd_bus_message_append(reply, "s", capabilities[i]);
+	if (strstr(state->config.format, "%b") != NULL) {
+		ret = sd_bus_message_append(reply, "s", "body");
+		if (ret < 0) {
+			return ret;
+		}
+	}
+
+	if (state->config.markup) {
+		ret = sd_bus_message_append(reply, "s", "body-markup");
 		if (ret < 0) {
 			return ret;
 		}
@@ -67,8 +72,6 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	notif->app_icon = strdup(app_icon);
 	notif->summary = strdup(summary);
 	notif->body = strdup(body);
-
-	// TODO: read the other parameters
 
 	if (replaces_id > 0) {
 		struct mako_notification *replaces =
@@ -256,7 +259,6 @@ void notify_notification_closed(struct mako_notification *notif,
 		enum mako_notification_close_reason reason) {
 	struct mako_state *state = notif->state;
 
-	uint32_t reason_u32 = reason;
 	sd_bus_emit_signal(state->bus, service_path, service_interface,
-		"NotificationClosed", "uu", notif->id, reason_u32);
+		"NotificationClosed", "uu", notif->id, reason);
 }
