@@ -25,6 +25,7 @@ struct mako_notification {
 
 	enum mako_notification_urgency urgency;
 	char *category;
+	char *desktop_entry;
 };
 
 struct mako_action {

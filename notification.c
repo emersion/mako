@@ -30,11 +30,12 @@ void destroy_notification(struct mako_notification *notif) {
 		free(action->title);
 		free(action);
 	}
-	free(notif->category);
 	free(notif->app_name);
 	free(notif->app_icon);
 	free(notif->summary);
 	free(notif->body);
+	free(notif->category);
+	free(notif->desktop_entry);
 	free(notif);
 }
 

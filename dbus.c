@@ -139,6 +139,13 @@ static int handle_notify(sd_bus_message *msg, void *data,
 				return ret;
 			}
 			notif->category = strdup(category);
+		} else if (strcmp(hint, "desktop-entry") == 0) {
+			const char *desktop_entry;
+			ret = sd_bus_message_read(msg, "v", "s", &desktop_entry);
+			if (ret < 0) {
+				return ret;
+			}
+			notif->desktop_entry = strdup(desktop_entry);
 		} else {
 			ret = sd_bus_message_skip(msg, "v");
 			if (ret < 0) {
