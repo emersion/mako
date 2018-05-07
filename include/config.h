@@ -6,8 +6,8 @@
 
 struct mako_config {
 	char *font;
-	int32_t margin, padding;
 	int32_t width, height;
+	int32_t margin, padding;
 	bool markup;
 	char *format;
 	bool actions;

@@ -18,6 +18,8 @@ const char *usage =
 	"      --font <font>              Font family and size.\n"
 	"      --background-color <color> Background color.\n"
 	"      --text-color <color>       Text color.\n"
+	"      --width <px>               Notification width.\n"
+	"      --height <px>              Max notification height.\n"
 	"      --margin <px>              Margin.\n"
 	"      --padding <px>             Padding.\n"
 	"      --markup <0|1>             Enable/disable markup.\n"

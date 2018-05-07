@@ -46,6 +46,8 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"font", required_argument, 0, 0},
 		{"background-color", required_argument, 0, 0},
 		{"text-color", required_argument, 0, 0},
+		{"width", required_argument, 0, 0},
+		{"height", required_argument, 0, 0},
 		{"margin", required_argument, 0, 0},
 		{"padding", required_argument, 0, 0},
 		{"markup", required_argument, 0, 0},
@@ -72,6 +74,10 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 			config->colors.background = parse_color(optarg);
 		} else if (strcmp(name, "text-color") == 0) {
 			config->colors.text = parse_color(optarg);
+		} else if (strcmp(name, "width") == 0) {
+			config->width = strtol(optarg, NULL, 10);
+		} else if (strcmp(name, "height") == 0) {
+			config->height = strtol(optarg, NULL, 10);
 		} else if (strcmp(name, "margin") == 0) {
 			config->margin = strtol(optarg, NULL, 10);
 		} else if (strcmp(name, "padding") == 0) {
