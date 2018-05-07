@@ -11,11 +11,13 @@ void init_config(struct mako_config *config) {
 	config->padding = 5;
 	config->width = 300;
 	config->height = 100;
+	config->border_size = 1;
 	config->markup = true;
 	config->format = strdup("<b>%s</b>\n%b");
 	config->actions = true;
 	config->colors.background = 0x000000FF;
 	config->colors.text = 0xFFFFFFFF;
+	config->colors.border = 0x222222FF;
 }
 
 void finish_config(struct mako_config *config) {
@@ -50,6 +52,8 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"height", required_argument, 0, 0},
 		{"margin", required_argument, 0, 0},
 		{"padding", required_argument, 0, 0},
+		{"border-size", required_argument, 0, 0},
+		{"border-color", required_argument, 0, 0},
 		{"markup", required_argument, 0, 0},
 		{"format", required_argument, 0, 0},
 		{0},
@@ -82,6 +86,10 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 			config->margin = strtol(optarg, NULL, 10);
 		} else if (strcmp(name, "padding") == 0) {
 			config->padding = strtol(optarg, NULL, 10);
+		} else if (strcmp(name, "border-size") == 0) {
+			config->border_size = strtol(optarg, NULL, 10);
+		} else if (strcmp(name, "border-color") == 0) {
+			config->colors.border = parse_color(optarg);
 		} else if (strcmp(name, "markup") == 0) {
 			config->markup = strcmp(optarg, "1") == 0;
 		} else if (strcmp(name, "format") == 0) {

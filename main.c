@@ -22,6 +22,8 @@ const char *usage =
 	"      --height <px>              Max notification height.\n"
 	"      --margin <px>              Margin.\n"
 	"      --padding <px>             Padding.\n"
+	"      --border-size <px>         Border size.\n"
+	"      --border-color <color>     Border color.\n"
 	"      --markup <0|1>             Enable/disable markup.\n"
 	"      --format <format>          Format string.\n"
 	"\n"

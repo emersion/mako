@@ -15,25 +15,34 @@ static void set_cairo_source_u32(cairo_t *cairo, uint32_t color) {
 
 int render(struct mako_state *state, struct pool_buffer *buffer) {
 	struct mako_config *config = &state->config;
+	cairo_t *cairo = buffer->cairo;
 
 	if (wl_list_empty(&state->notifications)) {
 		return 0;
 	}
 
-	cairo_t *cairo = buffer->cairo;
+	int border_size = 2 * config->border_size;
+	int padding_size = 2 * config->padding;
+
+	set_cairo_source_u32(cairo, config->colors.border);
+	cairo_set_line_width(cairo, border_size);
+	cairo_rectangle(cairo, 0, 0, state->width, state->height);
+	cairo_stroke(cairo);
+
 	set_cairo_source_u32(cairo, config->colors.background);
-	cairo_paint(cairo);
+	cairo_set_line_width(cairo, 0);
+	cairo_rectangle(cairo, config->border_size, config->border_size,
+		state->width - border_size, state->height - border_size);
+	cairo_fill(cairo);
 
 	int height = 0;
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
-		int padding_size = 2 * config->padding;
-
 		PangoLayout *layout = pango_cairo_create_layout(cairo);
 		pango_layout_set_width(layout,
-			(config->width - padding_size) * PANGO_SCALE);
+			(config->width - border_size - padding_size) * PANGO_SCALE);
 		pango_layout_set_height(layout,
-			(config->height - padding_size) * PANGO_SCALE);
+			(config->height - border_size - padding_size) * PANGO_SCALE);
 		pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
 		pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
 		PangoFontDescription *desc =
@@ -67,10 +76,11 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 
 		int text_height = 0;
 		pango_layout_get_pixel_size(layout, NULL, &text_height);
-		height = text_height + padding_size;
+		height = border_size + padding_size + text_height;
 
 		set_cairo_source_u32(cairo, config->colors.text);
-		cairo_move_to(cairo, config->padding, config->padding);
+		cairo_move_to(cairo, config->border_size + config->padding,
+			config->border_size + config->padding);
 		pango_cairo_update_layout(cairo, layout);
 		pango_cairo_show_layout(cairo, layout);
 
