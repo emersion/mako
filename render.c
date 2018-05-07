@@ -38,6 +38,7 @@ void render(struct mako_state *state) {
 		pango_layout_set_height(layout,
 			(state->height - 2 * config->padding) * PANGO_SCALE);
 		pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
+		pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
 		PangoFontDescription *desc =
 			pango_font_description_from_string(config->font);
 		pango_layout_set_font_description(layout, desc);
