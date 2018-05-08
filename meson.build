@@ -48,3 +48,8 @@ executable(
 	include_directories: [mako_inc],
 	install: true,
 )
+
+install_data(
+	'makoctl',
+	install_dir: join_paths(get_option('prefix'), get_option('bindir')),
+)
