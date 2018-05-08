@@ -1,5 +1,6 @@
-#include <stdlib.h>
+#include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "dbus.h"
 #include "mako.h"
@@ -86,6 +87,25 @@ static bool append_string(char **dst, size_t *dst_cap, const char *src,
 	return true;
 }
 
+static size_t trim_space(char *dst, const char *src) {
+	size_t len = strlen(src);
+	const char *start = src;
+	const char *end = src + len;
+
+	while (start != end && isspace(start[0])) {
+		++start;
+	}
+
+	while (end != start && isspace(end[-1])) {
+		--end;
+	}
+
+	size_t trimmed_len = end - start;
+	memmove(dst, start, trimmed_len);
+	dst[trimmed_len] = '\0';
+	return trimmed_len;
+}
+
 char *format_notification(struct mako_notification *notif, const char *format) {
 	char *formatted = NULL;
 	size_t formatted_cap = 0;
@@ -122,5 +142,6 @@ char *format_notification(struct mako_notification *notif, const char *format) {
 		last = current + 2;
 	}
 
+	trim_space(formatted, formatted);
 	return formatted;
 }
