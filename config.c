@@ -61,7 +61,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 
 	while (1) {
 		int option_index = -1;
-		int c = getopt_long(argc, argv, "f", long_options, &option_index);
+		int c = getopt_long(argc, argv, "h", long_options, &option_index);
 		if (c < 0) {
 			break;
 		} else if (c == 'h') {
