@@ -57,40 +57,9 @@ struct mako_notification *get_notification(struct mako_state *state,
 	return NULL;
 }
 
-static bool append_string(char **dst, size_t *dst_cap, const char *src,
-		size_t src_len) {
-	size_t dst_len = 0;
-	if (*dst != NULL) {
-		dst_len = strlen(*dst);
-	}
-
-	size_t required_cap = dst_len + src_len + 1;
-	if (*dst_cap < required_cap) {
-		*dst_cap *= 2;
-		if (*dst_cap < required_cap) {
-			*dst_cap = required_cap;
-		}
-		if (*dst_cap < 128) {
-			*dst_cap = 128;
-		}
-
-		*dst = realloc(*dst, *dst_cap);
-		if (*dst == NULL) {
-			*dst_cap = 0;
-			fprintf(stderr, "allocation failed\n");
-			return false;
-		}
-	}
-
-	memcpy(*dst + dst_len, src, src_len);
-	(*dst)[dst_len + src_len] = '\0';
-	return true;
-}
-
-static size_t trim_space(char *dst, const char *src) {
-	size_t len = strlen(src);
+static size_t trim_space(char *dst, const char *src, size_t src_len) {
 	const char *start = src;
-	const char *end = src + len;
+	const char *end = src + src_len;
 
 	while (start != end && isspace(start[0])) {
 		++start;
@@ -106,18 +75,27 @@ static size_t trim_space(char *dst, const char *src) {
 	return trimmed_len;
 }
 
-char *format_notification(struct mako_notification *notif, const char *format) {
-	char *formatted = NULL;
-	size_t formatted_cap = 0;
+size_t format_notification(struct mako_notification *notif, const char *format,
+		char *buf) {
+	size_t len = 0;
 
 	const char *last = format;
 	while (1) {
 		char *current = strchr(last, '%');
 		if (current == NULL || current[1] == '\0') {
-			append_string(&formatted, &formatted_cap, last, strlen(last));
+			size_t tail_len = strlen(last);
+			if (buf != NULL) {
+				memcpy(buf + len, last, tail_len + 1);
+			}
+			len += tail_len;
 			break;
 		}
-		append_string(&formatted, &formatted_cap, last, current - last);
+
+		size_t chunk_len = current - last;
+		if (buf != NULL) {
+			memcpy(buf + len, last, chunk_len);
+		}
+		len += chunk_len;
 
 		const char *value = NULL;
 		switch (current[1]) {
@@ -138,10 +116,17 @@ char *format_notification(struct mako_notification *notif, const char *format) {
 			value = "";
 		}
 
-		append_string(&formatted, &formatted_cap, value, strlen(value));
+		size_t value_len = strlen(value);
+		if (buf != NULL) {
+			memcpy(buf + len, value, value_len);
+		}
+		len += value_len;
+
 		last = current + 2;
 	}
 
-	trim_space(formatted, formatted);
-	return formatted;
+	if (buf != NULL) {
+		trim_space(buf, buf, len);
+	}
+	return len;
 }

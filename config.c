@@ -13,7 +13,7 @@ void init_config(struct mako_config *config) {
 	config->height = 100;
 	config->border_size = 1;
 	config->markup = true;
-	config->format = strdup("\n%b\n");
+	config->format = strdup("<b>%s</b>\n%b");
 	config->actions = true;
 	config->colors.background = 0x285577FF;
 	config->colors.text = 0xFFFFFFFF;

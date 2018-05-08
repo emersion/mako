@@ -50,10 +50,12 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 		pango_layout_set_font_description(layout, desc);
 		pango_font_description_free(desc);
 
-		char *text = format_notification(notif, config->format);
+		size_t text_len = format_notification(notif, config->format, NULL);
+		char *text = malloc(text_len * sizeof(char));
 		if (text == NULL) {
 			break;
 		}
+		format_notification(notif, config->format, text);
 
 		if (config->markup) {
 			PangoAttrList *attrs = NULL;
