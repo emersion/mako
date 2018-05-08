@@ -16,6 +16,7 @@ Install dependencies:
 * pango
 * cairo
 * systemd or elogind (for the sd-bus library)
+* pkg-config
 
 Then run:
 
