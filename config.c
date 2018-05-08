@@ -15,6 +15,7 @@ void init_config(struct mako_config *config) {
 	config->markup = true;
 	config->format = strdup("<b>%s</b>\n%b");
 	config->actions = true;
+	config->max_notifications = 5;
 	config->colors.background = 0x285577FF;
 	config->colors.text = 0xFFFFFFFF;
 	config->colors.border = 0x4C7899FF;

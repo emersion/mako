@@ -21,20 +21,14 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 		return 0;
 	}
 
+	// Clear
+	set_cairo_source_u32(cairo, 0x00000000);
+	cairo_paint(cairo);
+
 	int border_size = 2 * config->border_size;
 	int padding_size = 2 * config->padding;
 
-	set_cairo_source_u32(cairo, config->colors.border);
-	cairo_set_line_width(cairo, border_size);
-	cairo_rectangle(cairo, 0, 0, state->width, state->height);
-	cairo_stroke(cairo);
-
-	set_cairo_source_u32(cairo, config->colors.background);
-	cairo_set_line_width(cairo, 0);
-	cairo_rectangle(cairo, config->border_size, config->border_size,
-		state->width - border_size, state->height - border_size);
-	cairo_fill(cairo);
-
+	size_t i = 0;
 	int height = 0;
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
@@ -78,17 +72,42 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 
 		int text_height = 0;
 		pango_layout_get_pixel_size(layout, NULL, &text_height);
-		height = border_size + padding_size + text_height;
+		int notif_height = border_size + padding_size + text_height;
 
+		if (i > 0) {
+			height += config->margin;
+		}
+		int notif_y = height;
+		height += notif_height;
+
+		// Render border
+		set_cairo_source_u32(cairo, config->colors.border);
+		cairo_set_line_width(cairo, border_size);
+		cairo_rectangle(cairo, 0, notif_y, state->width, notif_height);
+		cairo_stroke(cairo);
+
+		// Render background
+		set_cairo_source_u32(cairo, config->colors.background);
+		cairo_set_line_width(cairo, 0);
+		cairo_rectangle(cairo,
+			config->border_size, notif_y + config->border_size,
+			state->width - border_size, notif_height - border_size);
+		cairo_fill(cairo);
+
+		// Render text
 		set_cairo_source_u32(cairo, config->colors.text);
 		cairo_move_to(cairo, config->border_size + config->padding,
-			config->border_size + config->padding);
+			notif_y + config->border_size + config->padding);
 		pango_cairo_update_layout(cairo, layout);
 		pango_cairo_show_layout(cairo, layout);
 
 		g_object_unref(layout);
 
-		break; // TODO: support multiple notifications
+		++i;
+		if (config->max_notifications >= 0 &&
+				i >= (size_t)config->max_notifications) {
+			break;
+		}
 	}
 
 	return height;
