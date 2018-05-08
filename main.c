@@ -26,6 +26,7 @@ const char *usage =
 	"      --border-color <color>     Border color.\n"
 	"      --markup <0|1>             Enable/disable markup.\n"
 	"      --format <format>          Format string.\n"
+	"      --max-visible <n>          Max number of visible notifications.\n"
 	"\n"
 	"Colors can be specified with the format #RRGGBB or #RRGGBBAA.\n";
 

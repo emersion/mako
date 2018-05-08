@@ -15,7 +15,7 @@ void init_config(struct mako_config *config) {
 	config->markup = true;
 	config->format = strdup("<b>%s</b>\n%b");
 	config->actions = true;
-	config->max_notifications = 5;
+	config->max_visible = 5;
 	config->colors.background = 0x285577FF;
 	config->colors.text = 0xFFFFFFFF;
 	config->colors.border = 0x4C7899FF;
@@ -57,6 +57,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"border-color", required_argument, 0, 0},
 		{"markup", required_argument, 0, 0},
 		{"format", required_argument, 0, 0},
+		{"max-visible", required_argument, 0, 0},
 		{0},
 	};
 
@@ -96,6 +97,8 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		} else if (strcmp(name, "format") == 0) {
 			free(config->format);
 			config->format = strdup(optarg);
+		} else if (strcmp(name, "max-visible") == 0) {
+			config->max_visible = strtol(optarg, NULL, 10);
 		}
 	}
 

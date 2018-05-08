@@ -12,7 +12,7 @@ struct mako_config {
 	bool markup;
 	char *format;
 	bool actions;
-	int32_t max_notifications;
+	int32_t max_visible;
 
 	struct {
 		uint32_t background;

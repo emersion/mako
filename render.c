@@ -104,8 +104,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 		g_object_unref(layout);
 
 		++i;
-		if (config->max_notifications >= 0 &&
-				i >= (size_t)config->max_notifications) {
+		if (config->max_visible >= 0 &&
+				i >= (size_t)config->max_visible) {
 			break;
 		}
 	}
