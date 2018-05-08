@@ -6,7 +6,7 @@
 #include "config.h"
 
 void init_config(struct mako_config *config) {
-	config->font = strdup("");
+	config->font = strdup("monospace 10");
 	config->margin = 10;
 	config->padding = 5;
 	config->width = 300;
@@ -15,9 +15,9 @@ void init_config(struct mako_config *config) {
 	config->markup = true;
 	config->format = strdup("<b>%s</b>\n%b");
 	config->actions = true;
-	config->colors.background = 0x000000FF;
+	config->colors.background = 0x285577FF;
 	config->colors.text = 0xFFFFFFFF;
-	config->colors.border = 0x222222FF;
+	config->colors.border = 0x4C7899FF;
 }
 
 void finish_config(struct mako_config *config) {
