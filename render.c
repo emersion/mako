@@ -51,7 +51,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 		pango_font_description_free(desc);
 
 		size_t text_len = format_notification(notif, config->format, NULL);
-		char *text = malloc(text_len * sizeof(char));
+		char *text = malloc(text_len + 1);
 		if (text == NULL) {
 			break;
 		}

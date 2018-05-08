@@ -57,7 +57,8 @@ struct mako_notification *get_notification(struct mako_state *state,
 	return NULL;
 }
 
-static size_t trim_space(char *dst, const char *src, size_t src_len) {
+static size_t trim_space(char *dst, const char *src) {
+	size_t src_len = strlen(src);
 	const char *start = src;
 	const char *end = src + src_len;
 
@@ -73,6 +74,41 @@ static size_t trim_space(char *dst, const char *src, size_t src_len) {
 	memmove(dst, start, trimmed_len);
 	dst[trimmed_len] = '\0';
 	return trimmed_len;
+}
+
+static const char *escape_markup_char(char c) {
+	switch (c) {
+	case '&': return "&amp;";
+	case '<': return "&lt;";
+	case '>': return "&gt;";
+	case '\'': return "&apos;";
+	case '"': return "&quot;";
+	}
+	return NULL;
+}
+
+static size_t escape_markup(const char *s, char *buf) {
+	size_t len = 0;
+	while (s[0] != '\0') {
+		const char *replacement = escape_markup_char(s[0]);
+		if (replacement != NULL) {
+			size_t replacement_len = strlen(replacement);
+			if (buf != NULL) {
+				memcpy(buf + len, replacement, replacement_len);
+			}
+			len += replacement_len;
+		} else {
+			if (buf != NULL) {
+				buf[len] = s[0];
+			}
+			++len;
+		}
+		++s;
+	}
+	if (buf != NULL) {
+		buf[len] = '\0';
+	}
+	return len;
 }
 
 size_t format_notification(struct mako_notification *notif, const char *format,
@@ -98,6 +134,7 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 		len += chunk_len;
 
 		const char *value = NULL;
+		bool markup = false;
 		switch (current[1]) {
 		case '%':
 			value = "%";
@@ -110,15 +147,25 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 			break;
 		case 'b':
 			value = notif->body;
+			markup = true;
 			break;
 		}
 		if (value == NULL) {
 			value = "";
 		}
 
-		size_t value_len = strlen(value);
-		if (buf != NULL) {
-			memcpy(buf + len, value, value_len);
+		size_t value_len;
+		if (!markup) {
+			char *escaped = NULL;
+			if (buf != NULL) {
+				escaped = buf + len;
+			}
+			value_len = escape_markup(value, escaped);
+		} else {
+			value_len = strlen(value);
+			if (buf != NULL) {
+				memcpy(buf + len, value, value_len);
+			}
 		}
 		len += value_len;
 
@@ -126,7 +173,7 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 	}
 
 	if (buf != NULL) {
-		trim_space(buf, buf, len);
+		trim_space(buf, buf);
 	}
 	return len;
 }
