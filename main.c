@@ -45,7 +45,6 @@ static bool init(struct mako_state *state) {
 static void finish(struct mako_state *state) {
 	finish_dbus(state);
 	finish_wayland(state);
-	// TODO: finish_render(state)
 	struct mako_notification *notif, *tmp;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
 		destroy_notification(notif);
