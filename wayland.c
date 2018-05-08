@@ -111,6 +111,19 @@ bool init_wayland(struct mako_state *state) {
 	wl_registry_add_listener(state->registry, &registry_listener, state);
 	wl_display_roundtrip(state->display);
 
+	if (state->compositor == NULL) {
+		fprintf(stderr, "compositor doesn't support wl_compositor\n");
+		return false;
+	}
+	if (state->shm == NULL) {
+		fprintf(stderr, "compositor doesn't support wl_shm\n");
+		return false;
+	}
+	if (state->layer_shell == NULL) {
+		fprintf(stderr, "compositor doesn't support zwlr_layer_shell_v1\n");
+		return false;
+	}
+
 	state->surface = wl_compositor_create_surface(state->compositor);
 	state->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
 		state->layer_shell, state->surface, NULL, ZWLR_LAYER_SHELL_V1_LAYER_TOP,

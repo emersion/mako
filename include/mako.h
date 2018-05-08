@@ -19,8 +19,8 @@ struct mako_state {
 	struct wl_display *display;
 	struct wl_registry *registry;
 	struct wl_compositor *compositor;
-	struct zwlr_layer_shell_v1 *layer_shell;
 	struct wl_shm *shm;
+	struct zwlr_layer_shell_v1 *layer_shell;
 
 	struct wl_surface *surface;
 	struct zwlr_layer_surface_v1 *layer_surface;
