@@ -52,7 +52,7 @@ static void finish(struct mako_state *state) {
 }
 
 int main(int argc, char *argv[]) {
-	struct mako_state state = { 0 };
+	struct mako_state state = {0};
 
 	init_config(&state.config);
 
@@ -65,6 +65,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (!init(&state)) {
+		finish_config(&state.config);
 		return EXIT_FAILURE;
 	}
 

@@ -28,7 +28,9 @@ executable(
 	'mako',
 	files([
 		'config.c',
-		'dbus.c',
+		'dbus/dbus.c',
+		'dbus/mako.c',
+		'dbus/xdg.c',
 		'main.c',
 		'notification.c',
 		'pool-buffer.c',

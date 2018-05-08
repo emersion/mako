@@ -11,7 +11,6 @@
 
 static const char *service_path = "/org/freedesktop/Notifications";
 static const char *service_interface = "org.freedesktop.Notifications";
-static const char *service_name = "org.freedesktop.Notifications";
 
 static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
@@ -202,7 +201,8 @@ static int handle_close_notification(sd_bus_message *msg, void *data,
 		close_notification(notif, MAKO_NOTIFICATION_CLOSE_REQUEST);
 		send_frame(state);
 	}
-	return 0;
+
+	return sd_bus_reply_method_return(msg, "");
 }
 
 static int handle_get_server_information(sd_bus_message *msg, void *data,
@@ -215,7 +215,7 @@ static int handle_get_server_information(sd_bus_message *msg, void *data,
 		spec_version);
 }
 
-static const sd_bus_vtable notifications_vtable[] = {
+static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_VTABLE_START(0),
 	SD_BUS_METHOD("GetCapabilities", "", "as", handle_get_capabilities, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("Notify", "susssasa{sv}i", "u", handle_notify, SD_BUS_VTABLE_UNPRIVILEGED),
@@ -226,40 +226,9 @@ static const sd_bus_vtable notifications_vtable[] = {
 	SD_BUS_VTABLE_END
 };
 
-bool init_dbus(struct mako_state *state) {
-	int ret = 0;
-	state->bus = NULL;
-	state->slot = NULL;
-
-	ret = sd_bus_open_user(&state->bus);
-	if (ret < 0) {
-		fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-ret));
-		goto error;
-	}
-
-	ret = sd_bus_add_object_vtable(state->bus, &state->slot, service_path,
-		service_interface, notifications_vtable, state);
-	if (ret < 0) {
-		fprintf(stderr, "Failed to issue method call: %s\n", strerror(-ret));
-		goto error;
-	}
-
-	ret = sd_bus_request_name(state->bus, service_name, 0);
-	if (ret < 0) {
-		fprintf(stderr, "Failed to acquire service name: %s\n", strerror(-ret));
-		goto error;
-	}
-
-	return true;
-
-error:
-	finish_dbus(state);
-	return false;
-}
-
-void finish_dbus(struct mako_state *state) {
-	sd_bus_slot_unref(state->slot);
-	sd_bus_unref(state->bus);
+int init_dbus_xdg(struct mako_state *state) {
+	return sd_bus_add_object_vtable(state->bus, &state->xdg_slot, service_path,
+		service_interface, service_vtable, state);
 }
 
 void notify_notification_closed(struct mako_notification *notif,

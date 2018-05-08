@@ -14,7 +14,7 @@ struct mako_state {
 	struct mako_config config;
 
 	sd_bus *bus;
-	sd_bus_slot *slot;
+	sd_bus_slot *xdg_slot, *mako_slot;
 
 	struct wl_display *display;
 	struct wl_registry *registry;
