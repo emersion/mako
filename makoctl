@@ -17,10 +17,10 @@ case "$1" in
 "dismiss")
 	case "$2" in
 	"-a"|"--all")
-		call CloseAllNotifications
+		call DismissAllNotifications
 		;;
 	"")
-		call CloseLastNotification
+		call DismissLastNotification
 		;;
 	*)
 		echo "makoctl: unrecognized option '$2'"
