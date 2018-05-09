@@ -69,14 +69,20 @@ dismissed with a click or via *makoctl*(1).
 	If 1, enable Pango markup. If 0, disable Pango markup. If enabled, Pango
 	markup will be interpreted in your format specifier and in the body of
 	notifications.
-	
+
 	Default: 1
 
 *--format* _format_
 	Set notification format string to _format_. See *FORMAT SPECIFIERS* for
 	more information.
-	
+
 	Default: <b>%s</b>\\n%b
+
+*--max-visible* _n_
+	Set maximum number of visible notifications to _n_. Older notifications will
+	be hidden. If -1, all notifications are visible.
+
+	Default: 5
 
 # COLORS
 
