@@ -52,6 +52,6 @@ executable(
 
 install_data(
 	'makoctl',
-	install_dir: join_paths(get_option('prefix'), get_option('bindir')),
+	install_dir: get_option('bindir'),
 	install_mode: 'rwxr-xr-x',
 )
