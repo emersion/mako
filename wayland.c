@@ -10,29 +10,56 @@ static void noop() {
 }
 
 
-static void pointer_handle_button(void *data, struct wl_pointer *pointer,
+static void pointer_handle_motion(void *data, struct wl_pointer *wl_pointer,
+		uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y) {
+	struct mako_pointer *pointer = data;
+	pointer->x = wl_fixed_to_int(surface_x);
+	pointer->y = wl_fixed_to_int(surface_y);
+}
+
+static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer,
 		uint32_t serial, uint32_t time, uint32_t button,
 		uint32_t button_state) {
-	struct mako_state *state = data;
+	struct mako_pointer *pointer = data;
+	struct mako_state *state = pointer->state;
 
-	if (button_state != WL_POINTER_BUTTON_STATE_PRESSED ||
-			wl_list_empty(&state->notifications)) {
-		return;
+	struct mako_notification *notif;
+	wl_list_for_each(notif, &state->notifications, link) {
+		if (hotspot_at(&notif->hotspot, pointer->x, pointer->y)) {
+			hotspot_send_button(&notif->hotspot, button, button_state);
+			return;
+		}
 	}
 
-	struct mako_notification *first_notif =
-		wl_container_of(state->notifications.next, first_notif, link);
-	close_notification(first_notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 	send_frame(state);
 }
 
 static const struct wl_pointer_listener pointer_listener = {
 	.enter = noop,
 	.leave = noop,
-	.motion = noop,
+	.motion = pointer_handle_motion,
 	.button = pointer_handle_button,
 	.axis = noop,
 };
+
+static void create_pointer(struct mako_state *state,
+		struct wl_pointer *wl_pointer) {
+	struct mako_pointer *pointer = calloc(1, sizeof(struct mako_pointer));
+	if (pointer == NULL) {
+		fprintf(stderr, "allocation failed\n");
+		return;
+	}
+	pointer->state = state;
+	pointer->wl_pointer = wl_pointer;
+	wl_pointer_add_listener(wl_pointer, &pointer_listener, pointer);
+	wl_list_insert(&state->pointers, &pointer->link);
+}
+
+static void destroy_pointer(struct mako_pointer *pointer) {
+	wl_list_remove(&pointer->link);
+	wl_pointer_destroy(pointer->wl_pointer);
+	free(pointer);
+}
 
 
 static void seat_handle_capabilities(void *data, struct wl_seat *seat,
@@ -40,8 +67,8 @@ static void seat_handle_capabilities(void *data, struct wl_seat *seat,
 	struct mako_state *state = data;
 
 	if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
-		struct wl_pointer *pointer = wl_seat_get_pointer(seat);
-		wl_pointer_add_listener(pointer, &pointer_listener, state);
+		struct wl_pointer *wl_pointer = wl_seat_get_pointer(seat);
+		create_pointer(state, wl_pointer);
 	}
 }
 
@@ -105,6 +132,8 @@ static const struct wl_registry_listener registry_listener = {
 };
 
 bool init_wayland(struct mako_state *state) {
+	wl_list_init(&state->pointers);
+
 	state->display = wl_display_connect(NULL);
 
 	state->registry = wl_display_get_registry(state->display);
@@ -150,6 +179,11 @@ void finish_wayland(struct mako_state *state) {
 	wl_surface_destroy(state->surface);
 	destroy_buffer(&state->buffers[0]);
 	destroy_buffer(&state->buffers[1]);
+
+	struct mako_pointer *pointer, *tmp;
+	wl_list_for_each_safe(pointer, tmp, &state->pointers, link) {
+		destroy_pointer(pointer);
+	}
 
 	wl_shm_destroy(state->shm);
 	zwlr_layer_shell_v1_destroy(state->layer_shell);

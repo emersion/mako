@@ -21,6 +21,7 @@ struct mako_state {
 	struct wl_compositor *compositor;
 	struct wl_shm *shm;
 	struct zwlr_layer_shell_v1 *layer_shell;
+	struct wl_list pointers; // mako_pointer::link
 
 	struct wl_surface *surface;
 	struct zwlr_layer_surface_v1 *layer_surface;

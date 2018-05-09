@@ -1,10 +1,20 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <wayland-client.h>
 
 #include "dbus.h"
 #include "mako.h"
 #include "notification.h"
+
+static void handle_button(void *data, uint32_t button,
+		enum wl_pointer_button_state state) {
+	struct mako_notification *notif = data;
+	if (state != WL_POINTER_BUTTON_STATE_PRESSED) {
+		return;
+	}
+	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+}
 
 struct mako_notification *create_notification(struct mako_state *state) {
 	struct mako_notification *notif =
@@ -18,6 +28,8 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	notif->id = state->last_id;
 	wl_list_init(&notif->actions);
 	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNWON;
+	notif->hotspot.handle_button = handle_button;
+	notif->hotspot.user_data = notif;
 	wl_list_insert(&state->notifications, &notif->link);
 	return notif;
 }

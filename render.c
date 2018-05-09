@@ -28,6 +28,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 	int border_size = 2 * config->border_size;
 	int padding_size = 2 * config->padding;
 
+	int notif_width = state->width;
+
 	size_t i = 0;
 	int height = 0;
 	struct mako_notification *notif;
@@ -83,7 +85,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 		// Render border
 		set_cairo_source_u32(cairo, config->colors.border);
 		cairo_set_line_width(cairo, border_size);
-		cairo_rectangle(cairo, 0, notif_y, state->width, notif_height);
+		cairo_rectangle(cairo, 0, notif_y, notif_width, notif_height);
 		cairo_stroke(cairo);
 
 		// Render background
@@ -91,7 +93,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 		cairo_set_line_width(cairo, 0);
 		cairo_rectangle(cairo,
 			config->border_size, notif_y + config->border_size,
-			state->width - border_size, notif_height - border_size);
+			notif_width - border_size, notif_height - border_size);
 		cairo_fill(cairo);
 
 		// Render text
@@ -100,6 +102,12 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 			notif_y + config->border_size + config->padding);
 		pango_cairo_update_layout(cairo, layout);
 		pango_cairo_show_layout(cairo, layout);
+
+		// Update hotspot
+		notif->hotspot.x = 0;
+		notif->hotspot.y = notif_y;
+		notif->hotspot.width = notif_width;
+		notif->hotspot.height = notif_height;
 
 		g_object_unref(layout);
 

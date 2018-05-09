@@ -1,7 +1,11 @@
 #ifndef _MAKO_NOTIFICATION_H
 #define _MAKO_NOTIFICATION_H
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <wayland-client.h>
+
+#include "hotspot.h"
 
 enum mako_notification_urgency {
 	MAKO_NOTIFICATION_URGENCY_LOW = 0,
@@ -26,6 +30,8 @@ struct mako_notification {
 	enum mako_notification_urgency urgency;
 	char *category;
 	char *desktop_entry;
+
+	struct mako_hotspot hotspot;
 };
 
 struct mako_action {
