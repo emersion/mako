@@ -12,7 +12,7 @@
 static const char *service_path = "/fr/emersion/Mako";
 static const char *service_interface = "fr.emersion.Mako";
 
-static int handle_close_all_notifications(sd_bus_message *msg, void *data,
+static int handle_dismiss_all_notifications(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
 
@@ -30,7 +30,7 @@ done:
 	return sd_bus_reply_method_return(msg, "");
 }
 
-static int handle_close_last_notification(sd_bus_message *msg, void *data,
+static int handle_dismiss_last_notification(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
 
@@ -49,8 +49,8 @@ done:
 
 static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_VTABLE_START(0),
-	SD_BUS_METHOD("CloseAllNotifications", "", "", handle_close_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
-	SD_BUS_METHOD("CloseLastNotification", "", "", handle_close_last_notification, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("DismissAllNotifications", "", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("DismissLastNotification", "", "", handle_dismiss_last_notification, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_VTABLE_END
 };
 

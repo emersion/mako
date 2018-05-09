@@ -4,8 +4,8 @@ usage() {
 	echo "Usage: makoctl <command> [options...]"
 	echo ""
 	echo "Commands:"
-	echo "  close [-a|--all]  Close the last or all notifications"
-	echo "  help              Show this help"
+	echo "  dismiss [-a|--all] Dismiss the last or all notifications"
+	echo "  help               Show this help"
 }
 
 call() {
@@ -14,7 +14,7 @@ call() {
 }
 
 case "$1" in
-"close")
+"dismiss")
 	case "$2" in
 	"-a"|"--all")
 		call CloseAllNotifications

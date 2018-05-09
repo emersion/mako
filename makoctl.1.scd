@@ -14,7 +14,7 @@ Sends IPC commands to the running mako daemon via dbus.
 
 # COMMANDS
 
-*close*
+*dismiss*
 	Dismisses the oldest notification.
 
 	*Options*
