@@ -25,6 +25,7 @@ struct mako_state {
 
 	struct wl_surface *surface;
 	struct zwlr_layer_surface_v1 *layer_surface;
+	bool configured;
 
 	int32_t width, height;
 	struct pool_buffer buffers[2];

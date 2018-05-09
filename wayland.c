@@ -82,6 +82,7 @@ static void layer_surface_configure(void *data,
 		uint32_t serial, uint32_t width, uint32_t height) {
 	struct mako_state *state = data;
 
+	state->configured = true;
 	state->width = width;
 	state->height = height;
 
@@ -153,24 +154,6 @@ bool init_wayland(struct mako_state *state) {
 		return false;
 	}
 
-	state->surface = wl_compositor_create_surface(state->compositor);
-	state->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
-		state->layer_shell, state->surface, NULL, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
-		"notifications");
-
-	zwlr_layer_surface_v1_add_listener(state->layer_surface,
-		&layer_surface_listener, state);
-
-	struct mako_config *config = &state->config;
-	int32_t margin = config->margin;
-	zwlr_layer_surface_v1_set_size(state->layer_surface,
-		config->width, config->height);
-	zwlr_layer_surface_v1_set_anchor(state->layer_surface,
-		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
-	zwlr_layer_surface_v1_set_margin(state->layer_surface,
-		margin, margin, margin, margin);
-	wl_surface_commit(state->surface);
-
 	return true;
 }
 
@@ -199,9 +182,35 @@ void send_frame(struct mako_state *state) {
 	int height = render(state, state->current_buffer);
 
 	if (height == 0) {
-		// Unmap the surface
-		wl_surface_attach(state->surface, NULL, 0, 0);
+		zwlr_layer_surface_v1_destroy(state->layer_surface);
+		wl_surface_destroy(state->surface);
+		state->layer_surface = NULL;
+		state->width = state->height = 0;
+		state->configured = false;
+		return;
+	}
+
+	if (state->layer_surface == NULL) {
+		state->surface = wl_compositor_create_surface(state->compositor);
+		state->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
+			state->layer_shell, state->surface, NULL,
+			ZWLR_LAYER_SHELL_V1_LAYER_TOP, "notifications");
+		zwlr_layer_surface_v1_add_listener(state->layer_surface,
+			&layer_surface_listener, state);
+
+		struct mako_config *config = &state->config;
+		int32_t margin = config->margin;
+		zwlr_layer_surface_v1_set_size(state->layer_surface,
+			config->width, height);
+		zwlr_layer_surface_v1_set_anchor(state->layer_surface,
+			ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
+		zwlr_layer_surface_v1_set_margin(state->layer_surface,
+			margin, margin, margin, margin);
 		wl_surface_commit(state->surface);
+		return;
+	}
+
+	if (!state->configured) {
 		return;
 	}
 
