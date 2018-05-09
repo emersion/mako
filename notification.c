@@ -7,14 +7,13 @@
 #include "mako.h"
 #include "notification.h"
 
-static void handle_button(void *data, uint32_t button,
-		enum wl_pointer_button_state state) {
-	struct mako_notification *notif = data;
-	if (state != WL_POINTER_BUTTON_STATE_PRESSED) {
-		return;
-	}
-	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y) {
+	return x >= hotspot->x &&
+		y >= hotspot->y &&
+		x < hotspot->x + hotspot->width &&
+		y < hotspot->y + hotspot->height;
 }
+
 
 struct mako_notification *create_notification(struct mako_state *state) {
 	struct mako_notification *notif =
@@ -28,8 +27,6 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	notif->id = state->last_id;
 	wl_list_init(&notif->actions);
 	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNWON;
-	notif->hotspot.handle_button = handle_button;
-	notif->hotspot.user_data = notif;
 	wl_list_insert(&state->notifications, &notif->link);
 	return notif;
 }
@@ -188,4 +185,12 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 		trim_space(buf, buf);
 	}
 	return len;
+}
+
+void notification_handle_button(struct mako_notification *notif, uint32_t button,
+		enum wl_pointer_button_state state) {
+	if (state != WL_POINTER_BUTTON_STATE_PRESSED) {
+		return;
+	}
+	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 }

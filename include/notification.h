@@ -5,8 +5,6 @@
 #include <stdint.h>
 #include <wayland-client.h>
 
-#include "hotspot.h"
-
 enum mako_notification_urgency {
 	MAKO_NOTIFICATION_URGENCY_LOW = 0,
 	MAKO_NOTIFICATION_URGENCY_NORMAL = 1,
@@ -15,6 +13,11 @@ enum mako_notification_urgency {
 };
 
 struct mako_state;
+
+struct mako_hotspot {
+	int32_t x, y;
+	int32_t width, height;
+};
 
 struct mako_notification {
 	struct mako_state *state;
@@ -47,6 +50,8 @@ enum mako_notification_close_reason {
 	MAKO_NOTIFICATION_CLOSE_UNKNOWN = 4,
 };
 
+bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y);
+
 struct mako_notification *create_notification(struct mako_state *state);
 void destroy_notification(struct mako_notification *notif);
 void close_notification(struct mako_notification *notif,
@@ -54,5 +59,7 @@ void close_notification(struct mako_notification *notif,
 struct mako_notification *get_notification(struct mako_state *state, uint32_t id);
 size_t format_notification(struct mako_notification *notif, const char *format,
 	char *buf);
+void notification_handle_button(struct mako_notification *notif, uint32_t button,
+	enum wl_pointer_button_state state);
 
 #endif

@@ -31,7 +31,6 @@ executable(
 		'dbus/dbus.c',
 		'dbus/mako.c',
 		'dbus/xdg.c',
-		'hotspot.c',
 		'main.c',
 		'notification.c',
 		'pool-buffer.c',
