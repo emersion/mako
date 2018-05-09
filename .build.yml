@@ -1,0 +1,15 @@
+image: archlinux
+packages:
+  - meson
+  - wayland
+  - wayland-protocols
+  - cairo
+  - pango
+  - libsystemd
+sources:
+  - https://github.com/emerison/mako
+tasks:
+  - setup: |
+      meson build
+  - build: |
+      ninja -C build
