@@ -10,6 +10,8 @@ sources:
   - https://github.com/emerison/mako
 tasks:
   - setup: |
+      cd mako
       meson build
   - build: |
+      cd mako
       ninja -C build
