@@ -5,7 +5,7 @@ packages:
   - wayland-protocols
   - cairo
   - pango
-  - libsystemd
+  - systemd
 sources:
   - https://github.com/emerison/mako
 tasks:
