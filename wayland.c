@@ -175,6 +175,20 @@ void finish_wayland(struct mako_state *state) {
 	wl_display_disconnect(state->display);
 }
 
+static struct wl_region *get_input_region(struct mako_state *state) {
+	struct wl_region *region =
+		wl_compositor_create_region(state->compositor);
+
+	struct mako_notification *notif;
+	wl_list_for_each(notif, &state->notifications, link) {
+		struct mako_hotspot *hotspot = &notif->hotspot;
+		wl_region_add(region, hotspot->x, hotspot->y,
+			hotspot->width, hotspot->height);
+	}
+
+	return region;
+}
+
 void send_frame(struct mako_state *state) {
 	state->current_buffer = get_next_buffer(state->shm, state->buffers,
 		state->width, state->height);
@@ -222,6 +236,10 @@ void send_frame(struct mako_state *state) {
 		wl_surface_commit(state->surface);
 		return;
 	}
+
+	struct wl_region *input_region = get_input_region(state);
+	wl_surface_set_input_region(state->surface, input_region);
+	wl_region_destroy(input_region);
 
 	wl_surface_attach(state->surface, state->current_buffer->buffer, 0, 0);
 	wl_surface_damage(state->surface, 0, 0, state->width, state->height);
