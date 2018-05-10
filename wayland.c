@@ -213,13 +213,13 @@ void send_frame(struct mako_state *state) {
 			&layer_surface_listener, state);
 
 		struct mako_config *config = &state->config;
-		int32_t margin = config->margin;
 		zwlr_layer_surface_v1_set_size(state->layer_surface,
 			config->width, height);
 		zwlr_layer_surface_v1_set_anchor(state->layer_surface,
 			ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
 		zwlr_layer_surface_v1_set_margin(state->layer_surface,
-			margin, margin, margin, margin);
+			config->margin.top, config->margin.right, config->margin.bottom,
+			config->margin.left);
 		wl_surface_commit(state->surface);
 		return;
 	}

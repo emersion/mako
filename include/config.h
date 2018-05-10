@@ -4,6 +4,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+struct mako_directional {
+	int32_t top;
+	int32_t right;
+	int32_t bottom;
+	int32_t left;
+};
+
 enum mako_button_binding {
 	MAKO_BUTTON_BINDING_NONE,
 	MAKO_BUTTON_BINDING_DISMISS,
@@ -14,12 +21,14 @@ enum mako_button_binding {
 struct mako_config {
 	char *font;
 	int32_t width, height;
-	int32_t margin, padding;
+	int32_t padding;
 	int32_t border_size;
 	bool markup;
 	char *format;
 	bool actions;
 	int32_t max_visible;
+
+	struct mako_directional margin;
 
 	struct {
 		uint32_t background;
