@@ -19,6 +19,8 @@ void init_config(struct mako_config *config) {
 	config->colors.background = 0x285577FF;
 	config->colors.text = 0xFFFFFFFF;
 	config->colors.border = 0x4C7899FF;
+	config->button_bindings.left = MAKO_BUTTON_BINDING_INVOKE_DEFAULT_ACTION;
+	config->button_bindings.right = MAKO_BUTTON_BINDING_DISMISS;
 }
 
 void finish_config(struct mako_config *config) {

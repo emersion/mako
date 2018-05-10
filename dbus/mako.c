@@ -16,17 +16,9 @@ static int handle_dismiss_all_notifications(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
 
-	if (wl_list_empty(&state->notifications)) {
-		goto done;
-	}
-
-	struct mako_notification *notif, *tmp;
-	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
-		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
-	}
+	close_all_notifications(state, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 	send_frame(state);
 
-done:
 	return sd_bus_reply_method_return(msg, "");
 }
 

@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wayland-client.h>
+#ifdef __linux__
+#include <linux/input-event-codes.h>
+#elif __FreeBSD__
+#include <dev/evdev/input-event-codes.h>
+#endif
 
 #include "dbus.h"
 #include "mako.h"
@@ -36,7 +41,7 @@ void destroy_notification(struct mako_notification *notif) {
 	struct mako_action *action, *tmp;
 	wl_list_for_each_safe(action, tmp, &notif->actions, link) {
 		wl_list_remove(&action->link);
-		free(action->id);
+		free(action->key);
 		free(action->title);
 		free(action);
 	}
@@ -64,6 +69,14 @@ struct mako_notification *get_notification(struct mako_state *state,
 		}
 	}
 	return NULL;
+}
+
+void close_all_notifications(struct mako_state *state,
+		enum mako_notification_close_reason reason) {
+	struct mako_notification *notif, *tmp;
+	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
+		close_notification(notif, reason);
+	}
 }
 
 static size_t trim_space(char *dst, const char *src) {
@@ -187,10 +200,43 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 	return len;
 }
 
+static enum mako_button_binding get_button_binding(struct mako_config *config,
+		uint32_t button) {
+	switch (button) {
+	case BTN_LEFT:
+		return config->button_bindings.left;
+	case BTN_RIGHT:
+		return config->button_bindings.right;
+	case BTN_MIDDLE:
+		return config->button_bindings.middle;
+	}
+	return MAKO_BUTTON_BINDING_NONE;
+}
+
 void notification_handle_button(struct mako_notification *notif, uint32_t button,
 		enum wl_pointer_button_state state) {
 	if (state != WL_POINTER_BUTTON_STATE_PRESSED) {
 		return;
 	}
-	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+
+	switch (get_button_binding(&notif->state->config, button)) {
+	case MAKO_BUTTON_BINDING_NONE:
+		break;
+	case MAKO_BUTTON_BINDING_DISMISS:
+		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+		break;
+	case MAKO_BUTTON_BINDING_DISMISS_ALL:
+		close_all_notifications(notif->state, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+		break;
+	case MAKO_BUTTON_BINDING_INVOKE_DEFAULT_ACTION:;
+		struct mako_action *action;
+		wl_list_for_each(action, &notif->actions, link) {
+			if (strcmp(action->key, DEFAULT_ACTION_KEY) == 0) {
+				notify_action_invoked(action);
+				break;
+			}
+		}
+		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+		break;
+	}
 }

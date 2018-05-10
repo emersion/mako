@@ -4,6 +4,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+enum mako_button_binding {
+	MAKO_BUTTON_BINDING_NONE,
+	MAKO_BUTTON_BINDING_DISMISS,
+	MAKO_BUTTON_BINDING_DISMISS_ALL,
+	MAKO_BUTTON_BINDING_INVOKE_DEFAULT_ACTION,
+};
+
 struct mako_config {
 	char *font;
 	int32_t width, height;
@@ -19,6 +26,10 @@ struct mako_config {
 		uint32_t text;
 		uint32_t border;
 	} colors;
+
+	struct {
+		enum mako_button_binding left, right, middle;
+	} button_bindings;
 };
 
 void init_config(struct mako_config *config);

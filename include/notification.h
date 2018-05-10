@@ -38,8 +38,9 @@ struct mako_notification {
 };
 
 struct mako_action {
+	struct mako_notification *notification;
 	struct wl_list link; // mako_notification::actions
-	char *id;
+	char *key;
 	char *title;
 };
 
@@ -50,11 +51,15 @@ enum mako_notification_close_reason {
 	MAKO_NOTIFICATION_CLOSE_UNKNOWN = 4,
 };
 
+#define DEFAULT_ACTION_KEY "default"
+
 bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y);
 
 struct mako_notification *create_notification(struct mako_state *state);
 void destroy_notification(struct mako_notification *notif);
 void close_notification(struct mako_notification *notif,
+	enum mako_notification_close_reason reason);
+void close_all_notifications(struct mako_state *state,
 	enum mako_notification_close_reason reason);
 struct mako_notification *get_notification(struct mako_state *state, uint32_t id);
 size_t format_notification(struct mako_notification *notif, const char *format,

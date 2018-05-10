@@ -93,8 +93,8 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	}
 
 	while (1) {
-		const char *action_id, *action_title;
-		ret = sd_bus_message_read(msg, "ss", &action_id, &action_title);
+		const char *action_key, *action_title;
+		ret = sd_bus_message_read(msg, "ss", &action_key, &action_title);
 		if (ret < 0) {
 			return ret;
 		} else if (ret == 0) {
@@ -105,7 +105,8 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		if (action == NULL) {
 			return -1;
 		}
-		action->id = strdup(action_id);
+		action->notification = notif;
+		action->key = strdup(action_key);
 		action->title = strdup(action_title);
 		wl_list_insert(&notif->actions, &action->link);
 	}
@@ -128,28 +129,44 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			break;
 		}
 
-		const char *hint;
+		const char *hint = NULL;
 		ret = sd_bus_message_read(msg, "s", &hint);
 		if (ret < 0) {
 			return ret;
 		}
 
 		if (strcmp(hint, "urgency") == 0) {
-			uint8_t urgency = 0;
-			ret = sd_bus_message_read(msg, "v", "y", &urgency);
+			// Should be a byte but some clients (Chromium) send an uint32_t
+			const char *contents = NULL;
+			ret = sd_bus_message_peek_type(msg, NULL, &contents);
 			if (ret < 0) {
 				return ret;
 			}
-			notif->urgency = urgency;
+
+			if (strcmp(contents, "u") == 0) {
+				uint32_t urgency = 0;
+				ret = sd_bus_message_read(msg, "v", "u", &urgency);
+				if (ret < 0) {
+					return ret;
+				}
+				notif->urgency = urgency;
+			} else {
+				uint8_t urgency = 0;
+				ret = sd_bus_message_read(msg, "v", "y", &urgency);
+				if (ret < 0) {
+					return ret;
+				}
+				notif->urgency = urgency;
+			}
 		} else if (strcmp(hint, "category") == 0) {
-			const char *category;
+			const char *category = NULL;
 			ret = sd_bus_message_read(msg, "v", "s", &category);
 			if (ret < 0) {
 				return ret;
 			}
 			notif->category = strdup(category);
 		} else if (strcmp(hint, "desktop-entry") == 0) {
-			const char *desktop_entry;
+			const char *desktop_entry = NULL;
 			ret = sd_bus_message_read(msg, "v", "s", &desktop_entry);
 			if (ret < 0) {
 				return ret;
@@ -237,4 +254,11 @@ void notify_notification_closed(struct mako_notification *notif,
 
 	sd_bus_emit_signal(state->bus, service_path, service_interface,
 		"NotificationClosed", "uu", notif->id, reason);
+}
+
+void notify_action_invoked(struct mako_action *action) {
+	struct mako_state *state = action->notification->state;
+
+	sd_bus_emit_signal(state->bus, service_path, service_interface,
+		"ActionInvoked", "us", action->notification->id, action->key);
 }
