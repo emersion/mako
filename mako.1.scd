@@ -85,6 +85,17 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: 5
 
+# CONFIG FILE
+
+The config file is located at *~/.config/mako/config* or at
+*$XDG\_CONFIG\_HOME/mako/config*. Each line of the form:
+
+	key=value
+
+Is equivalent to passing *--key=value* to mako from the command line.
+
+Empty lines and lines that begin with # are ignored.
+
 # COLORS
 
 Colors can be specified as _#RRGGBB_ or _#RRGGBBAA_.
