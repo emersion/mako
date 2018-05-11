@@ -1,10 +1,13 @@
 #!/bin/sh
 
+set -e
+
 usage() {
 	echo "Usage: makoctl <command> [options...]"
 	echo ""
 	echo "Commands:"
 	echo "  dismiss [-a|--all] Dismiss the last or all notifications"
+	echo "  reload             Reload the configuration file"
 	echo "  help               Show this help"
 }
 
@@ -27,6 +30,9 @@ case "$1" in
 		exit 1
 		;;
 	esac
+	;;
+"reload")
+	call Reload
 	;;
 "help"|"--help"|"-h")
 	usage

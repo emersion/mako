@@ -39,10 +39,23 @@ done:
 	return sd_bus_reply_method_return(msg, "");
 }
 
+static int handle_reload(sd_bus_message *msg, void *data,
+		sd_bus_error *ret_error) {
+	struct mako_state *state = data;
+
+	finish_config(&state->config);
+	init_config(&state->config);
+	load_config_file(&state->config);
+	send_frame(state);
+
+	return sd_bus_reply_method_return(msg, "");
+}
+
 static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_VTABLE_START(0),
 	SD_BUS_METHOD("DismissAllNotifications", "", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("DismissLastNotification", "", "", handle_dismiss_last_notification, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("Reload", "", "", handle_reload, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_VTABLE_END
 };
 

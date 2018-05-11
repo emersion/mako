@@ -22,6 +22,9 @@ Sends IPC commands to the running mako daemon via dbus.
 	*-a, --all*
 		Dismiss all notifications.
 
+*reload*
+	Reloads the configuration file.
+
 *help, -h, --help*
 	Show help message and quit.
 
