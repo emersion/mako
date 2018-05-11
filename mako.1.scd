@@ -45,8 +45,9 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: 100
 
-*--margin* _px_
-	Set margin to _px_ pixels from the edge of the screen.
+*--margin* _directional_
+	Set margin of each edge to the size specified by _directional_. See
+	*DIRECTIONAL VALUES* for more information.
 
 	Default: 10
 
@@ -87,6 +88,24 @@ dismissed with a click or via *makoctl*(1).
 # COLORS
 
 Colors can be specified as _#RRGGBB_ or _#RRGGBBAA_.
+
+# DIRECTIONAL VALUES
+
+Some options set values that affect all four edges of a notification. These
+options can be specified in several different ways, depending on how much
+control over each edge is desired:
+
+- A single value will apply to all four edges.
+- Two values will set vertical and horizontal edges separately.
+- Three will set top, horizontal, and bottom edges separately.
+- Four will give each edge a separate value.
+
+When specifying multiple values, they should be comma-separated. For example,
+this would set the top margin to 10, left and right to 20, and bottom to five:
+
+```
+--margin 10,20,5
+```
 
 # FORMAT SPECIFIERS
 

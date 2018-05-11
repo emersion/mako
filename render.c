@@ -28,6 +28,11 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 	int border_size = 2 * config->border_size;
 	int padding_size = 2 * config->padding;
 
+	int inner_margin = config->margin.top;
+	if (config->margin.bottom > config->margin.top) {
+		inner_margin = config->margin.bottom;
+	}
+
 	int notif_width = state->width;
 
 	size_t i = 0;
@@ -77,7 +82,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 		int notif_height = border_size + padding_size + text_height;
 
 		if (i > 0) {
-			height += config->margin;
+			height += inner_margin;
 		}
 		int notif_y = height;
 		height += notif_height;
