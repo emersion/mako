@@ -1,9 +1,12 @@
 #define _POSIX_C_SOURCE 200809L
 #include <errno.h>
 #include <getopt.h>
-#include <stdio.h>
+#include <libgen.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <wordexp.h>
+#include <unistd.h>
 
 #include "config.h"
 
@@ -114,6 +117,146 @@ static uint32_t parse_color(const char *color) {
 	return res;
 }
 
+static int apply_config_option(struct mako_config *config,
+		const char *name, const char *value) {
+	if (strcmp(name, "font") == 0) {
+		free(config->font);
+		config->font = strdup(value);
+		return 0;
+	} else if (strcmp(name, "background-color") == 0) {
+		config->colors.background = parse_color(value);
+		return 0;
+	} else if (strcmp(name, "text-color") == 0) {
+		config->colors.text = parse_color(value);
+		return 0;
+	} else if (strcmp(name, "width") == 0) {
+		config->width = strtol(value, NULL, 10);
+		return 0;
+	} else if (strcmp(name, "height") == 0) {
+		config->height = strtol(value, NULL, 10);
+		return 0;
+	} else if (strcmp(name, "margin") == 0) {
+		if (parse_directional(optarg, &config->margin)) {
+			fprintf(stderr, "Unable to parse margins\n");
+			return 1;
+		}
+		return 0;
+	} else if (strcmp(name, "padding") == 0) {
+		config->padding = strtol(value, NULL, 10);
+		return 0;
+	} else if (strcmp(name, "border-size") == 0) {
+		config->border_size = strtol(value, NULL, 10);
+		return 0;
+	} else if (strcmp(name, "border-color") == 0) {
+		config->colors.border = parse_color(value);
+		return 0;
+	} else if (strcmp(name, "markup") == 0) {
+		config->markup = strcmp(value, "1") == 0;
+		return 0;
+	} else if (strcmp(name, "format") == 0) {
+		free(config->format);
+		config->format = strdup(value);
+		return 0;
+	} else if (strcmp(name, "max-visible") == 0) {
+		config->max_visible = strtol(value, NULL, 10);
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
+static bool file_exists(const char *path) {
+	return path && access(path, R_OK) != -1;
+}
+
+static char *get_config_path(void) {
+	static const char *config_paths[] = {
+		"$HOME/.mako/config",
+		"$XDG_CONFIG_HOME/mako/config",
+	};
+
+	if (!getenv("XDG_CONFIG_HOME")) {
+		char *home = getenv("HOME");
+		char *config_home = malloc(strlen(home) + strlen("/.config") + 1);
+		if (!config_home) {
+			fprintf(stderr, "Unable to allocate $HOME/.config\n");
+		} else {
+			strcpy(config_home, home);
+			strcat(config_home, "/.config");
+			setenv("XDG_CONFIG_HOME", config_home, 1);
+			free(config_home);
+		}
+	}
+
+	wordexp_t p;
+	char *path;
+
+	for (size_t i = 0; i < sizeof(config_paths) / sizeof(char *); ++i) {
+		if (wordexp(config_paths[i], &p, 0) == 0) {
+			path = strdup(p.we_wordv[0]);
+			wordfree(&p);
+			if (file_exists(path)) {
+				return path;
+			}
+			free(path);
+		}
+	}
+
+	return NULL;
+}
+
+int load_config_file(struct mako_config *config) {
+	char *path = get_config_path();
+	if (!path) {
+		return 0;
+	}
+
+	FILE *f = fopen(path, "r");
+	if (!f) {
+		fprintf(stderr, "Unable to open %s for reading", path);
+		free(path);
+		return 1;
+	}
+	const char *base = basename(path);
+
+	int lineno = 0;
+	char *line = NULL;
+	size_t n = 0;
+	while (getline(&line, &n, f) > 0) {
+		++lineno;
+		if (!*line) {
+			continue;
+		}
+		if (*line == '#') {
+			continue;
+		}
+		char *eq = strchr(line, '=');
+		if (!eq) {
+			fprintf(stderr, "[%s:%d] Expected key=value\n",
+					base, lineno);
+			goto error;
+		}
+		*eq = 0;
+		if (eq[strlen(eq + 1)] == '\n') {
+			eq[strlen(eq + 1)] = 0;
+		}
+		if (apply_config_option(config, line, eq + 1) != 0) {
+			fprintf(stderr, "[%s:%d] Unknown option '%s'\n",
+					base, lineno, line);
+			goto error;
+		}
+	}
+	free(line);
+	fclose(f);
+	free(path);
+	return 0;
+error:
+	free(line);
+	fclose(f);
+	free(path);
+	return 1;
+}
+
 int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 	static const struct option long_options[] = {
 		{"help", no_argument, 0, 'h'},
@@ -144,36 +287,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		}
 
 		const char *name = long_options[option_index].name;
-		if (strcmp(name, "font") == 0) {
-			free(config->font);
-			config->font = strdup(optarg);
-		} else if (strcmp(name, "background-color") == 0) {
-			config->colors.background = parse_color(optarg);
-		} else if (strcmp(name, "text-color") == 0) {
-			config->colors.text = parse_color(optarg);
-		} else if (strcmp(name, "width") == 0) {
-			config->width = strtol(optarg, NULL, 10);
-		} else if (strcmp(name, "height") == 0) {
-			config->height = strtol(optarg, NULL, 10);
-		} else if (strcmp(name, "margin") == 0) {
-			if (parse_directional(optarg, &config->margin)) {
-				fprintf(stderr, "Unable to parse margins\n");
-				return 1;
-			}
-		} else if (strcmp(name, "padding") == 0) {
-			config->padding = strtol(optarg, NULL, 10);
-		} else if (strcmp(name, "border-size") == 0) {
-			config->border_size = strtol(optarg, NULL, 10);
-		} else if (strcmp(name, "border-color") == 0) {
-			config->colors.border = parse_color(optarg);
-		} else if (strcmp(name, "markup") == 0) {
-			config->markup = strcmp(optarg, "1") == 0;
-		} else if (strcmp(name, "format") == 0) {
-			free(config->format);
-			config->format = strdup(optarg);
-		} else if (strcmp(name, "max-visible") == 0) {
-			config->max_visible = strtol(optarg, NULL, 10);
-		}
+		apply_config_option(config, name, optarg);
 	}
 
 	return 0;

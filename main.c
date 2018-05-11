@@ -59,7 +59,11 @@ int main(int argc, char *argv[]) {
 
 	init_config(&state.config);
 
-	int ret = parse_config_arguments(&state.config, argc, argv);
+	int ret = load_config_file(&state.config);
+	if (ret < 0) {
+		return EXIT_FAILURE;
+	}
+	ret = parse_config_arguments(&state.config, argc, argv);
 	if (ret < 0) {
 		return EXIT_FAILURE;
 	} else if (ret > 0) {
