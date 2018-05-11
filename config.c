@@ -224,10 +224,7 @@ int load_config_file(struct mako_config *config) {
 	size_t n = 0;
 	while (getline(&line, &n, f) > 0) {
 		++lineno;
-		if (!*line) {
-			continue;
-		}
-		if (*line == '#') {
+		if (line[0] == 0 || line[0] == '\n' || line[0] == '#') {
 			continue;
 		}
 		char *eq = strchr(line, '=');
