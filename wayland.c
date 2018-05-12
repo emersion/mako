@@ -160,8 +160,8 @@ bool init_wayland(struct mako_state *state) {
 void finish_wayland(struct mako_state *state) {
 	zwlr_layer_surface_v1_destroy(state->layer_surface);
 	wl_surface_destroy(state->surface);
-	destroy_buffer(&state->buffers[0]);
-	destroy_buffer(&state->buffers[1]);
+	finish_buffer(&state->buffers[0]);
+	finish_buffer(&state->buffers[1]);
 
 	struct mako_pointer *pointer, *tmp;
 	wl_list_for_each_safe(pointer, tmp, &state->pointers, link) {

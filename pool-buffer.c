@@ -10,7 +10,7 @@
 #include "pool-buffer.h"
 
 static int create_pool_file(size_t size, char **name) {
-	static const char template[] = "sway-client-XXXXXX";
+	static const char template[] = "mako-XXXXXX";
 	const char *path = getenv("XDG_RUNTIME_DIR");
 	if (!path) {
 		return -1;
@@ -53,7 +53,7 @@ static struct pool_buffer *create_buffer(struct wl_shm *shm,
 	const cairo_format_t cairo_fmt = CAIRO_FORMAT_ARGB32;
 
 	uint32_t stride = cairo_format_stride_for_width(cairo_fmt, width);
-	uint32_t size = stride * height;
+	size_t size = stride * height;
 
 	void *data = NULL;
 	if (size > 0) {
@@ -80,6 +80,8 @@ static struct pool_buffer *create_buffer(struct wl_shm *shm,
 		free(name);
 	}
 
+	buf->data = data;
+	buf->size = size;
 	buf->width = width;
 	buf->height = height;
 	buf->surface = cairo_image_surface_create_for_data(data, cairo_fmt, width,
@@ -89,7 +91,7 @@ static struct pool_buffer *create_buffer(struct wl_shm *shm,
 	return buf;
 }
 
-void destroy_buffer(struct pool_buffer *buffer) {
+void finish_buffer(struct pool_buffer *buffer) {
 	if (buffer->buffer) {
 		wl_buffer_destroy(buffer->buffer);
 	}
@@ -101,6 +103,9 @@ void destroy_buffer(struct pool_buffer *buffer) {
 	}
 	if (buffer->pango) {
 		g_object_unref(buffer->pango);
+	}
+	if (buffer->data) {
+		munmap(buffer->data, buffer->size);
 	}
 	memset(buffer, 0, sizeof(struct pool_buffer));
 }
@@ -119,7 +124,7 @@ struct pool_buffer *get_next_buffer(struct wl_shm *shm,
 	}
 
 	if (buffer->width != width || buffer->height != height) {
-		destroy_buffer(buffer);
+		finish_buffer(buffer);
 	}
 
 	if (!buffer->buffer) {
