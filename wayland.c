@@ -158,8 +158,12 @@ bool init_wayland(struct mako_state *state) {
 }
 
 void finish_wayland(struct mako_state *state) {
-	zwlr_layer_surface_v1_destroy(state->layer_surface);
-	wl_surface_destroy(state->surface);
+	if (state->layer_surface != NULL) {
+		zwlr_layer_surface_v1_destroy(state->layer_surface);
+	}
+	if (state->surface != NULL) {
+		wl_surface_destroy(state->surface);
+	}
 	finish_buffer(&state->buffers[0]);
 	finish_buffer(&state->buffers[1]);
 
@@ -196,9 +200,14 @@ void send_frame(struct mako_state *state) {
 	int height = render(state, state->current_buffer);
 
 	if (height == 0) {
-		zwlr_layer_surface_v1_destroy(state->layer_surface);
-		wl_surface_destroy(state->surface);
-		state->layer_surface = NULL;
+		if (state->layer_surface != NULL) {
+			zwlr_layer_surface_v1_destroy(state->layer_surface);
+			state->layer_surface = NULL;
+		}
+		if (state->surface != NULL) {
+			wl_surface_destroy(state->surface);
+			state->surface = NULL;
+		}
 		state->width = state->height = 0;
 		state->configured = false;
 		return;

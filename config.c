@@ -33,6 +33,7 @@ void init_config(struct mako_config *config) {
 	config->colors.border = 0x4C7899FF;
 	config->button_bindings.left = MAKO_BUTTON_BINDING_INVOKE_DEFAULT_ACTION;
 	config->button_bindings.right = MAKO_BUTTON_BINDING_DISMISS;
+	config->button_bindings.middle = MAKO_BUTTON_BINDING_NONE;
 }
 
 void finish_config(struct mako_config *config) {
@@ -49,18 +50,17 @@ int parse_directional(const char *directional_string,
 	int error = 0;
 	char *components = strdup(directional_string);
 
-	char *token, *saveptr = NULL;
 	int32_t values[] = {0, 0, 0, 0};
 	size_t count;
 
-	token = strtok_r(components, ",", &saveptr);
+	char *saveptr = NULL;
+	char *token = strtok_r(components, ",", &saveptr);
 	for (count = 0; count < 4; count++) {
 		if (token == NULL) {
 			break;
 		}
 
 		errno = 0;
-
 		char *endptr = NULL;
 		int32_t number = strtol(token, &endptr, 10);
 		if (errno || endptr == token) {
@@ -254,6 +254,9 @@ error:
 	return 1;
 }
 
+static int config_argc = 0;
+static char **config_argv = NULL;
+
 int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 	static const struct option long_options[] = {
 		{"help", no_argument, 0, 'h'},
@@ -272,6 +275,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{0},
 	};
 
+	optind = 1;
 	while (1) {
 		int option_index = -1;
 		int c = getopt_long(argc, argv, "h", long_options, &option_index);
@@ -287,5 +291,15 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		apply_config_option(config, name, optarg);
 	}
 
+	config_argc = argc;
+	config_argv = argv;
+
 	return 0;
+}
+
+void reload_config(struct mako_config *config) {
+	finish_config(config);
+	init_config(config);
+	load_config_file(config);
+	parse_config_arguments(config, config_argc, config_argv);
 }

@@ -43,9 +43,7 @@ static int handle_reload(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
 
-	finish_config(&state->config);
-	init_config(&state->config);
-	load_config_file(&state->config);
+	reload_config(&state->config);
 	send_frame(state);
 
 	return sd_bus_reply_method_return(msg, "");
