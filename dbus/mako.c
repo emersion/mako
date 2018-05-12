@@ -39,6 +39,34 @@ done:
 	return sd_bus_reply_method_return(msg, "");
 }
 
+static int handle_invoke_action(sd_bus_message *msg, void *data,
+		sd_bus_error *ret_error) {
+	struct mako_state *state = data;
+
+	const char *action_key;
+	int ret = sd_bus_message_read(msg, "s", &action_key);
+	if (ret < 0) {
+		return ret;
+	}
+
+	if (wl_list_empty(&state->notifications)) {
+		goto done;
+	}
+
+	struct mako_notification *notif =
+		wl_container_of(state->notifications.next, notif, link);
+	struct mako_action *action;
+	wl_list_for_each(action, &notif->actions, link) {
+		if (strcmp(action->key, action_key) == 0) {
+			notify_action_invoked(action);
+			break;
+		}
+	}
+
+done:
+	return sd_bus_reply_method_return(msg, "");
+}
+
 static int handle_reload(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
@@ -53,6 +81,7 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_VTABLE_START(0),
 	SD_BUS_METHOD("DismissAllNotifications", "", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("DismissLastNotification", "", "", handle_dismiss_last_notification, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("InvokeAction", "s", "", handle_invoke_action, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("Reload", "", "", handle_reload, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_VTABLE_END
 };

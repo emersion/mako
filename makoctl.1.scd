@@ -15,12 +15,16 @@ Sends IPC commands to the running mako daemon via dbus.
 # COMMANDS
 
 *dismiss*
-	Dismisses the oldest notification.
+	Dismisses the first notification.
 
 	*Options*
 
 	*-a, --all*
 		Dismiss all notifications.
+
+*invoke* [action]
+	Invokes an action on the first notification. If _action_ is not specified,
+	invokes the default action.
 
 *reload*
 	Reloads the configuration file.

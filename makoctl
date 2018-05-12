@@ -7,6 +7,7 @@ usage() {
 	echo ""
 	echo "Commands:"
 	echo "  dismiss [-a|--all] Dismiss the last or all notifications"
+	echo "  invoke [action]    Invoke an action on the last notification"
 	echo "  reload             Reload the configuration file"
 	echo "  help               Show this help"
 }
@@ -30,6 +31,13 @@ case "$1" in
 		exit 1
 		;;
 	esac
+	;;
+"invoke")
+	action="$2"
+	if [ -z "$action" ] ; then
+		action="default"
+	fi
+	call InvokeAction "s" "$action"
 	;;
 "reload")
 	call Reload
