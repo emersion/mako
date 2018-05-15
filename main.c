@@ -11,7 +11,7 @@
 #include "render.h"
 #include "wayland.h"
 
-const char *usage =
+static const char usage[] =
 	"Usage: mako [options...]\n"
 	"\n"
 	"  -h, --help                     Show help message and quit.\n"

@@ -53,7 +53,13 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	return sd_bus_send(NULL, reply, NULL);
+	ret = sd_bus_send(NULL, reply, NULL);
+	if (ret < 0) {
+		return ret;
+	}
+
+	sd_bus_message_unref(reply);
+	return 0;
 }
 
 static int handle_notify(sd_bus_message *msg, void *data,
