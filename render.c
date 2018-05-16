@@ -74,17 +74,18 @@ void pango_render_layout(cairo_t *cairo, PangoLayout *layout, struct mako_config
 	int text_width = 0, text_height = 0;
 	pango_layout_get_pixel_size(layout, &text_width, &text_height);
 
-	int x = 0, y = 0;
+	int x = 0, y = offset + config->border_size;
 	switch (alignment) {
 	case MAKO_RENDER_TEXT_ALIGN_RIGHT:
 		x = config->width - config->padding - config->border_size - text_width;
-		y = offset + config->border_size;
 		break;
 
 	case MAKO_RENDER_TEXT_ALIGN_LEFT:
 		x = config->padding + config->border_size;
-		y = offset + config->border_size;
 		break;
+
+	case MAKO_RENDER_TEXT_ALIGN_CENTER:
+		x = (config->width / 2) - (text_width / 2);
 	}
 
 	cairo_move_to(cairo, x, y);
@@ -191,7 +192,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 		cairo_fill(cairo);
 
 		//Render Text
-		pango_render_layout(cairo, layout, config, notif_y + config->padding, MAKO_RENDER_TEXT_ALIGN_LEFT);
+		pango_render_layout(cairo, layout, config, notif_y + config->padding, MAKO_RENDER_TEXT_ALIGN_RIGHT);
+
 		// Update hotspot
 		notif->hotspot.x = 0;
 		notif->hotspot.y = notif_y;
@@ -217,7 +219,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 			int text_height = 0;
 			pango_layout_get_pixel_size(layout, NULL, &text_height);
 			set_pango_text(layout, false, hidden_text);
-			pango_render_layout(cairo, layout, config, height, MAKO_RENDER_TEXT_ALIGN_RIGHT);
+			pango_render_layout(cairo, layout, config, height, MAKO_RENDER_TEXT_ALIGN_CENTER);
 			height += text_height;
 		}
 
