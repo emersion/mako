@@ -160,6 +160,9 @@ static int apply_config_option(struct mako_config *config,
 	} else if (strcmp(name, "max-visible") == 0) {
 		config->max_visible = strtol(value, NULL, 10);
 		return 0;
+	} else if (strcmp(name, "default-timeout") == 0) {
+		config->default_timeout = strtol(value, NULL, 10);
+		return 0;
 	} else {
 		return 1;
 	}
@@ -272,6 +275,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"markup", required_argument, 0, 0},
 		{"format", required_argument, 0, 0},
 		{"max-visible", required_argument, 0, 0},
+		{"default-timeout", required_argument, 0, 0},
 		{0},
 	};
 

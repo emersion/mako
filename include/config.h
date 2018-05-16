@@ -27,8 +27,9 @@ struct mako_config {
 	char *format;
 	bool actions;
 	int32_t max_visible;
-
 	struct mako_directional margin;
+
+	int default_timeout; // in ms
 
 	struct {
 		uint32_t background;

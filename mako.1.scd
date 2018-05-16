@@ -85,6 +85,12 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: 5
 
+*--default-timeout* _timeout_
+	Set the default timeout to _timeout_ in milliseconds. To disable the
+	timeout, set it to zero.
+
+	Default: 0
+
 # CONFIG FILE
 
 The config file is located at *~/.config/mako/config* or at
