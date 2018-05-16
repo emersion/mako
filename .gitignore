@@ -42,6 +42,9 @@
 *.idb
 *.pdb
 
+# vim ctags
+tags
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd

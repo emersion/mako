@@ -114,9 +114,46 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 		notif->hotspot.width = notif_width;
 		notif->hotspot.height = notif_height;
 
-		g_object_unref(layout);
-
 		++i;
+		if(i == (size_t)config->max_visible &&
+				i < (size_t)wl_list_length(&state->notifications) ) {
+
+			int hidden = wl_list_length(&state->notifications) - i;
+			int hidden_ln = snprintf(NULL, 0, "[%d]", hidden);
+
+			char *hidden_text;
+			hidden_text = malloc(hidden_ln + 1);
+			snprintf(hidden_text, hidden_ln + 1, "[%d]", hidden);
+
+			pango_layout_set_text(layout, hidden_text, -1);
+
+			int hidden_width = 0, hidden_height = 0;
+			pango_layout_get_pixel_size(layout, &hidden_width, &hidden_height);
+
+			int hidden_y = height + border_size;
+			height += hidden_height;
+			
+			//Set cairo path to our "hidden" draw area and clear
+			cairo_rectangle(cairo, 0, hidden_y , notif_width, hidden_height + border_size);
+			cairo_set_operator(cairo, CAIRO_OPERATOR_CLEAR);
+			set_cairo_source_u32(cairo, 0xFFFFFFFF);
+			cairo_fill(cairo);
+
+			cairo_set_operator(cairo, CAIRO_OPERATOR_OVER);
+			set_cairo_source_u32(cairo, config->colors.text);
+
+			//Right align the text. Maybe we can do count alignment as a config option?
+			cairo_move_to(cairo, notif_width - border_size - hidden_width,
+					hidden_y);
+	
+			//Draw current hidden count
+			pango_cairo_update_layout(cairo, layout);
+			pango_cairo_show_layout(cairo, layout);
+
+			free(hidden_text);
+		}
+
+		g_object_unref(layout);
 		if (config->max_visible >= 0 &&
 				i >= (size_t)config->max_visible) {
 			break;
