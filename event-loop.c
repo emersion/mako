@@ -85,7 +85,12 @@ static void update_event_loop_timer(struct mako_event_loop *loop) {
 
 	if (updated) {
 		struct itimerspec delay = { .it_value = loop->next_timer->at };
-		timerfd_settime(timer_fd, TFD_TIMER_ABSTIME, &delay, NULL);
+		errno = 0;
+		int ret = timerfd_settime(timer_fd, TFD_TIMER_ABSTIME, &delay, NULL);
+		if (ret < 0) {
+			fprintf(stderr, "failed to timerfd_settime(): %s\n",
+				strerror(errno));
+		}
 	}
 }
 
@@ -156,6 +161,11 @@ int run_event_loop(struct mako_event_loop *loop) {
 		wl_display_flush(loop->display);
 
 		ret = poll_event_loop(loop);
+		if (!loop->running) {
+			wl_display_cancel_read(loop->display);
+			ret = 0;
+			break;
+		}
 		if (ret < 0) {
 			wl_display_cancel_read(loop->display);
 			fprintf(stderr, "failed to poll(): %s\n", strerror(-ret));
@@ -200,4 +210,15 @@ int run_event_loop(struct mako_event_loop *loop) {
 		}
 	}
 	return ret;
+}
+
+static void handle_stop_event_loop_timer(void *data) {
+	// No-op
+}
+
+void stop_event_loop(struct mako_event_loop *loop) {
+	loop->running = false;
+
+	// Wake up the event loop
+	add_event_loop_timer(loop, 0, handle_stop_event_loop_timer, NULL);
 }
