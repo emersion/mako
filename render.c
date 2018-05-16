@@ -207,6 +207,9 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 
 			char *hidden_text;
 			hidden_text = malloc(hidden_ln + 1);
+			if (hidden_text == NULL) {
+				break;
+			}
 
 			snprintf(hidden_text, hidden_ln + 1, "[%d]", hidden);
 			PangoLayout *layout = get_simple_text_layout(cairo, config->font, config->width, 0);
