@@ -9,6 +9,7 @@
 #endif
 
 #include "dbus.h"
+#include "event-loop.h"
 #include "mako.h"
 #include "notification.h"
 
@@ -45,6 +46,7 @@ void destroy_notification(struct mako_notification *notif) {
 		free(action->title);
 		free(action);
 	}
+	destroy_timer(notif->timer);
 	free(notif->app_name);
 	free(notif->app_icon);
 	free(notif->summary);

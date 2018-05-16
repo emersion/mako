@@ -62,6 +62,16 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 	return 0;
 }
 
+static void handle_notification_timer(void *data) {
+	struct mako_notification *notif = data;
+	notif->timer = NULL;
+
+	struct mako_state *state = notif->state;
+
+	close_notification(notif, MAKO_NOTIFICATION_CLOSE_EXPIRED);
+	send_frame(state);
+}
+
 static int handle_notify(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
@@ -201,7 +211,14 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	if (ret < 0) {
 		return ret;
 	}
-	// TODO: timeout
+
+	if (expire_timeout < 0) {
+		expire_timeout = 0; // TODO: configurable default
+	}
+	if (expire_timeout > 0) {
+		notif->timer = add_event_loop_timer(&state->event_loop, expire_timeout,
+			handle_notification_timer, notif);
+	}
 
 	send_frame(state);
 
