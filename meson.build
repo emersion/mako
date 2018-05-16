@@ -12,6 +12,7 @@ project(
 )
 
 add_project_arguments('-Wno-unused-parameter', language: 'c')
+add_project_arguments('-Wno-missing-braces', language: 'c')
 
 mako_inc = include_directories('include')
 
@@ -28,6 +29,7 @@ executable(
 	'mako',
 	files([
 		'config.c',
+		'event-loop.c',
 		'dbus/dbus.c',
 		'dbus/mako.c',
 		'dbus/xdg.c',

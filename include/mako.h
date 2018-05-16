@@ -6,12 +6,13 @@
 #include <wayland-client.h>
 
 #include "config.h"
+#include "event-loop.h"
 #include "pool-buffer.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 struct mako_state {
-	bool running;
 	struct mako_config config;
+	struct mako_event_loop event_loop;
 
 	sd_bus *bus;
 	sd_bus_slot *xdg_slot, *mako_slot;
