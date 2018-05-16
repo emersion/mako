@@ -115,8 +115,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 		notif->hotspot.height = notif_height;
 
 		++i;
-		if(i == (size_t)config->max_visible &&
-				i < (size_t)wl_list_length(&state->notifications) ) {
+		if (i == (size_t)config->max_visible &&
+				i < (size_t)wl_list_length(&state->notifications)) {
 
 			int hidden = wl_list_length(&state->notifications) - i;
 			int hidden_ln = snprintf(NULL, 0, "[%d]", hidden);
