@@ -21,6 +21,7 @@ struct mako_output {
 	struct wl_list link; // mako_state::outputs
 
 	char *name;
+	int32_t scale;
 };
 
 bool init_wayland(struct mako_state *state);
