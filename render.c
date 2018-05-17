@@ -167,14 +167,14 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 	if (wl_list_length(&state->notifications) > config->max_visible) {
 
-		height += inner_margin;
+		height += config->hidden_margin;
 
-		size_t hidden_ln = format_text("<b>%h hidden notifications..</b>", NULL, format_state_text, state);
+		size_t hidden_ln = format_text(config->hidden_format, NULL, format_state_text, state);
 		char *hidden_text = malloc(hidden_ln + 1);
 		if (hidden_text == NULL) {
 			return 0;
 		}
-		format_text("<b>%h hidden notifications..</b>", hidden_text, format_state_text, state);
+		format_text(config->hidden_format, hidden_text, format_state_text, state);
 
 		int hidden_height =
 			render_notification(cairo, state, hidden_text, height, scale);

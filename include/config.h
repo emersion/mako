@@ -29,6 +29,8 @@ struct mako_config {
 	struct mako_directional margin;
 	int32_t max_visible;
 	char *output;
+	char *hidden_format;
+	int32_t hidden_margin;
 
 	int default_timeout; // in ms
 

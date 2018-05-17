@@ -19,12 +19,14 @@ void init_config(struct mako_config *config) {
 	config->border_size = 1;
 	config->markup = true;
 	config->format = strdup("<b>%s</b>\n%b");
+	config->hidden_format = strdup("[%h]");
 	config->actions = true;
 
 	config->margin.top = 10;
 	config->margin.right = 10;
 	config->margin.bottom = 10;
 	config->margin.left = 10;
+	config->hidden_margin = 3;
 
 	config->max_visible = 5;
 	config->output = strdup("");
