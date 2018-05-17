@@ -13,7 +13,7 @@ static void set_cairo_source_u32(cairo_t *cairo, uint32_t color) {
 		(color >> (0*8) & 0xFF) / 255.0);
 }
 
-static int render_notification(cairo_t *cairo, struct mako_state *state, const char *text, int offset_y) {
+static int render_notification(cairo_t *cairo, struct mako_state *state, struct mako_notification *notif, const char *format, int offset_y) {
 	struct mako_config *config = &state->config;
 
 	int border_size = 2 * config->border_size;
@@ -30,6 +30,14 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, const c
 		pango_font_description_from_string(config->font);
 	pango_layout_set_font_description(layout, desc);
 	pango_font_description_free(desc);
+
+	size_t text_len = format_notification(state, notif, format, NULL);
+	char *text = malloc(text_len + 1);
+	if (text == NULL) {
+		g_object_unref(layout);
+		return 0;
+	}
+	format_notification(state, notif, format, text);
 
 	if (config->markup) {
 		PangoAttrList *attrs = NULL;
@@ -49,6 +57,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, const c
 	} else {
 		pango_layout_set_text(layout, text, -1);
 	}
+	free(text);
 
 	int text_height = 0;
 	pango_layout_get_pixel_size(layout, NULL, &text_height);
@@ -105,19 +114,12 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 
-		size_t text_len = format_notification(notif, config->format, NULL);
-		char *text = malloc(text_len + 1);
-		if (text == NULL) {
-			break;
-		}
-		format_notification(notif, config->format, text);
-
 		int notif_y = height;
 		if (i > 0) {
 			notif_y += inner_margin;
 		}
 
-		int notif_height = render_notification(cairo, state, text, notif_y);
+		int notif_height = render_notification(cairo, state, notif, config->format, notif_y);
 		height = notif_y + notif_height;
 
 		// Update hotspot
@@ -134,14 +136,9 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 	}
 
 	if (wl_list_length(&state->notifications) > config->max_visible) {
-		int hidden = wl_list_length(&state->notifications) - config->max_visible;
-		int hidden_ln = snprintf(NULL, 0, "<b>[%d]</b>", hidden);
-
-		char hidden_text[hidden_ln + 1];
-		snprintf(hidden_text, hidden_ln + 1, "<b>[%d]</b>", hidden);
 
 		height += inner_margin;
-		int hidden_height = render_notification(cairo, state, hidden_text, height);
+		int hidden_height = render_notification(cairo, state, NULL, "<b>%h hidden notifications..</b>", height);
 
 		height += hidden_height;	
 	}

@@ -135,7 +135,18 @@ static size_t escape_markup(const char *s, char *buf) {
 	return len;
 }
 
-size_t format_notification(struct mako_notification *notif, const char *format,
+static char *notification_hidden_count(struct mako_state *state) {
+	int hidden = (wl_list_length(&state->notifications) -
+			state->config.max_visible);
+
+	int hidden_ln = snprintf(NULL, 0, "%d",  hidden);
+	char *hidden_text = malloc(hidden_ln + 1);
+	snprintf(hidden_text, hidden_ln + 1, "%d", hidden);
+
+	return hidden_text;
+}
+
+size_t format_notification(struct mako_state *state, struct mako_notification *notif, const char *format,
 		char *buf) {
 	size_t len = 0;
 
@@ -160,19 +171,22 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 		const char *value = NULL;
 		bool markup = false;
 		switch (current[1]) {
-		case '%':
-			value = "%";
-			break;
-		case 'a':
-			value = notif->app_name;
-			break;
-		case 's':
-			value = notif->summary;
-			break;
-		case 'b':
-			value = notif->body;
-			markup = true;
-			break;
+			case '%':
+				value = "%";
+				break;
+			case 'a':
+				value = notif->app_name;
+				break;
+			case 's':
+				value = notif->summary;
+				break;
+			case 'b':
+				value = notif->body;
+				markup = true;
+				break;
+			case 'h':
+				value = notification_hidden_count(state);
+				break;
 		}
 		if (value == NULL) {
 			value = "";
@@ -205,12 +219,12 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 static enum mako_button_binding get_button_binding(struct mako_config *config,
 		uint32_t button) {
 	switch (button) {
-	case BTN_LEFT:
-		return config->button_bindings.left;
-	case BTN_RIGHT:
-		return config->button_bindings.right;
-	case BTN_MIDDLE:
-		return config->button_bindings.middle;
+		case BTN_LEFT:
+			return config->button_bindings.left;
+		case BTN_RIGHT:
+			return config->button_bindings.right;
+		case BTN_MIDDLE:
+			return config->button_bindings.middle;
 	}
 	return MAKO_BUTTON_BINDING_NONE;
 }
@@ -222,23 +236,23 @@ void notification_handle_button(struct mako_notification *notif, uint32_t button
 	}
 
 	switch (get_button_binding(&notif->state->config, button)) {
-	case MAKO_BUTTON_BINDING_NONE:
-		break;
-	case MAKO_BUTTON_BINDING_DISMISS:
-		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
-		break;
-	case MAKO_BUTTON_BINDING_DISMISS_ALL:
-		close_all_notifications(notif->state, MAKO_NOTIFICATION_CLOSE_DISMISSED);
-		break;
-	case MAKO_BUTTON_BINDING_INVOKE_DEFAULT_ACTION:;
-		struct mako_action *action;
-		wl_list_for_each(action, &notif->actions, link) {
-			if (strcmp(action->key, DEFAULT_ACTION_KEY) == 0) {
-				notify_action_invoked(action);
-				break;
-			}
-		}
-		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
-		break;
+		case MAKO_BUTTON_BINDING_NONE:
+			break;
+		case MAKO_BUTTON_BINDING_DISMISS:
+			close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+			break;
+		case MAKO_BUTTON_BINDING_DISMISS_ALL:
+			close_all_notifications(notif->state, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+			break;
+		case MAKO_BUTTON_BINDING_INVOKE_DEFAULT_ACTION:;
+							       struct mako_action *action;
+							       wl_list_for_each(action, &notif->actions, link) {
+								       if (strcmp(action->key, DEFAULT_ACTION_KEY) == 0) {
+									       notify_action_invoked(action);
+									       break;
+								       }
+							       }
+							       close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+							       break;
 	}
 }
