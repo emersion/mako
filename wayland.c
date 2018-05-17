@@ -1,4 +1,6 @@
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
+#include <string.h>
 
 #include "mako.h"
 #include "notification.h"
@@ -7,6 +9,58 @@
 
 static void noop() {
 	// This space intentionally left blank
+}
+
+
+static void xdg_output_handle_name(void *data, struct zxdg_output_v1 *xdg_output,
+		const char *name) {
+	struct mako_output *output = data;
+	output->name = strdup(name);
+}
+
+static const struct zxdg_output_v1_listener xdg_output_listener = {
+	.logical_position = noop,
+	.logical_size = noop,
+	.done = noop,
+	.name = xdg_output_handle_name,
+	.description = noop,
+};
+
+static void get_xdg_output(struct mako_output *output) {
+	if (output->state->xdg_output_manager == NULL ||
+			output->xdg_output != NULL) {
+		return;
+	}
+
+	output->xdg_output = zxdg_output_manager_v1_get_xdg_output(
+		output->state->xdg_output_manager, output->wl_output);
+	zxdg_output_v1_add_listener(output->xdg_output, &xdg_output_listener,
+		output);
+}
+
+static void create_output(struct mako_state *state,
+		struct wl_output *wl_output, uint32_t global_name) {
+	struct mako_output *output = calloc(1, sizeof(struct mako_output));
+	if (output == NULL) {
+		fprintf(stderr, "allocation failed\n");
+		return;
+	}
+	output->state = state;
+	output->global_name = global_name;
+	output->wl_output = wl_output;
+	wl_list_insert(&state->outputs, &output->link);
+
+	get_xdg_output(output);
+}
+
+static void destroy_output(struct mako_output *output) {
+	wl_list_remove(&output->link);
+	if (output->xdg_output != NULL) {
+		zxdg_output_v1_destroy(output->xdg_output);
+	}
+	wl_output_destroy(output->wl_output);
+	free(output->name);
+	free(output);
 }
 
 
@@ -119,12 +173,29 @@ static void handle_global(void *data, struct wl_registry *registry,
 		struct wl_seat *seat =
 			wl_registry_bind(registry, name, &wl_seat_interface, 1);
 		wl_seat_add_listener(seat, &seat_listener, state);
+	} else if (strcmp(interface, wl_output_interface.name) == 0) {
+		struct wl_output *output =
+			wl_registry_bind(registry, name, &wl_output_interface, 1);
+		create_output(state, output, name);
+	} else if (strcmp(interface, zxdg_output_manager_v1_interface.name) == 0 &&
+			version >= ZXDG_OUTPUT_V1_NAME_SINCE_VERSION) {
+		state->xdg_output_manager = wl_registry_bind(registry, name,
+			&zxdg_output_manager_v1_interface,
+			ZXDG_OUTPUT_V1_NAME_SINCE_VERSION);
 	}
 }
 
 static void handle_global_remove(void *data, struct wl_registry *registry,
 		uint32_t name) {
-	// who cares
+	struct mako_state *state = data;
+
+	struct mako_output *output, *tmp;
+	wl_list_for_each_safe(output, tmp, &state->outputs, link) {
+		if (output->global_name == name) {
+			destroy_output(output);
+			break;
+		}
+	}
 }
 
 static const struct wl_registry_listener registry_listener = {
@@ -134,6 +205,7 @@ static const struct wl_registry_listener registry_listener = {
 
 bool init_wayland(struct mako_state *state) {
 	wl_list_init(&state->pointers);
+	wl_list_init(&state->outputs);
 
 	state->display = wl_display_connect(NULL);
 
@@ -154,6 +226,19 @@ bool init_wayland(struct mako_state *state) {
 		return false;
 	}
 
+	if (state->xdg_output_manager != NULL) {
+		struct mako_output *output;
+		wl_list_for_each(output, &state->outputs, link) {
+			get_xdg_output(output);
+		}
+		wl_display_roundtrip(state->display);
+	}
+	if (state->xdg_output_manager == NULL &&
+			strcmp(state->config.output, "") != 0) {
+		fprintf(stderr, "warning: configured an output but compositor doesn't "
+			"support xdg-output-unstable-v1 version 2\n");
+	}
+
 	return true;
 }
 
@@ -167,14 +252,22 @@ void finish_wayland(struct mako_state *state) {
 	finish_buffer(&state->buffers[0]);
 	finish_buffer(&state->buffers[1]);
 
-	struct mako_pointer *pointer, *tmp;
-	wl_list_for_each_safe(pointer, tmp, &state->pointers, link) {
+	struct mako_pointer *pointer, *pointer_tmp;
+	wl_list_for_each_safe(pointer, pointer_tmp, &state->pointers, link) {
 		destroy_pointer(pointer);
 	}
 
-	wl_shm_destroy(state->shm);
+	struct mako_output *output, *output_tmp;
+	wl_list_for_each_safe(output, output_tmp, &state->outputs, link) {
+		destroy_output(output);
+	}
+
+	if (state->xdg_output_manager != NULL) {
+		zxdg_output_manager_v1_destroy(state->xdg_output_manager);
+	}
 	zwlr_layer_shell_v1_destroy(state->layer_shell);
 	wl_compositor_destroy(state->compositor);
+	wl_shm_destroy(state->shm);
 	wl_registry_destroy(state->registry);
 	wl_display_disconnect(state->display);
 }
@@ -193,13 +286,30 @@ static struct wl_region *get_input_region(struct mako_state *state) {
 	return region;
 }
 
+static struct mako_output *get_configured_output(struct mako_state *state) {
+	const char *output_name = state->config.output;
+	if (strcmp(output_name, "") == 0) {
+		return NULL;
+	}
+
+	struct mako_output *output;
+	wl_list_for_each(output, &state->outputs, link) {
+		if (output->name != NULL && strcmp(output->name, output_name) == 0) {
+			return output;
+		}
+	}
+
+	return NULL;
+}
+
 void send_frame(struct mako_state *state) {
 	state->current_buffer = get_next_buffer(state->shm, state->buffers,
 		state->width, state->height);
 
+	struct mako_output *output = get_configured_output(state);
 	int height = render(state, state->current_buffer);
 
-	if (height == 0) {
+	if (height == 0 || state->layer_surface_output != output) {
 		if (state->layer_surface != NULL) {
 			zwlr_layer_surface_v1_destroy(state->layer_surface);
 			state->layer_surface = NULL;
@@ -210,13 +320,22 @@ void send_frame(struct mako_state *state) {
 		}
 		state->width = state->height = 0;
 		state->configured = false;
-		return;
+	}
+
+	if (height == 0) {
+		return; // nothing to render
 	}
 
 	if (state->layer_surface == NULL) {
+		struct wl_output *wl_output = NULL;
+		if (output != NULL) {
+			wl_output = output->wl_output;
+		}
+		state->layer_surface_output = output;
+
 		state->surface = wl_compositor_create_surface(state->compositor);
 		state->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
-			state->layer_shell, state->surface, NULL,
+			state->layer_shell, state->surface, wl_output,
 			ZWLR_LAYER_SHELL_V1_LAYER_TOP, "notifications");
 		zwlr_layer_surface_v1_add_listener(state->layer_surface,
 			&layer_surface_listener, state);

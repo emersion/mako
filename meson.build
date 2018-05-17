@@ -21,7 +21,7 @@ libsystemd = dependency('libsystemd')
 pango = dependency('pango')
 pangocairo = dependency('pangocairo')
 wayland_client = dependency('wayland-client')
-wayland_protos = dependency('wayland-protocols')
+wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 
 subdir('protocol')
 

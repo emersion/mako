@@ -9,6 +9,7 @@
 #include "event-loop.h"
 #include "pool-buffer.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
+#include "xdg-output-unstable-v1-client-protocol.h"
 
 struct mako_state {
 	struct mako_config config;
@@ -22,10 +23,13 @@ struct mako_state {
 	struct wl_compositor *compositor;
 	struct wl_shm *shm;
 	struct zwlr_layer_shell_v1 *layer_shell;
+	struct zxdg_output_manager_v1 *xdg_output_manager;
 	struct wl_list pointers; // mako_pointer::link
+	struct wl_list outputs; // mako_output::link
 
 	struct wl_surface *surface;
 	struct zwlr_layer_surface_v1 *layer_surface;
+	struct mako_output *layer_surface_output;
 	bool configured;
 
 	int32_t width, height;

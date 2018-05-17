@@ -91,6 +91,15 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: 0
 
+*--output* _name_
+	Show notifications on the specified output. If empty, notifications will
+	appear on the focused output.
+
+	Requires the compositor to support the Wayland protocol
+	xdg-output-unstable-v1 version 2.
+
+	Default: ""
+
 # CONFIG FILE
 
 The config file is located at *~/.config/mako/config* or at
