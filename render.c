@@ -118,7 +118,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer) {
 		}
 
 		int notif_height = render_notification(cairo, state, text, notif_y);
-		height = notif_y +  notif_height;
+		height = notif_y + notif_height;
 
 		// Update hotspot
 		notif->hotspot.x = 0;
