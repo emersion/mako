@@ -147,7 +147,19 @@ static void layer_surface_configure(void *data,
 static void layer_surface_closed(void *data,
 		struct zwlr_layer_surface_v1 *surface) {
 	struct mako_state *state = data;
-	state->event_loop.running = false;
+
+	zwlr_layer_surface_v1_destroy(state->layer_surface);
+	state->layer_surface = NULL;
+
+	wl_surface_destroy(state->surface);
+	state->surface = NULL;
+
+	if (state->configured) {
+		state->configured = false;
+		state->width = state->height = 0;
+
+		send_frame(state);
+	}
 }
 
 static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
