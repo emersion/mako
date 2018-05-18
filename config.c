@@ -47,7 +47,7 @@ void finish_config(struct mako_config *config) {
  * Depending on the number of integers provided, the four fields of the `out`
  * struct will be initialized following the same rules as the CSS "margin"
  * property. Returns 0 on success, -1 on parsing failure. */
-int parse_directional(const char *directional_string,
+static int parse_directional(const char *directional_string,
 		struct mako_directional *out) {
 	int error = 0;
 	char *components = strdup(directional_string);
@@ -138,7 +138,7 @@ static int apply_config_option(struct mako_config *config,
 		config->height = strtol(value, NULL, 10);
 		return 0;
 	} else if (strcmp(name, "margin") == 0) {
-		if (parse_directional(optarg, &config->margin)) {
+		if (parse_directional(value, &config->margin)) {
 			fprintf(stderr, "Unable to parse margins\n");
 			return 1;
 		}
