@@ -260,6 +260,11 @@ bool init_wayland(struct mako_state *state) {
 
 	state->display = wl_display_connect(NULL);
 
+	if (state->display == NULL) {
+		fprintf(stderr, "failed to create display\n");
+		return false;
+	}
+
 	state->registry = wl_display_get_registry(state->display);
 	wl_registry_add_listener(state->registry, &registry_listener, state);
 	wl_display_roundtrip(state->display);
