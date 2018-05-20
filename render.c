@@ -35,10 +35,8 @@ static void set_rectangle(cairo_t *cairo, int x, int y, int width, int height,
 	cairo_rectangle(cairo, x * scale, y * scale, width * scale, height * scale);
 }
 
-static int render_notification(cairo_t *cairo, struct mako_state *state,
+static int render_notification(cairo_t *cairo, struct mako_config *config,
 		const char *text, int offset_y, int scale) {
-	struct mako_config *config = &state->config;
-
 	int border_size = 2 * config->border_size;
 	int padding_size = 2 * config->padding;
 
@@ -153,7 +151,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		}
 
 		int notif_height =
-			render_notification(cairo, state, text, total_height, scale);
+			render_notification(cairo, config, text, total_height, scale);
 		free(text);
 
 		// Update hotspot
@@ -184,7 +182,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		format_text(config->hidden_format, text, format_state_text, state);
 
 		int hidden_height =
-			render_notification(cairo, state, text, total_height, scale);
+			render_notification(cairo, config, text, total_height, scale);
 		free(text);
 
 		total_height += hidden_height;
