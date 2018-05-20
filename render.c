@@ -104,6 +104,11 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	pango_cairo_update_layout(cairo, layout);
 	pango_cairo_show_layout(cairo, layout);
 
+	// Reset the cairo path between each notification, otherwise subsequent
+	// borders will be drawn along all notifications, causing them to become
+	// visually thicker.
+	cairo_new_path(cairo);
+
 	g_object_unref(layout);
 
 	return notif_height;
