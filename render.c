@@ -118,8 +118,11 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	}
 
 	// Clear
-	set_source_u32(cairo, 0x00000000);
+	cairo_save(cairo);
+	cairo_set_source_rgba(cairo, 0, 0, 0, 0);
+	cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
 	cairo_paint(cairo);
+	cairo_restore(cairo);
 
 	int inner_margin = config->margin.top;
 	if (config->margin.bottom > config->margin.top) {

@@ -366,6 +366,9 @@ void send_frame(struct mako_state *state) {
 
 	state->current_buffer = get_next_buffer(state->shm, state->buffers,
 		state->width * scale, state->height * scale);
+	if (state->current_buffer == NULL) {
+		return;
+	}
 
 	struct mako_output *output = get_configured_output(state);
 	int height = render(state, state->current_buffer, scale);
