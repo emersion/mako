@@ -138,8 +138,12 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	int total_height = 0;
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
+		// Use each notification's config while rendering it.
+		config = notif->config;
+
 		size_t text_len =
 			format_text(config->format, NULL, format_notif_text, notif);
+
 		char *text = malloc(text_len + 1);
 		if (text == NULL) {
 			break;
@@ -168,6 +172,9 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 			break;
 		}
 	}
+
+	// Use the global config again after finishing all the notifications.
+	config = &state->config;
 
 	if (wl_list_length(&state->notifications) > config->max_visible) {
 		total_height += inner_margin;
