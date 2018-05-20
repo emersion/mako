@@ -88,7 +88,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	set_rectangle(cairo,
 		config->border_size / 2.0,
 		offset_y + config->border_size / 2.0,
-		state->width - config->border_size,
+		config->width - config->border_size,
 		notif_height - config->border_size, scale);
 	cairo_save(cairo);
 	cairo_set_line_width(cairo, config->border_size * scale);
@@ -99,7 +99,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	set_source_u32(cairo, config->colors.background);
 	set_rectangle(cairo,
 		config->border_size, offset_y + config->border_size,
-		state->width - border_size, notif_height - border_size, scale);
+		config->width - border_size, notif_height - border_size, scale);
 	cairo_fill(cairo);
 
 	// Render text
