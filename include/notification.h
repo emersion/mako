@@ -13,6 +13,7 @@ enum mako_notification_urgency {
 };
 
 struct mako_state;
+struct mako_config;
 struct mako_timer;
 
 struct mako_hotspot {
@@ -23,6 +24,8 @@ struct mako_hotspot {
 struct mako_notification {
 	struct mako_state *state;
 	struct wl_list link; // mako_state::notifications
+
+	struct mako_config *config;
 
 	uint32_t id;
 	char *app_name;

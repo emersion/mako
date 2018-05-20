@@ -33,6 +33,7 @@ struct mako_notification *create_notification(struct mako_state *state) {
 
 	notif->state = state;
 	++state->last_id;
+	notif->config = &state->config; // Assume global configuration.
 	notif->id = state->last_id;
 	wl_list_init(&notif->actions);
 	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNOWN;

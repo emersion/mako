@@ -24,6 +24,8 @@ enum mako_sort_criteria {
 };
 
 struct mako_config {
+	// Configurable per notification
+
 	char *font;
 	int32_t width, height;
 	int32_t padding;
@@ -32,11 +34,6 @@ struct mako_config {
 	char *format;
 	bool actions;
 	struct mako_directional margin;
-	int32_t max_visible;
-	char *output;
-	char *hidden_format;
-	uint32_t sort_criteria; //enum mako_sort_criteria
-	uint32_t sort_asc;
 
 	int default_timeout; // in ms
 
@@ -45,6 +42,14 @@ struct mako_config {
 		uint32_t text;
 		uint32_t border;
 	} colors;
+
+	// Always global (but still copied into per-notification structs)
+
+	int32_t max_visible;
+	char *output;
+	char *hidden_format;
+	uint32_t sort_criteria; //enum mako_sort_criteria
+	uint32_t sort_asc;
 
 	struct {
 		enum mako_button_binding left, right, middle;
