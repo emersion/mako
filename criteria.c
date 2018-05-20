@@ -29,5 +29,37 @@ void finish_criteria(struct mako_criteria *criteria) {
 
 bool match_criteria(struct mako_criteria *criteria,
 		struct mako_notification *notif) {
-	return false;
+	struct mako_criteria_spec spec = criteria->specified;
+
+	if (spec.app_name &&
+			strcmp(criteria->app_name, notif->app_name) != 0) {
+		return false;
+	}
+
+	if (spec.app_icon &&
+			strcmp(criteria->app_icon, notif->app_icon) != 0) {
+		return false;
+	}
+
+	if (spec.actionable &&
+			criteria->actionable == wl_list_empty(&notif->actions)) {
+		return false;
+	}
+
+	if (spec.urgency &&
+			criteria->urgency != notif->urgency) {
+		return false;
+	}
+
+	if (spec.category &&
+			strcmp(criteria->category, notif->category) != 0) {
+		return false;
+	}
+
+	if (spec.desktop_entry &&
+			strcmp(criteria->desktop_entry, notif->desktop_entry) != 0) {
+		return false;
+	}
+
+	return true;
 }
