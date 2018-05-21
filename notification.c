@@ -150,15 +150,9 @@ const char *format_state_text(char variable, void *data) {
 	struct mako_state *state = (struct mako_state *)data;
 	const char *value = NULL;
 	switch (variable) {
-<<<<<<< HEAD
 	case 'h':
 		value = notification_hidden_count(state);
 		break;
-=======
-		case 'h':
-			value = notification_hidden_count(state);
-			break;
->>>>>>> added generic format functions
 	}
 	return value;
 }
@@ -167,7 +161,6 @@ const char* format_notif_text(char variable, void *data) {
 	struct mako_notification *notif = (struct mako_notification *)data;
 	char *value = NULL;
 	switch (variable) {
-<<<<<<< HEAD
 	case 'a':
 		value = notif->app_name;
 		break;
@@ -177,26 +170,12 @@ const char* format_notif_text(char variable, void *data) {
 	case 'b':
 		value = notif->body;
 		break;
-=======
-		case 'a':
-			value = notif->app_name;
-			break;
-		case 's':
-			value = notif->summary; 
-			break;
-		case 'b':
-			value = notif->body;
-			break;
->>>>>>> added generic format functions
 	}
 	return value;
 }
 
 <<<<<<< HEAD
 size_t format_text(const char *format, char *buf, mako_format_func_t format_func, void *data) {
-=======
-size_t format_text(const char *format, char *buf, mako_format_func_t func, void *data) {
->>>>>>> added generic format functions
 	size_t len = 0;
 
 	const char *last = format;
@@ -223,11 +202,7 @@ size_t format_text(const char *format, char *buf, mako_format_func_t func, void 
 		if (current[1] == '%') { 
 			value = "%";
 		} else {
-<<<<<<< HEAD
 			value =	format_func(current[1], data);
-=======
-			value =	func(current[1], data);
->>>>>>> added generic format functions
 		}
 		if (value == NULL) {
 			value = "";
@@ -257,12 +232,8 @@ size_t format_text(const char *format, char *buf, mako_format_func_t func, void 
 	return len;
 
 }
-<<<<<<< HEAD
-size_t format_notification(struct mako_notification *notif, const char *format,
-=======
-size_t format_notification(struct mako_state *state, struct mako_notification *notif, const char *format,
->>>>>>> added generic format functions
-		char *buf) {
+
+size_t format_notification(struct mako_notification *notif, const char *format, char *buf) {
 	size_t len = 0;
 
 	const char *last = format;
