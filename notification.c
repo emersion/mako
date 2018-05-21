@@ -231,7 +231,7 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 	return len;
 
 }
-size_t format_notification(struct mako_state *state, struct mako_notification *notif, const char *format,
+size_t format_notification(struct mako_notification *notif, const char *format,
 		char *buf) {
 	size_t len = 0;
 
@@ -268,9 +268,6 @@ size_t format_notification(struct mako_state *state, struct mako_notification *n
 			case 'b':
 				value = notif->body;
 				markup = true;
-				break;
-			case 'h':
-				value = notification_hidden_count(state);
 				break;
 		}
 		if (value == NULL) {
