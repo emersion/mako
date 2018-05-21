@@ -10,7 +10,6 @@
 
 #include "dbus.h"
 #include "event-loop.h"
-
 #include "mako.h"
 #include "notification.h"
 
@@ -175,7 +174,6 @@ const char* format_notif_text(char variable, void *data) {
 	return value;
 }
 
-<<<<<<< HEAD
 size_t format_text(const char *format, char *buf, mako_format_func_t format_func, void *data) {
 	size_t len = 0;
 

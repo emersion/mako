@@ -139,7 +139,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		size_t text_len = format_text(config->format, NULL, format_notif_text, notif);
 		char *text = malloc(text_len + 1);
 		if (text == NULL) {
-			return 0;
+			break;
 		}
 		format_text(config->format, text, format_notif_text, notif);
 
@@ -174,7 +174,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		size_t hidden_ln = format_text(config->hidden_format, NULL, format_state_text, state);
 		char *hidden_text = malloc(hidden_ln + 1);
 		if (hidden_text == NULL) {
-			return 0;
+			return height;
 		}
 		format_text(config->hidden_format, hidden_text, format_state_text, state);
 
