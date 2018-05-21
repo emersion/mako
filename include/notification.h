@@ -70,8 +70,8 @@ const char *format_notif_text(char variable, void *data);
 size_t format_text(const char *format, char *buf, mako_format_func_t func, void *data);
 struct mako_notification *get_notification(struct mako_state *state, uint32_t id);
 size_t format_notification(struct mako_notification *notif, const char *format,
-		char *buf);
+	char *buf);
 void notification_handle_button(struct mako_notification *notif, uint32_t button,
-		enum wl_pointer_button_state state);
+	enum wl_pointer_button_state state);
 
 #endif
