@@ -184,7 +184,6 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		free(hidden_text);
 
 		height += hidden_height;
-
 	}
 
 	return height;
