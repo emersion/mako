@@ -146,6 +146,91 @@ static char *notification_hidden_count(struct mako_state *state) {
 	return hidden_text;
 }
 
+const char *format_state_text(char variable, void *data) {
+	struct mako_state *state = (struct mako_state *)data;
+	const char *value = NULL;
+	switch (variable) {
+		case 'h':
+			value = notification_hidden_count(state);
+			break;
+	}
+	return value;
+}
+
+const char* format_notif_text(char variable, void *data) {
+	struct mako_notification *notif = (struct mako_notification *)data;
+	char *value = NULL;
+	switch (variable) {
+		case 'a':
+			value = notif->app_name;
+			break;
+		case 's':
+			value = notif->summary; 
+			break;
+		case 'b':
+			value = notif->body;
+			break;
+	}
+	return value;
+}
+
+size_t format_text(const char *format, char *buf, mako_format_func_t func, void *data) {
+	size_t len = 0;
+
+	const char *last = format;
+	while (1) {
+		char *current = strchr(last, '%');
+		if (current == NULL || current[1] == '\0') {
+			size_t tail_len = strlen(last);
+			if (buf != NULL) {
+				memcpy(buf + len, last, tail_len + 1);
+			}
+			len += tail_len;
+			break;
+		}
+
+		size_t chunk_len = current - last;
+		if (buf != NULL) {
+			memcpy(buf + len, last, chunk_len);
+		}
+		len += chunk_len;
+
+		const char *value = NULL;
+		bool markup = false;
+
+		if (current[1] == '%') { 
+			value = "%";
+		} else {
+			value =	func(current[1], data);
+		}
+		if (value == NULL) {
+			value = "";
+		}
+
+		size_t value_len;
+		if (!markup) {
+			char *escaped = NULL;
+			if (buf != NULL) {
+				escaped = buf + len;
+			}
+			value_len = escape_markup(value, escaped);
+		} else {
+			value_len = strlen(value);
+			if (buf != NULL) {
+				memcpy(buf + len, value, value_len);
+			}
+		}
+		len += value_len;
+
+		last = current + 2;
+	}
+
+	if (buf != NULL) {
+		trim_space(buf, buf);
+	}
+	return len;
+
+}
 size_t format_notification(struct mako_state *state, struct mako_notification *notif, const char *format,
 		char *buf) {
 	size_t len = 0;
