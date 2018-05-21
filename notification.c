@@ -174,7 +174,7 @@ const char* format_notif_text(char variable, void *data) {
 	return value;
 }
 
-size_t format_text(const char *format, char *buf, mako_format_func_t func, void *data) {
+size_t format_text(const char *format, char *buf, mako_format_func_t format_func, void *data) {
 	size_t len = 0;
 
 	const char *last = format;
@@ -201,7 +201,7 @@ size_t format_text(const char *format, char *buf, mako_format_func_t func, void 
 		if (current[1] == '%') { 
 			value = "%";
 		} else {
-			value =	func(current[1], data);
+			value =	format_func(current[1], data);
 		}
 		if (value == NULL) {
 			value = "";
