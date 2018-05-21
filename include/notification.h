@@ -72,6 +72,6 @@ struct mako_notification *get_notification(struct mako_state *state, uint32_t id
 size_t format_notification(struct mako_notification *notif, const char *format,
 	char *buf);
 void notification_handle_button(struct mako_notification *notif, uint32_t button,
-		enum wl_pointer_button_state state);
+	enum wl_pointer_button_state state);
 
 #endif

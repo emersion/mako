@@ -20,7 +20,6 @@ static void set_source_u32(cairo_t *cairo, uint32_t color) {
 		(color >> (0*8) & 0xFF) / 255.0);
 }
 
-<<<<<<< HEAD
 static void set_layout_size(PangoLayout *layout, int width, int height,
 		int scale) {
 	pango_layout_set_width(layout, width * scale * PANGO_SCALE);
@@ -38,9 +37,6 @@ static void set_rectangle(cairo_t *cairo, int x, int y, int width, int height,
 
 static int render_notification(cairo_t *cairo, struct mako_state *state,
 		const char *text, int offset_y, int scale) {
-=======
-static int render_notification(cairo_t *cairo, struct mako_state *state, struct mako_notification *notif, const char *text, int offset_y) {
->>>>>>> added generic format functions
 	struct mako_config *config = &state->config;
 
 	int border_size = 2 * config->border_size;
@@ -57,11 +53,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	pango_layout_set_font_description(layout, desc);
 	pango_font_description_free(desc);
 
-<<<<<<< HEAD
 	PangoAttrList *attrs = NULL;
-=======
-
->>>>>>> added generic format functions
 	if (config->markup) {
 		char *buf = NULL;
 		GError *error = NULL;
@@ -156,14 +148,10 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 			notif_y += inner_margin;
 		}
 
-<<<<<<< HEAD
 		int notif_height =
 			render_notification(cairo, state, text, notif_y, scale);
-=======
-		int notif_height = render_notification(cairo, state, notif, config->format, notif_y);
 		free(text);
 
->>>>>>> added generic format functions
 		height = notif_y + notif_height;
 
 		// Update hotspot
@@ -181,7 +169,6 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 	if (wl_list_length(&state->notifications) > config->max_visible) {
 
-<<<<<<< HEAD
 		height += config->hidden_margin;
 
 		size_t hidden_ln = format_text(config->hidden_format, NULL, format_state_text, state);
@@ -194,13 +181,10 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		int hidden_height =
 			render_notification(cairo, state, hidden_text, height, scale);
 
-		height += hidden_height;
-=======
-		height += inner_margin;
-		//int hidden_height = render_notification(cairo, state, NULL, "<b>%h hidden notifications..</b>", height);
+		free(hidden_text);
 
-		//height += hidden_height;	
->>>>>>> added generic format functions
+		height += hidden_height;
+
 	}
 
 	return height;
