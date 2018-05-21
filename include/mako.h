@@ -28,9 +28,11 @@ struct mako_state {
 	struct wl_list outputs; // mako_output::link
 
 	struct wl_surface *surface;
+	struct mako_output *surface_output;
 	struct zwlr_layer_surface_v1 *layer_surface;
 	struct mako_output *layer_surface_output;
 	bool configured;
+	int32_t scale;
 
 	int32_t width, height;
 	struct pool_buffer buffers[2];

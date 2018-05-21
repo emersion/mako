@@ -1,4 +1,5 @@
 #define _POSIX_C_SOURCE 200809L
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -38,6 +39,19 @@ static void get_xdg_output(struct mako_output *output) {
 		output);
 }
 
+static void output_handle_scale(void *data, struct wl_output *wl_output,
+		int32_t factor) {
+	struct mako_output *output = data;
+	output->scale = factor;
+}
+
+static const struct wl_output_listener output_listener = {
+	.geometry = noop,
+	.mode = noop,
+	.done = noop,
+	.scale = output_handle_scale,
+};
+
 static void create_output(struct mako_state *state,
 		struct wl_output *wl_output, uint32_t global_name) {
 	struct mako_output *output = calloc(1, sizeof(struct mako_output));
@@ -48,8 +62,11 @@ static void create_output(struct mako_state *state,
 	output->state = state;
 	output->global_name = global_name;
 	output->wl_output = wl_output;
+	output->scale = 1;
 	wl_list_insert(&state->outputs, &output->link);
 
+	wl_output_set_user_data(wl_output, output);
+	wl_output_add_listener(wl_output, &output_listener, output);
 	get_xdg_output(output);
 }
 
@@ -81,7 +98,7 @@ static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer,
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (hotspot_at(&notif->hotspot, pointer->x, pointer->y)) {
 			notification_handle_button(notif, button, button_state);
-			return;
+			break;
 		}
 	}
 
@@ -105,8 +122,9 @@ static void create_pointer(struct mako_state *state,
 	}
 	pointer->state = state;
 	pointer->wl_pointer = wl_pointer;
-	wl_pointer_add_listener(wl_pointer, &pointer_listener, pointer);
 	wl_list_insert(&state->pointers, &pointer->link);
+
+	wl_pointer_add_listener(wl_pointer, &pointer_listener, pointer);
 }
 
 static void destroy_pointer(struct mako_pointer *pointer) {
@@ -131,7 +149,28 @@ static const struct wl_seat_listener seat_listener = {
 };
 
 
-static void layer_surface_configure(void *data,
+static void surface_handle_enter(void *data, struct wl_surface *surface,
+		struct wl_output *wl_output) {
+	struct mako_state *state = data;
+	// Don't bother keeping a list of outputs, a layer surface can only be on
+	// one output a a time
+	state->surface_output = wl_output_get_user_data(wl_output);
+	send_frame(state);
+}
+
+static void surface_handle_leave(void *data, struct wl_surface *surface,
+		struct wl_output *wl_output) {
+	struct mako_state *state = data;
+	state->surface_output = NULL;
+}
+
+static const struct wl_surface_listener surface_listener = {
+	.enter = surface_handle_enter,
+	.leave = surface_handle_leave,
+};
+
+
+static void layer_surface_handle_configure(void *data,
 		struct zwlr_layer_surface_v1 *surface,
 		uint32_t serial, uint32_t width, uint32_t height) {
 	struct mako_state *state = data;
@@ -144,7 +183,7 @@ static void layer_surface_configure(void *data,
 	send_frame(state);
 }
 
-static void layer_surface_closed(void *data,
+static void layer_surface_handle_closed(void *data,
 		struct zwlr_layer_surface_v1 *surface) {
 	struct mako_state *state = data;
 
@@ -163,8 +202,8 @@ static void layer_surface_closed(void *data,
 }
 
 static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
-	.configure = layer_surface_configure,
-	.closed = layer_surface_closed,
+	.configure = layer_surface_handle_configure,
+	.closed = layer_surface_handle_closed,
 };
 
 
@@ -174,7 +213,7 @@ static void handle_global(void *data, struct wl_registry *registry,
 
 	if (strcmp(interface, wl_compositor_interface.name) == 0) {
 		state->compositor = wl_registry_bind(registry, name,
-			&wl_compositor_interface, 3);
+			&wl_compositor_interface, 4);
 	} else if (strcmp(interface, wl_shm_interface.name) == 0) {
 		state->shm = wl_registry_bind(registry, name,
 			&wl_shm_interface, 1);
@@ -187,7 +226,7 @@ static void handle_global(void *data, struct wl_registry *registry,
 		wl_seat_add_listener(seat, &seat_listener, state);
 	} else if (strcmp(interface, wl_output_interface.name) == 0) {
 		struct wl_output *output =
-			wl_registry_bind(registry, name, &wl_output_interface, 1);
+			wl_registry_bind(registry, name, &wl_output_interface, 3);
 		create_output(state, output, name);
 	} else if (strcmp(interface, zxdg_output_manager_v1_interface.name) == 0 &&
 			version >= ZXDG_OUTPUT_V1_NAME_SINCE_VERSION) {
@@ -220,6 +259,11 @@ bool init_wayland(struct mako_state *state) {
 	wl_list_init(&state->outputs);
 
 	state->display = wl_display_connect(NULL);
+
+	if (state->display == NULL) {
+		fprintf(stderr, "failed to create display\n");
+		return false;
+	}
 
 	state->registry = wl_display_get_registry(state->display);
 	wl_registry_add_listener(state->registry, &registry_listener, state);
@@ -315,11 +359,19 @@ static struct mako_output *get_configured_output(struct mako_state *state) {
 }
 
 void send_frame(struct mako_state *state) {
+	int scale = 1;
+	if (state->surface_output != NULL) {
+		scale = state->surface_output->scale;
+	}
+
 	state->current_buffer = get_next_buffer(state->shm, state->buffers,
-		state->width, state->height);
+		state->width * scale, state->height * scale);
+	if (state->current_buffer == NULL) {
+		return;
+	}
 
 	struct mako_output *output = get_configured_output(state);
-	int height = render(state, state->current_buffer);
+	int height = render(state, state->current_buffer, scale);
 
 	if (height == 0 || state->layer_surface_output != output) {
 		if (state->layer_surface != NULL) {
@@ -331,6 +383,7 @@ void send_frame(struct mako_state *state) {
 			state->surface = NULL;
 		}
 		state->width = state->height = 0;
+		state->surface_output = NULL;
 		state->configured = false;
 	}
 
@@ -346,6 +399,8 @@ void send_frame(struct mako_state *state) {
 		state->layer_surface_output = output;
 
 		state->surface = wl_compositor_create_surface(state->compositor);
+		wl_surface_add_listener(state->surface, &surface_listener, state);
+
 		state->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
 			state->layer_shell, state->surface, wl_output,
 			ZWLR_LAYER_SHELL_V1_LAYER_TOP, "notifications");
@@ -381,6 +436,7 @@ void send_frame(struct mako_state *state) {
 	wl_surface_set_input_region(state->surface, input_region);
 	wl_region_destroy(input_region);
 
+	wl_surface_set_buffer_scale(state->surface, scale);
 	wl_surface_attach(state->surface, state->current_buffer->buffer, 0, 0);
 	wl_surface_damage(state->surface, 0, 0, state->width, state->height);
 	wl_surface_commit(state->surface);
