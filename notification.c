@@ -9,6 +9,7 @@
 #endif
 
 #include "dbus.h"
+#include "event-loop.h"
 
 #include "mako.h"
 #include "notification.h"
