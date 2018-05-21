@@ -329,10 +329,10 @@ void notification_handle_button(struct mako_notification *notif, uint32_t button
 	case MAKO_BUTTON_BINDING_INVOKE_DEFAULT_ACTION:;
 		struct mako_action *action;
 		wl_list_for_each(action, &notif->actions, link) {
-		       if (strcmp(action->key, DEFAULT_ACTION_KEY) == 0) {
+			if (strcmp(action->key, DEFAULT_ACTION_KEY) == 0) {
 			       notify_action_invoked(action);
 			       break;
-		       }
+			}
 		}
 		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 		break;
