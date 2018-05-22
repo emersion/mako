@@ -169,7 +169,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 	if (wl_list_length(&state->notifications) > config->max_visible) {
 
-		height += 3;
+		height += inner_margin;
 
 		size_t text_ln = format_text(config->hidden_format, NULL, format_state_text, state);
 		char *text = malloc(text_ln + 1);
