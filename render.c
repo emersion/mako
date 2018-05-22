@@ -171,17 +171,17 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 		height += config->hidden_margin;
 
-		size_t hidden_ln = format_text(config->hidden_format, NULL, format_state_text, state);
-		char *hidden_text = malloc(hidden_ln + 1);
-		if (hidden_text == NULL) {
+		size_t text_ln = format_text(config->hidden_format, NULL, format_state_text, state);
+		char *text = malloc(text_ln + 1);
+		if (text == NULL) {
 			return height;
 		}
-		format_text(config->hidden_format, hidden_text, format_state_text, state);
+		format_text(config->hidden_format, text, format_state_text, state);
 
 		int hidden_height =
-			render_notification(cairo, state, hidden_text, height, scale);
+			render_notification(cairo, state, text, height, scale);
 
-		free(hidden_text);
+		free(text);
 
 		height += hidden_height;
 	}

@@ -137,25 +137,30 @@ static size_t escape_markup(const char *s, char *buf) {
 	return len;
 }
 
-static char *notification_hidden_count(struct mako_state *state) {
-	int hidden = (wl_list_length(&state->notifications) -
-			state->config.max_visible);
-
-	size_t hidden_ln = snprintf(NULL, 0, "%d",  hidden);
-	char *hidden_text = malloc(hidden_ln + 1);
-	snprintf(hidden_text, hidden_ln + 1, "%d", hidden);
-
-	return hidden_text;
-}
-
 char *format_state_text(char variable, void *data) {
 	struct mako_state *state = (struct mako_state *)data;
+	char *value = NULL;
 	switch (variable) {
-	case 'h':
-		return notification_hidden_count(state);
-	default:
-		return NULL;
+	case 'h':;
+		int hidden = wl_list_length(&state->notifications) - state->config.max_visible;
+		size_t hidden_ln = snprintf(NULL, 0, "%d", hidden);
+		value = malloc(hidden_ln + 1);
+		if(!value) {
+			break;
+		}
+		snprintf(value, hidden_ln + 1, "%d", hidden);
+		return value;
+	case 't':;
+		int count = wl_list_length(&state->notifications);
+		size_t total_ln = snprintf(NULL, 0, "%d", count);
+		value = malloc(total_ln + 1);
+		if(!value) {
+			break;
+		}
+		snprintf(value, total_ln + 1, "%d", count);
+		return value;
 	}
+	return value;
 }
 
 char* format_notif_text(char variable, void *data) {
