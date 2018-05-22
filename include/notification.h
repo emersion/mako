@@ -9,7 +9,7 @@ enum mako_notification_urgency {
 	MAKO_NOTIFICATION_URGENCY_LOW = 0,
 	MAKO_NOTIFICATION_URGENCY_NORMAL = 1,
 	MAKO_NOTIFICATION_URGENCY_HIGH = 2,
-	MAKO_NOTIFICATION_URGENCY_UNKNWON = -1,
+	MAKO_NOTIFICATION_URGENCY_UNKNOWN = -1,
 };
 
 struct mako_state;
@@ -65,8 +65,8 @@ void close_notification(struct mako_notification *notif,
 	enum mako_notification_close_reason reason);
 void close_all_notifications(struct mako_state *state,
 	enum mako_notification_close_reason reason);
-const char *format_state_text(char variable, void *data);
-const char *format_notif_text(char variable, void *data);
+char *format_state_text(char variable, void *data);
+char *format_notif_text(char variable, void *data);
 size_t format_text(const char *format, char *buf, mako_format_func_t func, void *data);
 struct mako_notification *get_notification(struct mako_state *state, uint32_t id);
 size_t format_notification(struct mako_notification *notif, const char *format,

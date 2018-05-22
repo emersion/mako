@@ -32,7 +32,7 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	++state->last_id;
 	notif->id = state->last_id;
 	wl_list_init(&notif->actions);
-	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNWON;
+	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNOWN;
 	wl_list_insert(&state->notifications, &notif->link);
 	return notif;
 }
@@ -146,29 +146,28 @@ static char *notification_hidden_count(struct mako_state *state) {
 	return hidden_text;
 }
 
-const char *format_state_text(char variable, void *data) {
+char *format_state_text(char variable, void *data) {
 	struct mako_state *state = (struct mako_state *)data;
-	const char *value = NULL;
 	switch (variable) {
 	case 'h':
-		value = notification_hidden_count(state);
-		break;
+		return notification_hidden_count(state);
+	default:
+		return NULL;
 	}
-	return value;
 }
 
-const char* format_notif_text(char variable, void *data) {
+char* format_notif_text(char variable, void *data) {
 	struct mako_notification *notif = (struct mako_notification *)data;
 	char *value = NULL;
 	switch (variable) {
 	case 'a':
-		value = notif->app_name;
+		value = strdup(notif->app_name);
 		break;
 	case 's':
-		value = notif->summary; 
+		value = strdup(notif->summary); 
 		break;
 	case 'b':
-		value = notif->body;
+		value = strdup(notif->body);
 		break;
 	}
 	return value;
@@ -220,8 +219,9 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 				memcpy(buf + len, value, value_len);
 			}
 		}
-		len += value_len;
+		free(value);
 
+		len += value_len;
 		last = current + 2;
 	}
 
