@@ -55,7 +55,7 @@ enum mako_notification_close_reason {
 
 #define DEFAULT_ACTION_KEY "default"
 
-typedef const char *(*mako_format_func_t)(char variable, void *data);
+typedef char *(*mako_format_func_t)(char variable, void *data);
 
 bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y);
 

@@ -1,6 +1,8 @@
+#define _POSIX_C_SOURCE 200809L
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wayland-client.h>
 #ifdef __linux__
 #include <linux/input-event-codes.h>
@@ -139,7 +141,7 @@ static char *notification_hidden_count(struct mako_state *state) {
 	int hidden = (wl_list_length(&state->notifications) -
 			state->config.max_visible);
 
-	int hidden_ln = snprintf(NULL, 0, "%d",  hidden);
+	size_t hidden_ln = snprintf(NULL, 0, "%d",  hidden);
 	char *hidden_text = malloc(hidden_ln + 1);
 	snprintf(hidden_text, hidden_ln + 1, "%d", hidden);
 
@@ -194,7 +196,7 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 		}
 		len += chunk_len;
 
-		const char *value = NULL;
+		char *value = NULL;
 		bool markup = false;
 
 		if (current[1] == '%') { 

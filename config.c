@@ -26,7 +26,6 @@ void init_config(struct mako_config *config) {
 	config->margin.right = 10;
 	config->margin.bottom = 10;
 	config->margin.left = 10;
-	config->hidden_margin = 3;
 
 	config->max_visible = 5;
 	config->output = strdup("");
