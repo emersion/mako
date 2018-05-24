@@ -55,17 +55,15 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 	PangoAttrList *attrs = NULL;
 	if (config->markup) {
-		char *buf = NULL;
 		GError *error = NULL;
-		if (!pango_parse_markup(text, -1, 0, &attrs, &buf, NULL, &error)) {
-			fprintf(stderr, "cannot parse pango markup: %s\n",
-					error->message);
+		if (pango_parse_markup(text, -1, 0, &attrs, NULL, NULL, &error)) {
+			pango_layout_set_markup(layout, text, -1);
+		} else {
+			fprintf(stderr, "cannot parse pango markup: %s\n", error->message);
 			g_error_free(error);
-			g_object_unref(layout);
-			return 0;
+			// fallback to plain text
+			pango_layout_set_text(layout, text, -1);
 		}
-		pango_layout_set_markup(layout, buf, -1);
-		free(buf);
 	} else {
 		pango_layout_set_text(layout, text, -1);
 	}
