@@ -180,7 +180,6 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 		int hidden_height =
 			render_notification(cairo, state, text, height, scale);
-
 		free(text);
 
 		height += hidden_height;

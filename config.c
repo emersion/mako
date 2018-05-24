@@ -41,6 +41,7 @@ void init_config(struct mako_config *config) {
 void finish_config(struct mako_config *config) {
 	free(config->font);
 	free(config->format);
+	free(config->hidden_format);
 	free(config->output);
 }
 

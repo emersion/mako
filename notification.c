@@ -138,7 +138,7 @@ static size_t escape_markup(const char *s, char *buf) {
 }
 
 char *format_state_text(char variable, void *data) {
-	struct mako_state *state = (struct mako_state *)data;
+	struct mako_state *state = data;
 	char *value = NULL;
 	switch (variable) {
 	case 'h':;
@@ -163,8 +163,8 @@ char *format_state_text(char variable, void *data) {
 	return value;
 }
 
-char* format_notif_text(char variable, void *data) {
-	struct mako_notification *notif = (struct mako_notification *)data;
+char *format_notif_text(char variable, void *data) {
+	struct mako_notification *notif = data;
 	char *value = NULL;
 	switch (variable) {
 	case 'a':
@@ -237,72 +237,6 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 	}
 	return len;
 
-}
-
-size_t format_notification(struct mako_notification *notif, const char *format, char *buf) {
-	size_t len = 0;
-
-	const char *last = format;
-	while (1) {
-		char *current = strchr(last, '%');
-		if (current == NULL || current[1] == '\0') {
-			size_t tail_len = strlen(last);
-			if (buf != NULL) {
-				memcpy(buf + len, last, tail_len + 1);
-			}
-			len += tail_len;
-			break;
-		}
-
-		size_t chunk_len = current - last;
-		if (buf != NULL) {
-			memcpy(buf + len, last, chunk_len);
-		}
-		len += chunk_len;
-
-		const char *value = NULL;
-		bool markup = false;
-		switch (current[1]) {
-		case '%':
-			value = "%";
-			break;
-		case 'a':
-			value = notif->app_name;
-			break;
-		case 's':
-			value = notif->summary;
-			break;
-		case 'b':
-			value = notif->body;
-			markup = true;
-			break;
-		}
-		if (value == NULL) {
-			value = "";
-		}
-
-		size_t value_len;
-		if (!markup) {
-			char *escaped = NULL;
-			if (buf != NULL) {
-				escaped = buf + len;
-			}
-			value_len = escape_markup(value, escaped);
-		} else {
-			value_len = strlen(value);
-			if (buf != NULL) {
-				memcpy(buf + len, value, value_len);
-			}
-		}
-		len += value_len;
-
-		last = current + 2;
-	}
-
-	if (buf != NULL) {
-		trim_space(buf, buf);
-	}
-	return len;
 }
 
 static enum mako_button_binding get_button_binding(struct mako_config *config,
