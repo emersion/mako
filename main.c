@@ -28,6 +28,7 @@ static const char usage[] =
 	"      --border-color <color>      Border color.\n"
 	"      --markup <0|1>              Enable/disable markup.\n"
 	"      --format <format>           Format string.\n"
+	"      --hidden-format <format>    Format string.\n"
 	"      --max-visible <n>           Max number of visible notifications.\n"
 	"      --default-timeout <timeout> Default timeout in milliseconds.\n"
 	"      --output <name>             Show notifications on this output.\n"
