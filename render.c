@@ -136,12 +136,12 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 
-		size_t text_len = format_notification(notif, config->format, NULL);
+		size_t text_len = format_text(config->format, NULL, format_notif_text, notif);
 		char *text = malloc(text_len + 1);
 		if (text == NULL) {
 			break;
 		}
-		format_notification(notif, config->format, text);
+		format_text(config->format, text, format_notif_text, notif);
 
 		int notif_y = height;
 		if (i > 0) {
@@ -150,6 +150,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 		int notif_height =
 			render_notification(cairo, state, text, notif_y, scale);
+		free(text);
+
 		height = notif_y + notif_height;
 
 		// Update hotspot
@@ -166,15 +168,19 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	}
 
 	if (wl_list_length(&state->notifications) > config->max_visible) {
-		int hidden = wl_list_length(&state->notifications) - config->max_visible;
-		int hidden_ln = snprintf(NULL, 0, "<b>[%d]</b>", hidden);
-
-		char hidden_text[hidden_ln + 1];
-		snprintf(hidden_text, hidden_ln + 1, "<b>[%d]</b>", hidden);
 
 		height += inner_margin;
+
+		size_t text_ln = format_text(config->hidden_format, NULL, format_state_text, state);
+		char *text = malloc(text_ln + 1);
+		if (text == NULL) {
+			return height;
+		}
+		format_text(config->hidden_format, text, format_state_text, state);
+
 		int hidden_height =
-			render_notification(cairo, state, hidden_text, height, scale);
+			render_notification(cairo, state, text, height, scale);
+		free(text);
 
 		height += hidden_height;
 	}

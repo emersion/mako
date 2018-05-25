@@ -19,6 +19,7 @@ void init_config(struct mako_config *config) {
 	config->border_size = 1;
 	config->markup = true;
 	config->format = strdup("<b>%s</b>\n%b");
+	config->hidden_format = strdup("%t[%h]");
 	config->actions = true;
 
 	config->margin.top = 10;
@@ -40,6 +41,7 @@ void init_config(struct mako_config *config) {
 void finish_config(struct mako_config *config) {
 	free(config->font);
 	free(config->format);
+	free(config->hidden_format);
 	free(config->output);
 }
 
@@ -158,6 +160,10 @@ static int apply_config_option(struct mako_config *config,
 	} else if (strcmp(name, "format") == 0) {
 		free(config->format);
 		config->format = strdup(value);
+		return 0;
+	} else if (strcmp(name, "hidden-format") == 0) {
+		free(config->hidden_format);
+		config->hidden_format = strdup(value);
 		return 0;
 	} else if (strcmp(name, "max-visible") == 0) {
 		config->max_visible = strtol(value, NULL, 10);
@@ -280,6 +286,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"border-color", required_argument, 0, 0},
 		{"markup", required_argument, 0, 0},
 		{"format", required_argument, 0, 0},
+		{"hidden-format", required_argument, 0, 0},
 		{"max-visible", required_argument, 0, 0},
 		{"default-timeout", required_argument, 0, 0},
 		{"output", required_argument, 0, 0},

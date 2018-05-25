@@ -1,6 +1,8 @@
+#define _POSIX_C_SOURCE 200809L
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wayland-client.h>
 #ifdef __linux__
 #include <linux/input-event-codes.h>
@@ -32,7 +34,7 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	++state->last_id;
 	notif->id = state->last_id;
 	wl_list_init(&notif->actions);
-	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNWON;
+	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNOWN;
 	wl_list_insert(&state->notifications, &notif->link);
 	return notif;
 }
@@ -135,8 +137,58 @@ static size_t escape_markup(const char *s, char *buf) {
 	return len;
 }
 
-size_t format_notification(struct mako_notification *notif, const char *format,
-		char *buf) {
+static char *mako_asprintf(const char *fmt, ...) {
+	char *text;
+	va_list args;
+
+	va_start(args, fmt);
+	int size = vsnprintf(NULL, 0, fmt, args);
+	va_end(args);
+
+	if (size < 0) {
+		return NULL;
+	}
+
+	text = malloc(size + 1);
+	if (text == NULL) {
+		return NULL;
+	}
+
+	va_start(args, fmt);
+	vsnprintf(text, size + 1, fmt, args);
+	va_end(args);
+
+	return text;
+}
+
+char *format_state_text(char variable, bool *markup, void *data) {
+	struct mako_state *state = data;
+	switch (variable) {
+	case 'h':;
+		int hidden = wl_list_length(&state->notifications) - state->config.max_visible;
+		return mako_asprintf("%d", hidden);
+	case 't':;
+		int count = wl_list_length(&state->notifications);
+		return mako_asprintf("%d", count);
+	}
+	return NULL;
+}
+
+char *format_notif_text(char variable, bool *markup, void *data) {
+	struct mako_notification *notif = data;
+	switch (variable) {
+	case 'a':
+		return strdup(notif->app_name);
+	case 's':
+		return strdup(notif->summary);
+	case 'b':
+		*markup = true;
+		return strdup(notif->body);
+	}
+	return NULL;
+}
+
+size_t format_text(const char *format, char *buf, mako_format_func_t format_func, void *data) {
 	size_t len = 0;
 
 	const char *last = format;
@@ -157,25 +209,16 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 		}
 		len += chunk_len;
 
-		const char *value = NULL;
+		char *value = NULL;
 		bool markup = false;
-		switch (current[1]) {
-		case '%':
-			value = "%";
-			break;
-		case 'a':
-			value = notif->app_name;
-			break;
-		case 's':
-			value = notif->summary;
-			break;
-		case 'b':
-			value = notif->body;
-			markup = true;
-			break;
+
+		if (current[1] == '%') { 
+			value = strdup("%");
+		} else {
+			value =	format_func(current[1], &markup, data);
 		}
 		if (value == NULL) {
-			value = "";
+			value = strdup("");
 		}
 
 		size_t value_len;
@@ -191,8 +234,9 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 				memcpy(buf + len, value, value_len);
 			}
 		}
-		len += value_len;
+		free(value);
 
+		len += value_len;
 		last = current + 2;
 	}
 
