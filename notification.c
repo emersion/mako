@@ -137,47 +137,54 @@ static size_t escape_markup(const char *s, char *buf) {
 	return len;
 }
 
+static char *mako_asprintf(const char *fmt, ...) {
+	char *text;
+	va_list args;
+
+	va_start(args, fmt);
+	int size = vsnprintf(NULL, 0, fmt, args);
+	va_end(args);
+
+	if (size < 0) {
+		return NULL;
+	}
+
+	text = malloc(size + 1);
+	if (text == NULL) {
+		return NULL;
+	}
+
+	va_start(args, fmt);
+	vsnprintf(text, size + 1, fmt, args);
+	va_end(args);
+
+	return text;
+}
+
 char *format_state_text(char variable, void *data) {
 	struct mako_state *state = data;
-	char *value = NULL;
 	switch (variable) {
 	case 'h':;
 		int hidden = wl_list_length(&state->notifications) - state->config.max_visible;
-		size_t hidden_ln = snprintf(NULL, 0, "%d", hidden);
-		value = malloc(hidden_ln + 1);
-		if(!value) {
-			break;
-		}
-		snprintf(value, hidden_ln + 1, "%d", hidden);
-		return value;
+		return mako_asprintf("%d", hidden);
 	case 't':;
 		int count = wl_list_length(&state->notifications);
-		size_t total_ln = snprintf(NULL, 0, "%d", count);
-		value = malloc(total_ln + 1);
-		if(!value) {
-			break;
-		}
-		snprintf(value, total_ln + 1, "%d", count);
-		return value;
+		return mako_asprintf("%d", count);
 	}
-	return value;
+	return NULL;
 }
 
 char *format_notif_text(char variable, void *data) {
 	struct mako_notification *notif = data;
-	char *value = NULL;
 	switch (variable) {
 	case 'a':
-		value = strdup(notif->app_name);
-		break;
+		return strdup(notif->app_name);
 	case 's':
-		value = strdup(notif->summary); 
-		break;
+		return strdup(notif->summary);
 	case 'b':
-		value = strdup(notif->body);
-		break;
+		return strdup(notif->body);
 	}
-	return value;
+	return NULL;
 }
 
 size_t format_text(const char *format, char *buf, mako_format_func_t format_func, void *data) {
@@ -210,7 +217,11 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 			value =	format_func(current[1], data);
 		}
 		if (value == NULL) {
-			value = "";
+			value = strdup("");
+		}
+
+		if (current[1] == 'b') {
+			markup = true;
 		}
 
 		size_t value_len;
@@ -236,7 +247,6 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 		trim_space(buf, buf);
 	}
 	return len;
-
 }
 
 static enum mako_button_binding get_button_binding(struct mako_config *config,
