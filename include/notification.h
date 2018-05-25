@@ -55,7 +55,7 @@ enum mako_notification_close_reason {
 
 #define DEFAULT_ACTION_KEY "default"
 
-typedef char *(*mako_format_func_t)(char variable, void *data);
+typedef char *(*mako_format_func_t)(char variable, bool *markup, void *data);
 
 bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y);
 
@@ -65,8 +65,8 @@ void close_notification(struct mako_notification *notif,
 	enum mako_notification_close_reason reason);
 void close_all_notifications(struct mako_state *state,
 	enum mako_notification_close_reason reason);
-char *format_state_text(char variable, void *data);
-char *format_notif_text(char variable, void *data);
+char *format_state_text(char variable, bool *markup, void *data);
+char *format_notif_text(char variable, bool *markup, void *data);
 size_t format_text(const char *format, char *buf, mako_format_func_t func, void *data);
 struct mako_notification *get_notification(struct mako_state *state, uint32_t id);
 size_t format_notification(struct mako_notification *notif, const char *format,

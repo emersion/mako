@@ -161,7 +161,7 @@ static char *mako_asprintf(const char *fmt, ...) {
 	return text;
 }
 
-char *format_state_text(char variable, void *data) {
+char *format_state_text(char variable, bool *markup, void *data) {
 	struct mako_state *state = data;
 	switch (variable) {
 	case 'h':;
@@ -174,7 +174,7 @@ char *format_state_text(char variable, void *data) {
 	return NULL;
 }
 
-char *format_notif_text(char variable, void *data) {
+char *format_notif_text(char variable, bool *markup, void *data) {
 	struct mako_notification *notif = data;
 	switch (variable) {
 	case 'a':
@@ -182,6 +182,7 @@ char *format_notif_text(char variable, void *data) {
 	case 's':
 		return strdup(notif->summary);
 	case 'b':
+		*markup = true;
 		return strdup(notif->body);
 	}
 	return NULL;
@@ -212,16 +213,12 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 		bool markup = false;
 
 		if (current[1] == '%') { 
-			value = "%";
+			value = strdup("%");
 		} else {
-			value =	format_func(current[1], data);
+			value =	format_func(current[1], &markup, data);
 		}
 		if (value == NULL) {
 			value = strdup("");
-		}
-
-		if (current[1] == 'b') {
-			markup = true;
 		}
 
 		size_t value_len;
