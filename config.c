@@ -16,7 +16,7 @@ void init_config(struct mako_config *config) {
 	config->padding = 5;
 	config->width = 300;
 	config->height = 100;
-	config->border_size = 1;
+	config->border_size = 2;
 	config->markup = true;
 	config->format = strdup("<b>%s</b>\n%b");
 	config->hidden_format = strdup("%t[%h]");
