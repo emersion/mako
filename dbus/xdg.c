@@ -215,6 +215,8 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	if (expire_timeout < 0) {
 		expire_timeout = state->config.default_timeout;
 	}
+
+	insert_notification(state, notif);
 	if (expire_timeout > 0) {
 		notif->timer = add_event_loop_timer(&state->event_loop, expire_timeout,
 			handle_notification_timer, notif);

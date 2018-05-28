@@ -30,12 +30,12 @@ struct mako_notification *create_notification(struct mako_state *state) {
 		fprintf(stderr, "allocation failed\n");
 		return NULL;
 	}
+
 	notif->state = state;
 	++state->last_id;
 	notif->id = state->last_id;
 	wl_list_init(&notif->actions);
 	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNOWN;
-	wl_list_insert(&state->notifications, &notif->link);
 	return notif;
 }
 
@@ -285,4 +285,48 @@ void notification_handle_button(struct mako_notification *notif, uint32_t button
 		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 		break;
 	}
+}
+
+/*
+ * Searches through the notifications list and returns the next position at which to insert based on urgency and direction
+ */
+static struct wl_list *get_last_notif_by_urgency(struct wl_list *notifications, enum mako_notification_urgency urgency, int direction) {
+	enum mako_notification_urgency current = urgency;
+
+	if (wl_list_length(notifications) == 0) {
+		return notifications;
+	}
+
+	while (current <= MAKO_NOTIFICATION_URGENCY_HIGH && current >= MAKO_NOTIFICATION_URGENCY_UNKNOWN) {
+		struct mako_notification *notif;
+		wl_list_for_each_reverse(notif, notifications, link) {
+			if (notif->urgency == current) {
+				return &notif->link;
+			}
+		}
+		current += direction;
+	}
+
+	return notifications;
+}
+
+void insert_notification(struct mako_state *state, struct mako_notification *notif) {
+	struct mako_config *config = &state->config;
+	struct wl_list *insert_node;
+
+	//This works but I don't like the way it's done. Can probably use some work.
+	if (config->sort_direction == 0x0) {
+		insert_node = &state->notifications;
+	} else if (config->sort_direction == 0x1) {
+		insert_node = state->notifications.prev;
+	} else if(config->sort_direction & MAKO_SORT_DIRECTION_URGENCY) {
+		int direction = (config->sort_direction & MAKO_SORT_DIRECTION_URGENCY_ASC) ? -1 : 1;
+		int offset = 0;
+		if (!(config->sort_direction & MAKO_SORT_DIRECTION_TIME_ASC)) {
+			offset = direction;
+		}
+		insert_node = get_last_notif_by_urgency(&state->notifications, notif->urgency + offset, direction);
+	}
+
+	wl_list_insert(insert_node, &notif->link);
 }
