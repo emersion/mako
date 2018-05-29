@@ -288,7 +288,8 @@ void notification_handle_button(struct mako_notification *notif, uint32_t button
 }
 
 /*
- * Searches through the notifications list and returns the next position at which to insert based on urgency and direction
+ * Searches through the notifications list and returns the next position at which to insert.
+ * If no results for the specified urgency are found, it will return the closest link searching in the direction specifed. (-1 for lower, 1 or upper).
  */
 static struct wl_list *get_last_notif_by_urgency(struct wl_list *notifications, enum mako_notification_urgency urgency, int direction) {
 	enum mako_notification_urgency current = urgency;
