@@ -315,18 +315,21 @@ void insert_notification(struct mako_state *state, struct mako_notification *not
 	struct mako_config *config = &state->config;
 	struct wl_list *insert_node;
 
-	//This works but I don't like the way it's done. Can probably use some work.
-	if (config->sort_direction == 0x0) {
+	if (config->sort_criteria == MAKO_SORT_CRITERIA_TIME &&
+			!config->sort_asc) {
 		insert_node = &state->notifications;
-	} else if (config->sort_direction == 0x1) {
-		insert_node = state->notifications.prev;
-	} else if(config->sort_direction & MAKO_SORT_DIRECTION_URGENCY) {
-		int direction = (config->sort_direction & MAKO_SORT_DIRECTION_URGENCY_ASC) ? -1 : 1;
+	} else if (config->sort_criteria == MAKO_SORT_CRITERIA_TIME &&
+			(config->sort_asc & MAKO_SORT_ASC_TIME)) {
+			insert_node = state->notifications.prev;
+	} else if (config->sort_criteria & MAKO_SORT_CRITERIA_URGENCY) {
+		int direction = (config->sort_asc & MAKO_SORT_ASC_URGENCY) ? -1 : 1;
 		int offset = 0;
-		if (!(config->sort_direction & MAKO_SORT_DIRECTION_TIME_ASC)) {
+		if (!(config->sort_asc & MAKO_SORT_ASC_TIME)) {
 			offset = direction;
 		}
 		insert_node = get_last_notif_by_urgency(&state->notifications, notif->urgency + offset, direction);
+	} else {
+		insert_node = &state->notifications;
 	}
 
 	wl_list_insert(insert_node, &notif->link);

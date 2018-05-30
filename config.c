@@ -21,7 +21,8 @@ void init_config(struct mako_config *config) {
 	config->format = strdup("<b>%s</b>\n%b");
 	config->hidden_format = strdup("%t[%h]");
 	config->actions = true;
-	config->sort_direction = 0;
+	config->sort_criteria = MAKO_SORT_CRITERIA_TIME;
+	config->sort_asc = 0;
 
 	config->margin.top = 10;
 	config->margin.right = 10;
@@ -178,13 +179,17 @@ static int apply_config_option(struct mako_config *config,
 		return 0;
 	} else if (strcmp(name, "sort") == 0) {
 		if (strcmp(value, "+priority") == 0) {
-			config->sort_direction |= (MAKO_SORT_DIRECTION_URGENCY | MAKO_SORT_DIRECTION_URGENCY_ASC);
+			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
+			config->sort_asc |= MAKO_SORT_ASC_URGENCY;
 		} else if (strcmp(value, "-priority") == 0) {
-			config->sort_direction |= (MAKO_SORT_DIRECTION_URGENCY);
+			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
+			config->sort_asc &= ~MAKO_SORT_ASC_URGENCY;
 		} else if (strcmp(value, "+time") == 0) {
-			config->sort_direction |= (MAKO_SORT_DIRECTION_TIME_ASC);
+			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
+			config->sort_asc |= MAKO_SORT_ASC_TIME;
 		} else if (strcmp(value, "-time") == 0) {
-			config->sort_direction &= ~(MAKO_SORT_DIRECTION_URGENCY);
+			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
+			config->sort_asc &= ~MAKO_SORT_ASC_TIME;
 		}
 		return 0;
 	} else {
