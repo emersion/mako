@@ -32,6 +32,8 @@ void init_config(struct mako_config *config) {
 	config->max_visible = 5;
 	config->output = strdup("");
 
+	config->ignore_timeout = false;
+
 	config->colors.background = 0x285577FF;
 	config->colors.text = 0xFFFFFFFF;
 	config->colors.border = 0x4C7899FF;
@@ -173,6 +175,9 @@ static int apply_config_option(struct mako_config *config,
 	} else if (strcmp(name, "default-timeout") == 0) {
 		config->default_timeout = strtol(value, NULL, 10);
 		return 0;
+	} else if (strcmp(name, "ignore-timeout") == 0) {
+		config->ignore_timeout = true;
+		return 0;
 	} else if (strcmp(name, "output") == 0) {
 		free(config->output);
 		config->output = strdup(value);
@@ -306,6 +311,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"hidden-format", required_argument, 0, 0},
 		{"max-visible", required_argument, 0, 0},
 		{"default-timeout", required_argument, 0, 0},
+		{"ignore-timeout", no_argument, 0, 0},
 		{"output", required_argument, 0, 0},
 		{"sort", required_argument, 0, 0},
 		{0},
