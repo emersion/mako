@@ -16,10 +16,10 @@ void init_config(struct mako_config *config) {
 	config->padding = 5;
 	config->width = 300;
 	config->height = 100;
-	config->border_size = 1;
+	config->border_size = 2;
 	config->markup = true;
 	config->format = strdup("<b>%s</b>\n%b");
-	config->hidden_format = strdup("%t[%h]");
+	config->hidden_format = strdup("(%h more)");
 	config->actions = true;
 	config->sort_criteria = MAKO_SORT_CRITERIA_TIME;
 	config->sort_asc = 0;
@@ -47,136 +47,145 @@ void finish_config(struct mako_config *config) {
 	free(config->output);
 }
 
+static bool parse_int(const char *s, int *out) {
+	errno = 0;
+	char *end;
+	*out = (int)strtol(s, &end, 10);
+	return errno == 0 && end[0] == '\0';
+}
+
 /* Parse between 1 and 4 integers, comma separated, from the provided string.
  * Depending on the number of integers provided, the four fields of the `out`
  * struct will be initialized following the same rules as the CSS "margin"
- * property. Returns 0 on success, -1 on parsing failure. */
-static int parse_directional(const char *directional_string,
+ * property.
+ */
+static bool parse_directional(const char *directional_string,
 		struct mako_directional *out) {
-	int error = 0;
 	char *components = strdup(directional_string);
 
 	int32_t values[] = {0, 0, 0, 0};
-	size_t count;
 
 	char *saveptr = NULL;
 	char *token = strtok_r(components, ",", &saveptr);
+	size_t count;
 	for (count = 0; count < 4; count++) {
 		if (token == NULL) {
 			break;
 		}
 
-		errno = 0;
-		char *endptr = NULL;
-		int32_t number = strtol(token, &endptr, 10);
-		if (errno || endptr == token) {
-			// There were no digits, or something else went horribly wrong.
-			error = -1;
-			break;
+		int32_t number;
+		if (!parse_int(token, &number)) {
+			// There were no digits, or something else went horribly wrong
+			free(components);
+			return false;
 		}
 
 		values[count] = number;
 		token = strtok_r(NULL, ",", &saveptr);
 	}
 
-	if (error == 0) {
-		switch (count) {
-		case 1: // All values are the same
-			out->top = out->right = out->bottom = out->left = values[0];
-			break;
-		case 2: // Vertical, horizontal
-			out->top = out->bottom = values[0];
-			out->right = out->left = values[1];
-			break;
-		case 3: // Top, horizontal, bottom
-			out->top = values[0];
-			out->right = out->left = values[1];
-			out->bottom = values[2];
-			break;
-		case 4: // Top, right, bottom, left
-			out->top = values[0];
-			out->right = values[1];
-			out->bottom = values[2];
-			out->left = values[3];
-			break;
-		}
+	switch (count) {
+	case 1: // All values are the same
+		out->top = out->right = out->bottom = out->left = values[0];
+		break;
+	case 2: // Vertical, horizontal
+		out->top = out->bottom = values[0];
+		out->right = out->left = values[1];
+		break;
+	case 3: // Top, horizontal, bottom
+		out->top = values[0];
+		out->right = out->left = values[1];
+		out->bottom = values[2];
+		break;
+	case 4: // Top, right, bottom, left
+		out->top = values[0];
+		out->right = values[1];
+		out->bottom = values[2];
+		out->left = values[3];
+		break;
 	}
 
 	free(components);
-	return error;
+	return true;
 }
 
-static uint32_t parse_color(const char *color) {
+static bool parse_color(const char *color, uint32_t *out) {
 	if (color[0] != '#') {
-		return -1;
+		return false;
 	}
 	color++;
 
 	size_t len = strlen(color);
 	if (len != 6 && len != 8) {
-		return -1;
+		return false;
 	}
-	uint32_t res = (uint32_t)strtoul(color, NULL, 16);
+
+	errno = 0;
+	char *end;
+	*out = (uint32_t)strtoul(color, &end, 16);
+	if (errno != 0 || end[0] != '\0') {
+		return false;
+	}
+
 	if (len == 6) {
-		res = (res << 8) | 0xFF;
+		*out = (*out << 8) | 0xFF;
 	}
-	return res;
+	return true;
 }
 
-static int apply_config_option(struct mako_config *config,
+static bool apply_config_option(struct mako_config *config, const char *section,
 		const char *name, const char *value) {
+	if (section != NULL) {
+		// TODO: criteria support
+		if (strcmp(section, "hidden") != 0) {
+			return false;
+		}
+
+		if (strcmp(name, "format") == 0) {
+			free(config->hidden_format);
+			config->hidden_format = strdup(value);
+			return true;
+		} else {
+			fprintf(stderr, "Only 'format' is supported in the 'hidden' section");
+			return false;
+		}
+	}
+
 	if (strcmp(name, "font") == 0) {
 		free(config->font);
 		config->font = strdup(value);
-		return 0;
+		return true;
 	} else if (strcmp(name, "background-color") == 0) {
-		config->colors.background = parse_color(value);
-		return 0;
+		return parse_color(value, &config->colors.background);
 	} else if (strcmp(name, "text-color") == 0) {
-		config->colors.text = parse_color(value);
-		return 0;
+		return parse_color(value, &config->colors.text);
 	} else if (strcmp(name, "width") == 0) {
-		config->width = strtol(value, NULL, 10);
-		return 0;
+		return parse_int(value, &config->width);
 	} else if (strcmp(name, "height") == 0) {
-		config->height = strtol(value, NULL, 10);
-		return 0;
+		return parse_int(value, &config->height);
 	} else if (strcmp(name, "margin") == 0) {
-		if (parse_directional(value, &config->margin)) {
-			fprintf(stderr, "Unable to parse margins\n");
-			return 1;
-		}
-		return 0;
+		return parse_directional(value, &config->margin);
 	} else if (strcmp(name, "padding") == 0) {
-		config->padding = strtol(value, NULL, 10);
-		return 0;
+		return parse_int(value, &config->padding);
 	} else if (strcmp(name, "border-size") == 0) {
-		config->border_size = strtol(value, NULL, 10);
-		return 0;
+		return parse_int(value, &config->border_size);
 	} else if (strcmp(name, "border-color") == 0) {
-		config->colors.border = parse_color(value);
-		return 0;
+		return parse_color(value, &config->colors.border);
 	} else if (strcmp(name, "markup") == 0) {
 		config->markup = strcmp(value, "1") == 0;
-		return 0;
+		return config->markup || strcmp(value, "0") == 0;
 	} else if (strcmp(name, "format") == 0) {
 		free(config->format);
 		config->format = strdup(value);
-		return 0;
-	} else if (strcmp(name, "hidden-format") == 0) {
-		free(config->hidden_format);
-		config->hidden_format = strdup(value);
-		return 0;
+		return true;
 	} else if (strcmp(name, "max-visible") == 0) {
-		config->max_visible = strtol(value, NULL, 10);
-		return 0;
+		return parse_int(value, &config->max_visible);
 	} else if (strcmp(name, "default-timeout") == 0) {
-		config->default_timeout = strtol(value, NULL, 10);
-		return 0;
+		return parse_int(value, &config->default_timeout);
 	} else if (strcmp(name, "output") == 0) {
 		free(config->output);
 		config->output = strdup(value);
-		return 0;
+		return true;
 	} else if (strcmp(name, "sort") == 0) {
 		if (strcmp(value, "+priority") == 0) {
 			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
@@ -191,9 +200,9 @@ static int apply_config_option(struct mako_config *config,
 			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
 			config->sort_asc &= ~MAKO_SORT_CRITERIA_TIME;
 		}
-		return 0;
+		return true;
 	} else {
-		return 1;
+		return false;
 	}
 }
 
@@ -209,23 +218,19 @@ static char *get_config_path(void) {
 
 	if (!getenv("XDG_CONFIG_HOME")) {
 		char *home = getenv("HOME");
-		char *config_home = malloc(strlen(home) + strlen("/.config") + 1);
-		if (!config_home) {
-			fprintf(stderr, "Unable to allocate $HOME/.config\n");
-		} else {
-			strcpy(config_home, home);
-			strcat(config_home, "/.config");
-			setenv("XDG_CONFIG_HOME", config_home, 1);
-			free(config_home);
+		if (!home) {
+			return NULL;
 		}
+		char config_home[strlen(home) + strlen("/.config") + 1];
+		strcpy(config_home, home);
+		strcat(config_home, "/.config");
+		setenv("XDG_CONFIG_HOME", config_home, 1);
 	}
 
-	wordexp_t p;
-	char *path;
-
 	for (size_t i = 0; i < sizeof(config_paths) / sizeof(char *); ++i) {
+		wordexp_t p;
 		if (wordexp(config_paths[i], &p, 0) == 0) {
-			path = strdup(p.we_wordv[0]);
+			char *path = strdup(p.we_wordv[0]);
 			wordfree(&p);
 			if (file_exists(path)) {
 				return path;
@@ -247,43 +252,47 @@ int load_config_file(struct mako_config *config) {
 	if (!f) {
 		fprintf(stderr, "Unable to open %s for reading", path);
 		free(path);
-		return 1;
+		return -1;
 	}
 	const char *base = basename(path);
 
+	int ret = 0;
 	int lineno = 0;
 	char *line = NULL;
+	char *section = NULL;
 	size_t n = 0;
 	while (getline(&line, &n, f) > 0) {
 		++lineno;
-		if (line[0] == 0 || line[0] == '\n' || line[0] == '#') {
+		if (line[0] == '\0' || line[0] == '\n' || line[0] == '#') {
+			continue;
+		}
+		if (line[strlen(line) - 1] == '\n') {
+			line[strlen(line) - 1] = '\0';
+		}
+		if (line[0] == '[' && line[strlen(line) - 1] == ']') {
+			free(section);
+			section = strndup(line + 1, strlen(line) - 2);
 			continue;
 		}
 		char *eq = strchr(line, '=');
 		if (!eq) {
-			fprintf(stderr, "[%s:%d] Expected key=value\n",
-					base, lineno);
-			goto error;
+			fprintf(stderr, "[%s:%d] Expected key=value\n", base, lineno);
+			ret = -1;
+			break;
 		}
-		*eq = 0;
-		if (eq[strlen(eq + 1)] == '\n') {
-			eq[strlen(eq + 1)] = 0;
-		}
-		if (apply_config_option(config, line, eq + 1) != 0) {
-			fprintf(stderr, "[%s:%d] Unknown option '%s'\n",
-					base, lineno, line);
-			goto error;
+		eq[0] = '\0';
+		if (!apply_config_option(config, section, line, eq + 1)) {
+			fprintf(stderr, "[%s:%d] Failed to parse option '%s'\n",
+				base, lineno, line);
+			ret = -1;
+			break;
 		}
 	}
+	free(section);
 	free(line);
 	fclose(f);
 	free(path);
-	return 0;
-error:
-	free(line);
-	fclose(f);
-	free(path);
-	return 1;
+	return ret;
 }
 
 static int config_argc = 0;
@@ -303,7 +312,6 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"border-color", required_argument, 0, 0},
 		{"markup", required_argument, 0, 0},
 		{"format", required_argument, 0, 0},
-		{"hidden-format", required_argument, 0, 0},
 		{"max-visible", required_argument, 0, 0},
 		{"default-timeout", required_argument, 0, 0},
 		{"output", required_argument, 0, 0},
@@ -324,7 +332,10 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		}
 
 		const char *name = long_options[option_index].name;
-		apply_config_option(config, name, optarg);
+		if (!apply_config_option(config, NULL, name, optarg)) {
+			fprintf(stderr, "Failed to parse option '%s'\n", name);
+			return -1;
+		}
 	}
 
 	config_argc = argc;

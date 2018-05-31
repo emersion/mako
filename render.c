@@ -85,13 +85,18 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 	// Render border
 	set_source_u32(cairo, config->colors.border);
-	cairo_set_line_width(cairo, border_size * scale);
-	set_rectangle(cairo, 0, offset_y, state->width, notif_height, scale);
+	set_rectangle(cairo,
+		config->border_size / 2.0,
+		offset_y + config->border_size / 2.0,
+		state->width - config->border_size,
+		notif_height - config->border_size, scale);
+	cairo_save(cairo);
+	cairo_set_line_width(cairo, config->border_size * scale);
 	cairo_stroke(cairo);
+	cairo_restore(cairo);
 
 	// Render background
 	set_source_u32(cairo, config->colors.background);
-	cairo_set_line_width(cairo, 0);
 	set_rectangle(cairo,
 		config->border_size, offset_y + config->border_size,
 		state->width - border_size, notif_height - border_size, scale);
@@ -132,33 +137,32 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	int notif_width = state->width;
 
 	size_t i = 0;
-	int height = 0;
+	int total_height = 0;
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
-
-		size_t text_len = format_text(config->format, NULL, format_notif_text, notif);
+		size_t text_len =
+			format_text(config->format, NULL, format_notif_text, notif);
 		char *text = malloc(text_len + 1);
 		if (text == NULL) {
 			break;
 		}
 		format_text(config->format, text, format_notif_text, notif);
 
-		int notif_y = height;
 		if (i > 0) {
-			notif_y += inner_margin;
+			total_height += inner_margin;
 		}
 
 		int notif_height =
-			render_notification(cairo, state, text, notif_y, scale);
+			render_notification(cairo, state, text, total_height, scale);
 		free(text);
-
-		height = notif_y + notif_height;
 
 		// Update hotspot
 		notif->hotspot.x = 0;
-		notif->hotspot.y = notif_y;
+		notif->hotspot.y = total_height;
 		notif->hotspot.width = notif_width;
 		notif->hotspot.height = notif_height;
+
+		total_height += notif_height;
 
 		++i;
 		if (config->max_visible >= 0 &&
@@ -168,22 +172,23 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	}
 
 	if (wl_list_length(&state->notifications) > config->max_visible) {
+		total_height += inner_margin;
 
-		height += inner_margin;
-
-		size_t text_ln = format_text(config->hidden_format, NULL, format_state_text, state);
+		size_t text_ln =
+			format_text(config->hidden_format, NULL, format_state_text, state);
 		char *text = malloc(text_ln + 1);
 		if (text == NULL) {
-			return height;
+			fprintf(stderr, "allocation failed");
+			return 0;
 		}
 		format_text(config->hidden_format, text, format_state_text, state);
 
 		int hidden_height =
-			render_notification(cairo, state, text, height, scale);
+			render_notification(cairo, state, text, total_height, scale);
 		free(text);
 
-		height += hidden_height;
+		total_height += hidden_height;
 	}
 
-	return height;
+	return total_height;
 }
