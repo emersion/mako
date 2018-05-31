@@ -320,15 +320,15 @@ void insert_notification(struct mako_state *state, struct mako_notification *not
 	struct wl_list *insert_node;
 
 	if (config->sort_criteria == MAKO_SORT_CRITERIA_TIME &&
-		!(config->sort_asc & MAKO_SORT_ASC_TIME)) {
+			!(config->sort_asc & MAKO_SORT_CRITERIA_TIME)) {
 		insert_node = &state->notifications;
 	} else if (config->sort_criteria == MAKO_SORT_CRITERIA_TIME &&
-		(config->sort_asc & MAKO_SORT_ASC_TIME)) {
+			(config->sort_asc & MAKO_SORT_CRITERIA_TIME)) {
 		insert_node = state->notifications.prev;
 	} else if (config->sort_criteria & MAKO_SORT_CRITERIA_URGENCY) {
-		int direction = (config->sort_asc & MAKO_SORT_ASC_URGENCY) ? -1 : 1;
+		int direction = (config->sort_asc & MAKO_SORT_CRITERIA_URGENCY) ? -1 : 1;
 		int offset = 0;
-		if (!(config->sort_asc & MAKO_SORT_ASC_TIME)) {
+		if (!(config->sort_asc & MAKO_SORT_CRITERIA_TIME)) {
 			offset = direction;
 		}
 		insert_node = get_last_notif_by_urgency(&state->notifications,

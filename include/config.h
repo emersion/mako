@@ -21,8 +21,6 @@ enum mako_button_binding {
 enum mako_sort_criteria {
 	MAKO_SORT_CRITERIA_TIME = 1,
 	MAKO_SORT_CRITERIA_URGENCY = 2,
-	MAKO_SORT_ASC_TIME = 1,
-	MAKO_SORT_ASC_URGENCY = 2,
 };
 
 struct mako_config {
