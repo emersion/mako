@@ -45,138 +45,135 @@ void finish_config(struct mako_config *config) {
 	free(config->output);
 }
 
+static bool parse_int(const char *s, int *out) {
+	errno = 0;
+	char *end;
+	*out = (int)strtol(s, &end, 10);
+	return errno == 0 && end[0] == '\0';
+}
+
 /* Parse between 1 and 4 integers, comma separated, from the provided string.
  * Depending on the number of integers provided, the four fields of the `out`
  * struct will be initialized following the same rules as the CSS "margin"
- * property. Returns 0 on success, -1 on parsing failure. */
-static int parse_directional(const char *directional_string,
+ * property.
+ */
+static bool parse_directional(const char *directional_string,
 		struct mako_directional *out) {
-	int error = 0;
 	char *components = strdup(directional_string);
 
 	int32_t values[] = {0, 0, 0, 0};
-	size_t count;
 
 	char *saveptr = NULL;
 	char *token = strtok_r(components, ",", &saveptr);
+	size_t count;
 	for (count = 0; count < 4; count++) {
 		if (token == NULL) {
 			break;
 		}
 
-		errno = 0;
-		char *endptr = NULL;
-		int32_t number = strtol(token, &endptr, 10);
-		if (errno || endptr == token) {
-			// There were no digits, or something else went horribly wrong.
-			error = -1;
-			break;
+		int32_t number;
+		if (!parse_int(token, &number)) {
+			// There were no digits, or something else went horribly wrong
+			free(components);
+			return false;
 		}
 
 		values[count] = number;
 		token = strtok_r(NULL, ",", &saveptr);
 	}
 
-	if (error == 0) {
-		switch (count) {
-		case 1: // All values are the same
-			out->top = out->right = out->bottom = out->left = values[0];
-			break;
-		case 2: // Vertical, horizontal
-			out->top = out->bottom = values[0];
-			out->right = out->left = values[1];
-			break;
-		case 3: // Top, horizontal, bottom
-			out->top = values[0];
-			out->right = out->left = values[1];
-			out->bottom = values[2];
-			break;
-		case 4: // Top, right, bottom, left
-			out->top = values[0];
-			out->right = values[1];
-			out->bottom = values[2];
-			out->left = values[3];
-			break;
-		}
+	switch (count) {
+	case 1: // All values are the same
+		out->top = out->right = out->bottom = out->left = values[0];
+		break;
+	case 2: // Vertical, horizontal
+		out->top = out->bottom = values[0];
+		out->right = out->left = values[1];
+		break;
+	case 3: // Top, horizontal, bottom
+		out->top = values[0];
+		out->right = out->left = values[1];
+		out->bottom = values[2];
+		break;
+	case 4: // Top, right, bottom, left
+		out->top = values[0];
+		out->right = values[1];
+		out->bottom = values[2];
+		out->left = values[3];
+		break;
 	}
 
 	free(components);
-	return error;
+	return true;
 }
 
-static uint32_t parse_color(const char *color) {
+static bool parse_color(const char *color, uint32_t *out) {
 	if (color[0] != '#') {
-		return -1;
+		return false;
 	}
 	color++;
 
 	size_t len = strlen(color);
 	if (len != 6 && len != 8) {
-		return -1;
+		return false;
 	}
-	uint32_t res = (uint32_t)strtoul(color, NULL, 16);
+
+	errno = 0;
+	char *end;
+	*out = (uint32_t)strtoul(color, &end, 16);
+	if (errno != 0 || end[0] != '\0') {
+		return false;
+	}
+
 	if (len == 6) {
-		res = (res << 8) | 0xFF;
+		*out = (*out << 8) | 0xFF;
 	}
-	return res;
+	return true;
 }
 
-static int apply_config_option(struct mako_config *config,
+static bool apply_config_option(struct mako_config *config,
 		const char *name, const char *value) {
 	if (strcmp(name, "font") == 0) {
 		free(config->font);
 		config->font = strdup(value);
-		return 0;
+		return true;
 	} else if (strcmp(name, "background-color") == 0) {
-		config->colors.background = parse_color(value);
-		return 0;
+		return parse_color(value, &config->colors.background);
 	} else if (strcmp(name, "text-color") == 0) {
-		config->colors.text = parse_color(value);
-		return 0;
+		return parse_color(value, &config->colors.text);
 	} else if (strcmp(name, "width") == 0) {
-		config->width = strtol(value, NULL, 10);
-		return 0;
+		return parse_int(value, &config->width);
 	} else if (strcmp(name, "height") == 0) {
-		config->height = strtol(value, NULL, 10);
-		return 0;
+		return parse_int(value, &config->height);
 	} else if (strcmp(name, "margin") == 0) {
-		if (parse_directional(value, &config->margin)) {
-			fprintf(stderr, "Unable to parse margins\n");
-			return 1;
-		}
-		return 0;
+		return parse_directional(value, &config->margin);
 	} else if (strcmp(name, "padding") == 0) {
-		config->padding = strtol(value, NULL, 10);
-		return 0;
+		return parse_int(value, &config->padding);
 	} else if (strcmp(name, "border-size") == 0) {
-		config->border_size = strtol(value, NULL, 10);
-		return 0;
+		return parse_int(value, &config->border_size);
 	} else if (strcmp(name, "border-color") == 0) {
-		config->colors.border = parse_color(value);
-		return 0;
+		return parse_color(value, &config->colors.border);
 	} else if (strcmp(name, "markup") == 0) {
 		config->markup = strcmp(value, "1") == 0;
-		return 0;
+		return config->markup || strcmp(value, "0") == 0;
 	} else if (strcmp(name, "format") == 0) {
 		free(config->format);
 		config->format = strdup(value);
-		return 0;
+		return true;
 	} else if (strcmp(name, "hidden-format") == 0) {
 		free(config->hidden_format);
 		config->hidden_format = strdup(value);
-		return 0;
+		return true;
 	} else if (strcmp(name, "max-visible") == 0) {
-		config->max_visible = strtol(value, NULL, 10);
-		return 0;
+		return parse_int(value, &config->max_visible);
 	} else if (strcmp(name, "default-timeout") == 0) {
-		config->default_timeout = strtol(value, NULL, 10);
-		return 0;
+		return parse_int(value, &config->default_timeout);
 	} else if (strcmp(name, "output") == 0) {
 		free(config->output);
 		config->output = strdup(value);
-		return 0;
+		return true;
 	} else {
-		return 1;
+		return false;
 	}
 }
 
@@ -252,9 +249,9 @@ int load_config_file(struct mako_config *config) {
 		if (eq[strlen(eq + 1)] == '\n') {
 			eq[strlen(eq + 1)] = 0;
 		}
-		if (apply_config_option(config, line, eq + 1) != 0) {
-			fprintf(stderr, "[%s:%d] Unknown option '%s'\n",
-					base, lineno, line);
+		if (!apply_config_option(config, line, eq + 1)) {
+			fprintf(stderr, "[%s:%d] Failed to parse option '%s'\n",
+				base, lineno, line);
 			goto error;
 		}
 	}
@@ -306,7 +303,10 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		}
 
 		const char *name = long_options[option_index].name;
-		apply_config_option(config, name, optarg);
+		if (!apply_config_option(config, name, optarg)) {
+			fprintf(stderr, "Failed to parse option '%s'\n", name);
+			return -1;
+		}
 	}
 
 	config_argc = argc;
