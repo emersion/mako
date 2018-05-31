@@ -180,16 +180,16 @@ static int apply_config_option(struct mako_config *config,
 	} else if (strcmp(name, "sort") == 0) {
 		if (strcmp(value, "+priority") == 0) {
 			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
-			config->sort_asc |= MAKO_SORT_ASC_URGENCY;
+			config->sort_asc |= MAKO_SORT_CRITERIA_URGENCY;
 		} else if (strcmp(value, "-priority") == 0) {
 			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
-			config->sort_asc &= ~MAKO_SORT_ASC_URGENCY;
+			config->sort_asc &= ~MAKO_SORT_CRITERIA_URGENCY;
 		} else if (strcmp(value, "+time") == 0) {
 			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
-			config->sort_asc |= MAKO_SORT_ASC_TIME;
+			config->sort_asc |= MAKO_SORT_CRITERIA_TIME;
 		} else if (strcmp(value, "-time") == 0) {
 			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
-			config->sort_asc &= ~MAKO_SORT_ASC_TIME;
+			config->sort_asc &= ~MAKO_SORT_CRITERIA_TIME;
 		}
 		return 0;
 	} else {
@@ -306,6 +306,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"hidden-format", required_argument, 0, 0},
 		{"max-visible", required_argument, 0, 0},
 		{"default-timeout", required_argument, 0, 0},
+		{"output", required_argument, 0, 0},
 		{"sort", required_argument, 0, 0},
 		{0},
 	};
