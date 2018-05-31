@@ -19,7 +19,7 @@ void init_config(struct mako_config *config) {
 	config->border_size = 2;
 	config->markup = true;
 	config->format = strdup("<b>%s</b>\n%b");
-	config->hidden_format = strdup("%t[%h]");
+	config->hidden_format = strdup("(%h more)");
 	config->actions = true;
 
 	config->margin.top = 10;
