@@ -288,17 +288,21 @@ void notification_handle_button(struct mako_notification *notif, uint32_t button
 }
 
 /*
- * Searches through the notifications list and returns the next position at which to insert.
- * If no results for the specified urgency are found, it will return the closest link searching in the direction specifed. (-1 for lower, 1 or upper).
+ * Searches through the notifications list and returns the next position at
+ * which to insert. If no results for the specified urgency are found,
+ * it will return the closest link searching in the direction specifed.
+ * (-1 for lower, 1 or upper).
  */
-static struct wl_list *get_last_notif_by_urgency(struct wl_list *notifications, enum mako_notification_urgency urgency, int direction) {
+static struct wl_list *get_last_notif_by_urgency(struct wl_list *notifications,
+		enum mako_notification_urgency urgency, int direction) {
 	enum mako_notification_urgency current = urgency;
 
-	if (wl_list_length(notifications) == 0) {
+	if (wl_list_empty(notifications)) {
 		return notifications;
 	}
 
-	while (current <= MAKO_NOTIFICATION_URGENCY_HIGH && current >= MAKO_NOTIFICATION_URGENCY_UNKNOWN) {
+	while (current <= MAKO_NOTIFICATION_URGENCY_HIGH &&
+		current >= MAKO_NOTIFICATION_URGENCY_UNKNOWN) {
 		struct mako_notification *notif;
 		wl_list_for_each_reverse(notif, notifications, link) {
 			if (notif->urgency == current) {
@@ -316,18 +320,19 @@ void insert_notification(struct mako_state *state, struct mako_notification *not
 	struct wl_list *insert_node;
 
 	if (config->sort_criteria == MAKO_SORT_CRITERIA_TIME &&
-			!config->sort_asc) {
+		!(config->sort_asc & MAKO_SORT_ASC_TIME)) {
 		insert_node = &state->notifications;
 	} else if (config->sort_criteria == MAKO_SORT_CRITERIA_TIME &&
-			(config->sort_asc & MAKO_SORT_ASC_TIME)) {
-			insert_node = state->notifications.prev;
+		(config->sort_asc & MAKO_SORT_ASC_TIME)) {
+		insert_node = state->notifications.prev;
 	} else if (config->sort_criteria & MAKO_SORT_CRITERIA_URGENCY) {
 		int direction = (config->sort_asc & MAKO_SORT_ASC_URGENCY) ? -1 : 1;
 		int offset = 0;
 		if (!(config->sort_asc & MAKO_SORT_ASC_TIME)) {
 			offset = direction;
 		}
-		insert_node = get_last_notif_by_urgency(&state->notifications, notif->urgency + offset, direction);
+		insert_node = get_last_notif_by_urgency(&state->notifications,
+			notif->urgency + offset, direction);
 	} else {
 		insert_node = &state->notifications;
 	}

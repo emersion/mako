@@ -21,9 +21,6 @@ enum mako_button_binding {
 enum mako_sort_criteria {
 	MAKO_SORT_CRITERIA_TIME = 1,
 	MAKO_SORT_CRITERIA_URGENCY = 2,
-};
-
-enum mako_sort_asc {
 	MAKO_SORT_ASC_TIME = 1,
 	MAKO_SORT_ASC_URGENCY = 2,
 };
@@ -40,8 +37,8 @@ struct mako_config {
 	int32_t max_visible;
 	char *output;
 	char *hidden_format;
-	enum mako_sort_criteria sort_criteria;
-	enum mako_sort_asc sort_asc;
+	uint32_t sort_criteria; //enum mako_sort_criteria
+	uint32_t sort_asc;
 
 	int default_timeout; // in ms
 

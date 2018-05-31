@@ -306,6 +306,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"hidden-format", required_argument, 0, 0},
 		{"max-visible", required_argument, 0, 0},
 		{"default-timeout", required_argument, 0, 0},
+		{"output", required_argument, 0, 0},
 		{"sort", required_argument, 0, 0},
 		{0},
 	};
