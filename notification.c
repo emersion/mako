@@ -324,7 +324,7 @@ void insert_notification(struct mako_state *state, struct mako_notification *not
 		insert_node = &state->notifications;
 	} else if (config->sort_criteria == MAKO_SORT_CRITERIA_TIME &&
 			(config->sort_asc & MAKO_SORT_CRITERIA_TIME)) {
-		insert_node = &state->notifications;
+		insert_node = state->notifications.prev;
 	} else if (config->sort_criteria & MAKO_SORT_CRITERIA_URGENCY) {
 		int direction = (config->sort_asc & MAKO_SORT_CRITERIA_URGENCY) ? -1 : 1;
 		int offset = 0;
