@@ -21,6 +21,8 @@ void init_config(struct mako_config *config) {
 	config->format = strdup("<b>%s</b>\n%b");
 	config->hidden_format = strdup("(%h more)");
 	config->actions = true;
+	config->sort_criteria = MAKO_SORT_CRITERIA_TIME;
+	config->sort_asc = 0;
 
 	config->margin.top = 10;
 	config->margin.right = 10;
@@ -184,6 +186,21 @@ static bool apply_config_option(struct mako_config *config, const char *section,
 		free(config->output);
 		config->output = strdup(value);
 		return true;
+	} else if (strcmp(name, "sort") == 0) {
+		if (strcmp(value, "+priority") == 0) {
+			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
+			config->sort_asc |= MAKO_SORT_CRITERIA_URGENCY;
+		} else if (strcmp(value, "-priority") == 0) {
+			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
+			config->sort_asc &= ~MAKO_SORT_CRITERIA_URGENCY;
+		} else if (strcmp(value, "+time") == 0) {
+			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
+			config->sort_asc |= MAKO_SORT_CRITERIA_TIME;
+		} else if (strcmp(value, "-time") == 0) {
+			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
+			config->sort_asc &= ~MAKO_SORT_CRITERIA_TIME;
+		}
+		return true;
 	} else {
 		return false;
 	}
@@ -298,6 +315,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"max-visible", required_argument, 0, 0},
 		{"default-timeout", required_argument, 0, 0},
 		{"output", required_argument, 0, 0},
+		{"sort", required_argument, 0, 0},
 		{0},
 	};
 

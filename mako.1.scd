@@ -85,6 +85,13 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: 5
 
+*--sort* _+/-time_ | _+/-priority_
+	Sorts incoming notifications by time and/or priority in ascending(+)
+	or descending(-) order.
+
+	Default: -time
+
+
 *--default-timeout* _timeout_
 	Set the default timeout to _timeout_ in milliseconds. To disable the
 	timeout, set it to zero.

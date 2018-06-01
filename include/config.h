@@ -18,6 +18,11 @@ enum mako_button_binding {
 	MAKO_BUTTON_BINDING_INVOKE_DEFAULT_ACTION,
 };
 
+enum mako_sort_criteria {
+	MAKO_SORT_CRITERIA_TIME = 1,
+	MAKO_SORT_CRITERIA_URGENCY = 2,
+};
+
 struct mako_config {
 	char *font;
 	int32_t width, height;
@@ -30,6 +35,8 @@ struct mako_config {
 	int32_t max_visible;
 	char *output;
 	char *hidden_format;
+	uint32_t sort_criteria; //enum mako_sort_criteria
+	uint32_t sort_asc;
 
 	int default_timeout; // in ms
 
