@@ -98,6 +98,12 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: 0
 
+*--ignore-timeout*
+	If set, Mako will ignore the expire timeout sent by notifications and use
+	the one provided by _default-timeout_ instead.
+
+	Default: Unset
+
 *--output* _name_
 	Show notifications on the specified output. If empty, notifications will
 	appear on the focused output.
