@@ -38,6 +38,7 @@ executable(
 		'pool-buffer.c',
 		'render.c',
 		'wayland.c',
+		'criteria.c',
 	]),
 	dependencies: [
 		cairo,

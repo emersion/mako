@@ -35,10 +35,8 @@ static void set_rectangle(cairo_t *cairo, int x, int y, int width, int height,
 	cairo_rectangle(cairo, x * scale, y * scale, width * scale, height * scale);
 }
 
-static int render_notification(cairo_t *cairo, struct mako_state *state,
+static int render_notification(cairo_t *cairo, struct mako_config *config,
 		const char *text, int offset_y, int scale) {
-	struct mako_config *config = &state->config;
-
 	int border_size = 2 * config->border_size;
 	int padding_size = 2 * config->padding;
 
@@ -88,7 +86,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	set_rectangle(cairo,
 		config->border_size / 2.0,
 		offset_y + config->border_size / 2.0,
-		state->width - config->border_size,
+		config->width - config->border_size,
 		notif_height - config->border_size, scale);
 	cairo_save(cairo);
 	cairo_set_line_width(cairo, config->border_size * scale);
@@ -99,7 +97,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	set_source_u32(cairo, config->colors.background);
 	set_rectangle(cairo,
 		config->border_size, offset_y + config->border_size,
-		state->width - border_size, notif_height - border_size, scale);
+		config->width - border_size, notif_height - border_size, scale);
 	cairo_fill(cairo);
 
 	// Render text
@@ -140,8 +138,12 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	int total_height = 0;
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
+		// Use each notification's config while rendering it.
+		config = notif->config;
+
 		size_t text_len =
 			format_text(config->format, NULL, format_notif_text, notif);
+
 		char *text = malloc(text_len + 1);
 		if (text == NULL) {
 			break;
@@ -153,7 +155,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		}
 
 		int notif_height =
-			render_notification(cairo, state, text, total_height, scale);
+			render_notification(cairo, config, text, total_height, scale);
 		free(text);
 
 		// Update hotspot
@@ -171,6 +173,9 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		}
 	}
 
+	// Use the global config again after finishing all the notifications.
+	config = &state->config;
+
 	if (wl_list_length(&state->notifications) > config->max_visible) {
 		total_height += inner_margin;
 
@@ -184,7 +189,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		format_text(config->hidden_format, text, format_state_text, state);
 
 		int hidden_height =
-			render_notification(cairo, state, text, total_height, scale);
+			render_notification(cairo, config, text, total_height, scale);
 		free(text);
 
 		total_height += hidden_height;
