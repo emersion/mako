@@ -152,28 +152,32 @@ static bool parse_color(const char *color, uint32_t *out) {
 static bool apply_config_option(struct mako_config *config, const char *section,
 		const char *name, const char *value) {
 	// First try to parse this as a global option.
-	if (strcmp(name, "max-visible") == 0) {
-		return parse_int(value, &config->max_visible);
-	} else if (strcmp(name, "output") == 0) {
-		free(config->output);
-		config->output = strdup(value);
-		return true;
-	} else if (strcmp(name, "sort") == 0) {
-		if (strcmp(value, "+priority") == 0) {
-			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
-			config->sort_asc |= MAKO_SORT_CRITERIA_URGENCY;
-		} else if (strcmp(value, "-priority") == 0) {
-			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
-			config->sort_asc &= ~MAKO_SORT_CRITERIA_URGENCY;
-		} else if (strcmp(value, "+time") == 0) {
-			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
-			config->sort_asc |= MAKO_SORT_CRITERIA_TIME;
-		} else if (strcmp(value, "-time") == 0) {
-			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
-			config->sort_asc &= ~MAKO_SORT_CRITERIA_TIME;
+	if (section == NULL) {
+		if (strcmp(name, "max-visible") == 0) {
+			return parse_int(value, &config->max_visible);
+		} else if (strcmp(name, "output") == 0) {
+			free(config->output);
+			config->output = strdup(value);
+			return true;
+		} else if (strcmp(name, "sort") == 0) {
+			if (strcmp(value, "+priority") == 0) {
+				config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
+				config->sort_asc |= MAKO_SORT_CRITERIA_URGENCY;
+			} else if (strcmp(value, "-priority") == 0) {
+				config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
+				config->sort_asc &= ~MAKO_SORT_CRITERIA_URGENCY;
+			} else if (strcmp(value, "+time") == 0) {
+				config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
+				config->sort_asc |= MAKO_SORT_CRITERIA_TIME;
+			} else if (strcmp(value, "-time") == 0) {
+				config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
+				config->sort_asc &= ~MAKO_SORT_CRITERIA_TIME;
+			}
+			return true;
+		} else {
+			// We want to try the style options now, so keep going.
 		}
-		return true;
-	} else if (section != NULL) {
+	} else {
 		// TODO: criteria support
 		if (strcmp(section, "hidden") != 0) {
 			fprintf(stderr, "Only the 'hidden' section is currently supported\n");
