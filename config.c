@@ -55,23 +55,7 @@ void init_default_style(struct mako_style *style) {
 	style->colors.border = 0x4C7899FF;
 
 	// Everything in the default config is explicitly specified.
-	style->spec = (struct mako_style_spec){
-		.width = true,
-		.height = true,
-		.margin = true,
-		.padding = true,
-		.border_size = true,
-		.font = true,
-		.markup = true,
-		.format = true,
-		.actions = true,
-		.default_timeout = true,
-		.colors = {
-			.background = true,
-			.text = true,
-			.border = true,
-		},
-	};
+	memset(&style->spec, true, sizeof(struct mako_style_spec));
 }
 
 void finish_style(struct mako_style *style) {
