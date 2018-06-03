@@ -36,25 +36,23 @@ static void set_rectangle(cairo_t *cairo, int x, int y, int width, int height,
 }
 
 static int render_notification(cairo_t *cairo, struct mako_state *state,
-		const char *text, int offset_y, int scale) {
-	struct mako_config *config = &state->config;
-
-	int border_size = 2 * config->border_size;
-	int padding_size = 2 * config->padding;
+		struct mako_style *style, const char *text, int offset_y, int scale) {
+	int border_size = 2 * style->border_size;
+	int padding_size = 2 * style->padding;
 
 	PangoLayout *layout = pango_cairo_create_layout(cairo);
 	set_layout_size(layout,
-		config->width - border_size - padding_size,
-		config->height - border_size - padding_size, scale);
+		state->width - border_size - padding_size,
+		style->height - border_size - padding_size, scale);
 	pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
 	pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
 	PangoFontDescription *desc =
-		pango_font_description_from_string(config->font);
+		pango_font_description_from_string(style->font);
 	pango_layout_set_font_description(layout, desc);
 	pango_font_description_free(desc);
 
 	PangoAttrList *attrs = NULL;
-	if (config->markup) {
+	if (style->markup) {
 		GError *error = NULL;
 		char *buf = NULL;
 		if (pango_parse_markup(text, -1, 0, &attrs, &buf, NULL, &error)) {
@@ -84,28 +82,28 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	int notif_height = border_size + padding_size + text_height;
 
 	// Render border
-	set_source_u32(cairo, config->colors.border);
+	set_source_u32(cairo, style->colors.border);
 	set_rectangle(cairo,
-		config->border_size / 2.0,
-		offset_y + config->border_size / 2.0,
-		state->width - config->border_size,
-		notif_height - config->border_size, scale);
+		style->border_size / 2.0,
+		offset_y + style->border_size / 2.0,
+		state->width - style->border_size,
+		notif_height - style->border_size, scale);
 	cairo_save(cairo);
-	cairo_set_line_width(cairo, config->border_size * scale);
+	cairo_set_line_width(cairo, style->border_size * scale);
 	cairo_stroke(cairo);
 	cairo_restore(cairo);
 
 	// Render background
-	set_source_u32(cairo, config->colors.background);
+	set_source_u32(cairo, style->colors.background);
 	set_rectangle(cairo,
-		config->border_size, offset_y + config->border_size,
+		style->border_size, offset_y + style->border_size,
 		state->width - border_size, notif_height - border_size, scale);
 	cairo_fill(cairo);
 
 	// Render text
-	set_source_u32(cairo, config->colors.text);
-	move_to(cairo, config->border_size + config->padding,
-		offset_y + config->border_size + config->padding, scale);
+	set_source_u32(cairo, style->colors.text);
+	move_to(cairo, style->border_size + style->padding,
+		offset_y + style->border_size + style->padding, scale);
 	pango_cairo_update_layout(cairo, layout);
 	pango_cairo_show_layout(cairo, layout);
 
@@ -152,8 +150,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 			total_height += inner_margin;
 		}
 
-		int notif_height =
-			render_notification(cairo, state, text, total_height, scale);
+		int notif_height = render_notification(cairo, state,
+				&config->default_style, text, total_height, scale);
 		free(text);
 
 		// Update hotspot
@@ -183,8 +181,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		}
 		format_text(config->hidden_format, text, format_state_text, state);
 
-		int hidden_height =
-			render_notification(cairo, state, text, total_height, scale);
+		int hidden_height = render_notification(cairo, state,
+				&config->default_style, text, total_height, scale);
 		free(text);
 
 		total_height += hidden_height;
