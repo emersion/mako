@@ -50,6 +50,7 @@ struct mako_style {
 
 	bool actions;
 	int default_timeout; // in ms
+	bool ignore_timeout;
 
 	struct {
 		uint32_t background;

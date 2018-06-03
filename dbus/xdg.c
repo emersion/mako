@@ -212,7 +212,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	if (expire_timeout < 0) {
+	if (expire_timeout < 0 || state->config.style.ignore_timeout) {
 		expire_timeout = state->config.style.default_timeout;
 	}
 

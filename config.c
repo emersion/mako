@@ -49,6 +49,7 @@ void init_default_style(struct mako_style *style) {
 
 	style->actions = true;
 	style->default_timeout = 0;
+	style->ignore_timeout = false;
 
 	style->colors.background = 0x285577FF;
 	style->colors.text = 0xFFFFFFFF;
@@ -226,6 +227,9 @@ static bool apply_config_option(struct mako_config *config, const char *section,
 		return true;
 	} else if (strcmp(name, "default-timeout") == 0) {
 		return parse_int(value, &style->default_timeout);
+	} else if (strcmp(name, "ignore-timeout") == 0) {
+		style->ignore_timeout = strcmp(value, "1") == 0;
+		return style->ignore_timeout || strcmp(value, "0") == 0;
 	} else {
 		return false;
 	}
@@ -339,6 +343,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"format", required_argument, 0, 0},
 		{"max-visible", required_argument, 0, 0},
 		{"default-timeout", required_argument, 0, 0},
+		{"ignore-timeout", required_argument, 0, 0},
 		{"output", required_argument, 0, 0},
 		{"sort", required_argument, 0, 0},
 		{0},
