@@ -23,10 +23,9 @@ enum mako_sort_criteria {
 	MAKO_SORT_CRITERIA_URGENCY = 2,
 };
 
-// Represents which fields in the style were specified in this style. Those
-// which are unspecified should fall through to the default style. All fields
-// in the mako_style structure should have a counterpart here. Inline structs
-// are also mirrored.
+// Represents which fields in the style were specified in this style. All
+// fields in the mako_style structure should have a counterpart here. Inline
+// structs are also mirrored.
 struct mako_style_spec {
 	bool width, height, margin, padding, border_size, font, markup, format,
 		 actions, default_timeout;
