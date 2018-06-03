@@ -11,40 +11,72 @@
 #include "config.h"
 
 void init_config(struct mako_config *config) {
-	config->font = strdup("monospace 10");
+	init_default_style(&config->default_style);
 
-	config->padding = 5;
-	config->width = 300;
-	config->height = 100;
-	config->border_size = 2;
-	config->markup = true;
-	config->format = strdup("<b>%s</b>\n%b");
 	config->hidden_format = strdup("(%h more)");
-	config->actions = true;
+	config->output = strdup("");
+	config->max_visible = 5;
+
 	config->sort_criteria = MAKO_SORT_CRITERIA_TIME;
 	config->sort_asc = 0;
 
-	config->margin.top = 10;
-	config->margin.right = 10;
-	config->margin.bottom = 10;
-	config->margin.left = 10;
-
-	config->max_visible = 5;
-	config->output = strdup("");
-
-	config->colors.background = 0x285577FF;
-	config->colors.text = 0xFFFFFFFF;
-	config->colors.border = 0x4C7899FF;
 	config->button_bindings.left = MAKO_BUTTON_BINDING_INVOKE_DEFAULT_ACTION;
 	config->button_bindings.right = MAKO_BUTTON_BINDING_DISMISS;
 	config->button_bindings.middle = MAKO_BUTTON_BINDING_NONE;
 }
 
 void finish_config(struct mako_config *config) {
-	free(config->font);
-	free(config->format);
+	finish_style(&config->default_style);
 	free(config->hidden_format);
 	free(config->output);
+}
+
+void init_default_style(struct mako_style *style) {
+	style->width = 300;
+	style->height = 100;
+
+	style->margin.top = 10;
+	style->margin.right = 10;
+	style->margin.bottom = 10;
+	style->margin.left = 10;
+
+	style->padding = 5;
+	style->border_size = 2;
+
+	style->font = strdup("monospace 10");
+	style->markup = true;
+	style->format = strdup("<b>%s</b>\n%b");
+
+	style->actions = true;
+	style->default_timeout = 0;
+
+	style->colors.background = 0x285577FF;
+	style->colors.text = 0xFFFFFFFF;
+	style->colors.border = 0x4C7899FF;
+
+	// Everything in the default config is explicitly specified.
+	style->spec = (struct mako_style_spec){
+		.width = true,
+		.height = true,
+		.margin = true,
+		.padding = true,
+		.border_size = true,
+		.font = true,
+		.markup = true,
+		.format = true,
+		.actions = true,
+		.default_timeout = true,
+		.colors = {
+			.background = true,
+			.text = true,
+			.border = true,
+		},
+	};
+}
+
+void finish_style(struct mako_style *style) {
+	free(style->font);
+	free(style->format);
 }
 
 static bool parse_int(const char *s, int *out) {
