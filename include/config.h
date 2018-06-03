@@ -72,7 +72,7 @@ struct mako_config {
 	} button_bindings;
 };
 
-void init_config(struct mako_config *config);
+void init_default_config(struct mako_config *config);
 void finish_config(struct mako_config *config);
 
 void init_default_style(struct mako_style *style);

@@ -10,7 +10,7 @@
 
 #include "config.h"
 
-void init_config(struct mako_config *config) {
+void init_default_config(struct mako_config *config) {
 	init_default_style(&config->style);
 
 	config->hidden_format = strdup("(%h more)");
@@ -383,7 +383,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 
 void reload_config(struct mako_config *config) {
 	finish_config(config);
-	init_config(config);
+	init_default_config(config);
 	load_config_file(config);
 	parse_config_arguments(config, config_argc, config_argv);
 }
