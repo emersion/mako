@@ -167,53 +167,9 @@ static bool parse_color(const char *color, uint32_t *out) {
 
 static bool apply_config_option(struct mako_config *config, const char *section,
 		const char *name, const char *value) {
-	if (section != NULL) {
-		// TODO: criteria support
-		if (strcmp(section, "hidden") != 0) {
-			return false;
-		}
-
-		if (strcmp(name, "format") == 0) {
-			free(config->hidden_format);
-			config->hidden_format = strdup(value);
-			return true;
-		} else {
-			fprintf(stderr, "Only 'format' is supported in the 'hidden' section");
-			return false;
-		}
-	}
-
-	if (strcmp(name, "font") == 0) {
-		free(config->font);
-		config->font = strdup(value);
-		return true;
-	} else if (strcmp(name, "background-color") == 0) {
-		return parse_color(value, &config->colors.background);
-	} else if (strcmp(name, "text-color") == 0) {
-		return parse_color(value, &config->colors.text);
-	} else if (strcmp(name, "width") == 0) {
-		return parse_int(value, &config->width);
-	} else if (strcmp(name, "height") == 0) {
-		return parse_int(value, &config->height);
-	} else if (strcmp(name, "margin") == 0) {
-		return parse_directional(value, &config->margin);
-	} else if (strcmp(name, "padding") == 0) {
-		return parse_int(value, &config->padding);
-	} else if (strcmp(name, "border-size") == 0) {
-		return parse_int(value, &config->border_size);
-	} else if (strcmp(name, "border-color") == 0) {
-		return parse_color(value, &config->colors.border);
-	} else if (strcmp(name, "markup") == 0) {
-		config->markup = strcmp(value, "1") == 0;
-		return config->markup || strcmp(value, "0") == 0;
-	} else if (strcmp(name, "format") == 0) {
-		free(config->format);
-		config->format = strdup(value);
-		return true;
-	} else if (strcmp(name, "max-visible") == 0) {
+	// First try to parse this as a global option.
+	if (strcmp(name, "max-visible") == 0) {
 		return parse_int(value, &config->max_visible);
-	} else if (strcmp(name, "default-timeout") == 0) {
-		return parse_int(value, &config->default_timeout);
 	} else if (strcmp(name, "output") == 0) {
 		free(config->output);
 		config->output = strdup(value);
@@ -233,6 +189,55 @@ static bool apply_config_option(struct mako_config *config, const char *section,
 			config->sort_asc &= ~MAKO_SORT_CRITERIA_TIME;
 		}
 		return true;
+	} else if (section != NULL) {
+		// TODO: criteria support
+		if (strcmp(section, "hidden") != 0) {
+			fprintf(stderr, "Only the 'hidden' section is currently supported\n");
+			return false;
+		}
+
+		if (strcmp(name, "format") == 0) {
+			free(config->hidden_format);
+			config->hidden_format = strdup(value);
+			return true;
+		} else {
+			fprintf(stderr, "Only 'format' is supported in the 'hidden' section\n");
+			return false;
+		}
+	}
+
+	// Now try to match on style options.
+	struct mako_style *style = &config->default_style;
+
+	if (strcmp(name, "font") == 0) {
+		free(style->font);
+		style->font = strdup(value);
+		return true;
+	} else if (strcmp(name, "background-color") == 0) {
+		return parse_color(value, &style->colors.background);
+	} else if (strcmp(name, "text-color") == 0) {
+		return parse_color(value, &style->colors.text);
+	} else if (strcmp(name, "width") == 0) {
+		return parse_int(value, &style->width);
+	} else if (strcmp(name, "height") == 0) {
+		return parse_int(value, &style->height);
+	} else if (strcmp(name, "margin") == 0) {
+		return parse_directional(value, &style->margin);
+	} else if (strcmp(name, "padding") == 0) {
+		return parse_int(value, &style->padding);
+	} else if (strcmp(name, "border-size") == 0) {
+		return parse_int(value, &style->border_size);
+	} else if (strcmp(name, "border-color") == 0) {
+		return parse_color(value, &style->colors.border);
+	} else if (strcmp(name, "markup") == 0) {
+		style->markup = strcmp(value, "1") == 0;
+		return style->markup || strcmp(value, "0") == 0;
+	} else if (strcmp(name, "format") == 0) {
+		free(style->format);
+		style->format = strdup(value);
+		return true;
+	} else if (strcmp(name, "default-timeout") == 0) {
+		return parse_int(value, &style->default_timeout);
 	} else {
 		return false;
 	}
