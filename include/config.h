@@ -39,6 +39,7 @@ struct mako_config {
 	uint32_t sort_asc;
 
 	int default_timeout; // in ms
+	bool ignore_timeout;
 
 	struct {
 		uint32_t background;
