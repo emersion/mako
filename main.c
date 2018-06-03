@@ -67,7 +67,7 @@ static void handle_signal(int signum) {
 int main(int argc, char *argv[]) {
 	struct mako_state state = {0};
 
-	init_config(&state.config);
+	init_default_config(&state.config);
 
 	int ret = load_config_file(&state.config);
 	if (ret < 0) {

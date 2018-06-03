@@ -23,21 +23,32 @@ enum mako_sort_criteria {
 	MAKO_SORT_CRITERIA_URGENCY = 2,
 };
 
-struct mako_config {
-	char *font;
-	int32_t width, height;
+// Represents which fields in the style were specified in this style. All
+// fields in the mako_style structure should have a counterpart here. Inline
+// structs are also mirrored.
+struct mako_style_spec {
+	bool width, height, margin, padding, border_size, font, markup, format,
+		 actions, default_timeout;
+
+	struct {
+		bool background, text, border;
+	} colors;
+};
+
+struct mako_style {
+	struct mako_style_spec spec;
+
+	int32_t width;
+	int32_t height;
+	struct mako_directional margin;
 	int32_t padding;
 	int32_t border_size;
+
+	char *font;
 	bool markup;
 	char *format;
-	bool actions;
-	struct mako_directional margin;
-	int32_t max_visible;
-	char *output;
-	char *hidden_format;
-	uint32_t sort_criteria; //enum mako_sort_criteria
-	uint32_t sort_asc;
 
+	bool actions;
 	int default_timeout; // in ms
 	bool ignore_timeout;
 
@@ -46,14 +57,28 @@ struct mako_config {
 		uint32_t text;
 		uint32_t border;
 	} colors;
+};
+
+struct mako_config {
+	struct mako_style style;
+
+	int32_t max_visible;
+	char *output;
+	char *hidden_format;
+	uint32_t sort_criteria; //enum mako_sort_criteria
+	uint32_t sort_asc;
 
 	struct {
 		enum mako_button_binding left, right, middle;
 	} button_bindings;
 };
 
-void init_config(struct mako_config *config);
+void init_default_config(struct mako_config *config);
 void finish_config(struct mako_config *config);
+
+void init_default_style(struct mako_style *style);
+void finish_style(struct mako_style *style);
+
 int parse_config_arguments(struct mako_config *config, int argc, char **argv);
 int load_config_file(struct mako_config *config);
 void reload_config(struct mako_config *config);
