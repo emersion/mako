@@ -60,7 +60,7 @@ struct mako_style {
 };
 
 struct mako_config {
-	struct mako_style default_style;
+	struct mako_style style;
 
 	int32_t max_visible;
 	char *output;

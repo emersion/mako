@@ -114,7 +114,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	struct mako_config *config = &state->config;
-	struct mako_style *style = &config->default_style;
+	struct mako_style *style = &config->style;
 	cairo_t *cairo = buffer->cairo;
 
 	if (wl_list_empty(&state->notifications)) {

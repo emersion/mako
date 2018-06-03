@@ -11,7 +11,7 @@
 #include "config.h"
 
 void init_config(struct mako_config *config) {
-	init_default_style(&config->default_style);
+	init_default_style(&config->style);
 
 	config->hidden_format = strdup("(%h more)");
 	config->output = strdup("");
@@ -26,7 +26,7 @@ void init_config(struct mako_config *config) {
 }
 
 void finish_config(struct mako_config *config) {
-	finish_style(&config->default_style);
+	finish_style(&config->style);
 	free(config->hidden_format);
 	free(config->output);
 }
@@ -207,7 +207,7 @@ static bool apply_config_option(struct mako_config *config, const char *section,
 	}
 
 	// Now try to match on style options.
-	struct mako_style *style = &config->default_style;
+	struct mako_style *style = &config->style;
 
 	if (strcmp(name, "font") == 0) {
 		free(style->font);
