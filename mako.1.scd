@@ -111,6 +111,12 @@ Is equivalent to passing *--key=value* to mako from the command line.
 
 Empty lines and lines that begin with # are ignored.
 
+The hidden notifications placeholder can be configured after a *[hidden]*
+section:
+
+	\[hidden\]
+	format=(%h more)
+
 # COLORS
 
 Colors can be specified as _#RRGGBB_ or _#RRGGBBAA_.
@@ -140,11 +146,19 @@ specifiers.
 
 *%%*	Literal "%"
 
+## For notifications
+
 *%a*	Application name
 
 *%s*	Notification summary
 
 *%b*	Notification body
+
+## For the hidden notifications placeholder
+
+*%h*	Number of hidden notifications
+
+*%t*	Total number of notifications
 
 # AUTHORS
 
