@@ -409,12 +409,12 @@ void send_frame(struct mako_state *state) {
 
 		struct mako_config *config = &state->config;
 		zwlr_layer_surface_v1_set_size(state->layer_surface,
-			config->width, height);
+			config->style.width, height);
 		zwlr_layer_surface_v1_set_anchor(state->layer_surface,
 			ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
 		zwlr_layer_surface_v1_set_margin(state->layer_surface,
-			config->margin.top, config->margin.right, config->margin.bottom,
-			config->margin.left);
+			config->style.margin.top, config->style.margin.right,
+			config->style.margin.bottom, config->style.margin.left);
 		wl_surface_commit(state->surface);
 		return;
 	}
@@ -427,7 +427,7 @@ void send_frame(struct mako_state *state) {
 	// requested, we'll enter an infinite loop
 	if (state->height != height) {
 		zwlr_layer_surface_v1_set_size(state->layer_surface,
-			state->config.width, height);
+			state->config.style.width, height);
 		wl_surface_commit(state->surface);
 		return;
 	}

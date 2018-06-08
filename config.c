@@ -10,39 +10,58 @@
 
 #include "config.h"
 
-void init_config(struct mako_config *config) {
-	config->font = strdup("monospace 10");
+void init_default_config(struct mako_config *config) {
+	init_default_style(&config->style);
 
-	config->padding = 5;
-	config->width = 300;
-	config->height = 100;
-	config->border_size = 2;
-	config->markup = true;
-	config->format = strdup("<b>%s</b>\n%b");
 	config->hidden_format = strdup("(%h more)");
-	config->actions = true;
-
-	config->margin.top = 10;
-	config->margin.right = 10;
-	config->margin.bottom = 10;
-	config->margin.left = 10;
-
-	config->max_visible = 5;
 	config->output = strdup("");
+	config->max_visible = 5;
 
-	config->colors.background = 0x285577FF;
-	config->colors.text = 0xFFFFFFFF;
-	config->colors.border = 0x4C7899FF;
+	config->sort_criteria = MAKO_SORT_CRITERIA_TIME;
+	config->sort_asc = 0;
+
 	config->button_bindings.left = MAKO_BUTTON_BINDING_INVOKE_DEFAULT_ACTION;
 	config->button_bindings.right = MAKO_BUTTON_BINDING_DISMISS;
 	config->button_bindings.middle = MAKO_BUTTON_BINDING_NONE;
 }
 
 void finish_config(struct mako_config *config) {
-	free(config->font);
-	free(config->format);
+	finish_style(&config->style);
 	free(config->hidden_format);
 	free(config->output);
+}
+
+void init_default_style(struct mako_style *style) {
+	style->width = 300;
+	style->height = 100;
+
+	style->margin.top = 10;
+	style->margin.right = 10;
+	style->margin.bottom = 10;
+	style->margin.left = 10;
+
+	style->padding = 5;
+	style->border_size = 2;
+
+	style->font = strdup("monospace 10");
+	style->markup = true;
+	style->format = strdup("<b>%s</b>\n%b");
+
+	style->actions = true;
+	style->default_timeout = 0;
+	style->ignore_timeout = false;
+
+	style->colors.background = 0x285577FF;
+	style->colors.text = 0xFFFFFFFF;
+	style->colors.border = 0x4C7899FF;
+
+	// Everything in the default config is explicitly specified.
+	memset(&style->spec, true, sizeof(struct mako_style_spec));
+}
+
+void finish_style(struct mako_style *style) {
+	free(style->font);
+	free(style->format);
 }
 
 static bool parse_int(const char *s, int *out) {
@@ -133,9 +152,36 @@ static bool parse_color(const char *color, uint32_t *out) {
 
 static bool apply_config_option(struct mako_config *config, const char *section,
 		const char *name, const char *value) {
-	if (section != NULL) {
+	// First try to parse this as a global option.
+	if (section == NULL) {
+		if (strcmp(name, "max-visible") == 0) {
+			return parse_int(value, &config->max_visible);
+		} else if (strcmp(name, "output") == 0) {
+			free(config->output);
+			config->output = strdup(value);
+			return true;
+		} else if (strcmp(name, "sort") == 0) {
+			if (strcmp(value, "+priority") == 0) {
+				config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
+				config->sort_asc |= MAKO_SORT_CRITERIA_URGENCY;
+			} else if (strcmp(value, "-priority") == 0) {
+				config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
+				config->sort_asc &= ~MAKO_SORT_CRITERIA_URGENCY;
+			} else if (strcmp(value, "+time") == 0) {
+				config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
+				config->sort_asc |= MAKO_SORT_CRITERIA_TIME;
+			} else if (strcmp(value, "-time") == 0) {
+				config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
+				config->sort_asc &= ~MAKO_SORT_CRITERIA_TIME;
+			}
+			return true;
+		} else {
+			// We want to try the style options now, so keep going.
+		}
+	} else {
 		// TODO: criteria support
 		if (strcmp(section, "hidden") != 0) {
+			fprintf(stderr, "Only the 'hidden' section is currently supported\n");
 			return false;
 		}
 
@@ -144,46 +190,46 @@ static bool apply_config_option(struct mako_config *config, const char *section,
 			config->hidden_format = strdup(value);
 			return true;
 		} else {
-			fprintf(stderr, "Only 'format' is supported in the 'hidden' section");
+			fprintf(stderr, "Only 'format' is supported in the 'hidden' section\n");
 			return false;
 		}
 	}
 
+	// Now try to match on style options.
+	struct mako_style *style = &config->style;
+
 	if (strcmp(name, "font") == 0) {
-		free(config->font);
-		config->font = strdup(value);
+		free(style->font);
+		style->font = strdup(value);
 		return true;
 	} else if (strcmp(name, "background-color") == 0) {
-		return parse_color(value, &config->colors.background);
+		return parse_color(value, &style->colors.background);
 	} else if (strcmp(name, "text-color") == 0) {
-		return parse_color(value, &config->colors.text);
+		return parse_color(value, &style->colors.text);
 	} else if (strcmp(name, "width") == 0) {
-		return parse_int(value, &config->width);
+		return parse_int(value, &style->width);
 	} else if (strcmp(name, "height") == 0) {
-		return parse_int(value, &config->height);
+		return parse_int(value, &style->height);
 	} else if (strcmp(name, "margin") == 0) {
-		return parse_directional(value, &config->margin);
+		return parse_directional(value, &style->margin);
 	} else if (strcmp(name, "padding") == 0) {
-		return parse_int(value, &config->padding);
+		return parse_int(value, &style->padding);
 	} else if (strcmp(name, "border-size") == 0) {
-		return parse_int(value, &config->border_size);
+		return parse_int(value, &style->border_size);
 	} else if (strcmp(name, "border-color") == 0) {
-		return parse_color(value, &config->colors.border);
+		return parse_color(value, &style->colors.border);
 	} else if (strcmp(name, "markup") == 0) {
-		config->markup = strcmp(value, "1") == 0;
-		return config->markup || strcmp(value, "0") == 0;
+		style->markup = strcmp(value, "1") == 0;
+		return style->markup || strcmp(value, "0") == 0;
 	} else if (strcmp(name, "format") == 0) {
-		free(config->format);
-		config->format = strdup(value);
+		free(style->format);
+		style->format = strdup(value);
 		return true;
-	} else if (strcmp(name, "max-visible") == 0) {
-		return parse_int(value, &config->max_visible);
 	} else if (strcmp(name, "default-timeout") == 0) {
-		return parse_int(value, &config->default_timeout);
-	} else if (strcmp(name, "output") == 0) {
-		free(config->output);
-		config->output = strdup(value);
-		return true;
+		return parse_int(value, &style->default_timeout);
+	} else if (strcmp(name, "ignore-timeout") == 0) {
+		style->ignore_timeout = strcmp(value, "1") == 0;
+		return style->ignore_timeout || strcmp(value, "0") == 0;
 	} else {
 		return false;
 	}
@@ -297,7 +343,9 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"format", required_argument, 0, 0},
 		{"max-visible", required_argument, 0, 0},
 		{"default-timeout", required_argument, 0, 0},
+		{"ignore-timeout", required_argument, 0, 0},
 		{"output", required_argument, 0, 0},
+		{"sort", required_argument, 0, 0},
 		{0},
 	};
 
@@ -328,7 +376,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 
 void reload_config(struct mako_config *config) {
 	finish_config(config);
-	init_config(config);
+	init_default_config(config);
 	load_config_file(config);
 	parse_config_arguments(config, config_argc, config_argv);
 }
