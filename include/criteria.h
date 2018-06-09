@@ -8,6 +8,15 @@
 
 struct mako_config;
 
+// State is intended to work as a bitmask, so if more need to be added in the
+// future, this should be taken into account.
+enum mako_parse_state {
+	MAKO_PARSE_STATE_NORMAL = 0,
+	MAKO_PARSE_STATE_ESCAPE = 1,
+	MAKO_PARSE_STATE_QUOTE = 2,
+	MAKO_PARSE_STATE_QUOTE_ESCAPE = 3,
+};
+
 // Stores whether or not each field was part of the criteria specification, so
 // that, for example, "not actionable" can be distinguished from "don't care".
 // This is unnecessary for string fields, but it's best to just keep it
@@ -41,5 +50,11 @@ struct mako_criteria *create_criteria(struct mako_state *state);
 void destroy_criteria(struct mako_criteria *criteria);
 bool match_criteria(struct mako_criteria *criteria,
 		struct mako_notification *notif);
+
+bool parse_boolean(const char *string, bool *out);
+bool parse_urgency(const char *string, enum mako_notification_urgency *out);
+
+bool parse_criteria(const char *string, struct mako_criteria *criteria);
+bool apply_criteria_field(struct mako_criteria *criteria, const char *token);
 
 #endif
