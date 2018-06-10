@@ -55,6 +55,6 @@ bool parse_boolean(const char *string, bool *out);
 bool parse_urgency(const char *string, enum mako_notification_urgency *out);
 
 bool parse_criteria(const char *string, struct mako_criteria *criteria);
-bool apply_criteria_field(struct mako_criteria *criteria, const char *token);
+bool apply_criteria_field(struct mako_criteria *criteria, char *token);
 
 #endif

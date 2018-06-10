@@ -183,13 +183,16 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 // Any further equal signs are assumed to be part of the value. If there is no .
 // equal sign present, the field is treated as a boolean, with a leading
 // exclamation point signifying negation.
-bool apply_criteria_field(struct mako_criteria *criteria, const char *token) {
-	const char *key = token;
-	const char *value = strstr(token, "=");
+//
+// Note that the token will be consumed.
+bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
+	char *key = token;
+	char *value = strstr(key, "=");
 	bool bare_key = !value;
 
 	if (value) {
 		// Skip past the equal sign to the value itself.
+		*value = '\0';
 		++value;
 	}
 	else {
