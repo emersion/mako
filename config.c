@@ -152,89 +152,86 @@ static bool parse_color(const char *color, uint32_t *out) {
 	return true;
 }
 
-static bool apply_config_option(struct mako_config *config, const char *section,
-		const char *name, const char *value) {
-	// First try to parse this as a global option.
-	if (section == NULL) {
-		if (strcmp(name, "max-visible") == 0) {
-			return parse_int(value, &config->max_visible);
-		} else if (strcmp(name, "output") == 0) {
-			free(config->output);
-			config->output = strdup(value);
-			return true;
-		} else if (strcmp(name, "sort") == 0) {
-			if (strcmp(value, "+priority") == 0) {
-				config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
-				config->sort_asc |= MAKO_SORT_CRITERIA_URGENCY;
-			} else if (strcmp(value, "-priority") == 0) {
-				config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
-				config->sort_asc &= ~MAKO_SORT_CRITERIA_URGENCY;
-			} else if (strcmp(value, "+time") == 0) {
-				config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
-				config->sort_asc |= MAKO_SORT_CRITERIA_TIME;
-			} else if (strcmp(value, "-time") == 0) {
-				config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
-				config->sort_asc &= ~MAKO_SORT_CRITERIA_TIME;
-			}
-			return true;
-		} else {
-			// We want to try the style options now, so keep going.
+static bool apply_config_option(struct mako_config *config, const char *name,
+		const char *value) {
+	if (strcmp(name, "max-visible") == 0) {
+		return parse_int(value, &config->max_visible);
+	} else if (strcmp(name, "output") == 0) {
+		free(config->output);
+		config->output = strdup(value);
+		return true;
+	} else if (strcmp(name, "sort") == 0) {
+		if (strcmp(value, "+priority") == 0) {
+			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
+			config->sort_asc |= MAKO_SORT_CRITERIA_URGENCY;
+		} else if (strcmp(value, "-priority") == 0) {
+			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
+			config->sort_asc &= ~MAKO_SORT_CRITERIA_URGENCY;
+		} else if (strcmp(value, "+time") == 0) {
+			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
+			config->sort_asc |= MAKO_SORT_CRITERIA_TIME;
+		} else if (strcmp(value, "-time") == 0) {
+			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
+			config->sort_asc &= ~MAKO_SORT_CRITERIA_TIME;
 		}
-	} else {
-		// TODO: criteria support
-		if (strcmp(section, "hidden") != 0) {
-			fprintf(stderr, "Only the 'hidden' section is currently supported\n");
-			return false;
-		}
-
-		if (strcmp(name, "format") == 0) {
-			free(config->hidden_format);
-			config->hidden_format = strdup(value);
-			return true;
-		} else {
-			fprintf(stderr, "Only 'format' is supported in the 'hidden' section\n");
-			return false;
-		}
+		return true;
 	}
 
-	// Now try to match on style options.
-	struct mako_style *style = &config->style;
+	return false;
+}
+
+	// The hidden criteria is a bit of a lie...
+	// TODO: Convert it to a style.
+	//if (strcmp(section, "hidden") == 0) {
+	//	if (strcmp(name, "format") == 0) {
+	//		free(config->hidden_format);
+	//		config->hidden_format = strdup(value);
+	//		return true;
+	//	}
+	//}
+
+static bool apply_style_option(struct mako_style *style, const char *name,
+		const char *value) {
+	struct mako_style_spec *spec = &style->spec;
 
 	if (strcmp(name, "font") == 0) {
 		free(style->font);
-		style->font = strdup(value);
-		return true;
+		return spec->font = !!(style->font = strdup(value));
 	} else if (strcmp(name, "background-color") == 0) {
-		return parse_color(value, &style->colors.background);
+		return spec->colors.background =
+			parse_color(value, &style->colors.background);
 	} else if (strcmp(name, "text-color") == 0) {
-		return parse_color(value, &style->colors.text);
+		return spec->colors.text = parse_color(value, &style->colors.text);
 	} else if (strcmp(name, "width") == 0) {
-		return parse_int(value, &style->width);
+		return spec->width = parse_int(value, &style->width);
 	} else if (strcmp(name, "height") == 0) {
-		return parse_int(value, &style->height);
+		return spec->height = parse_int(value, &style->height);
 	} else if (strcmp(name, "margin") == 0) {
-		return parse_directional(value, &style->margin);
+		return spec->margin = parse_directional(value, &style->margin);
 	} else if (strcmp(name, "padding") == 0) {
-		return parse_int(value, &style->padding);
+		if (!parse_int(value, &style->padding)) return false;
 	} else if (strcmp(name, "border-size") == 0) {
-		return parse_int(value, &style->border_size);
+		return spec->border_size = parse_int(value, &style->border_size);
 	} else if (strcmp(name, "border-color") == 0) {
-		return parse_color(value, &style->colors.border);
+		return spec->colors.border = parse_color(value, &style->colors.border);
 	} else if (strcmp(name, "markup") == 0) {
+		// TODO: Move parse_boolean somewhere accessible.
 		style->markup = strcmp(value, "1") == 0;
-		return style->markup || strcmp(value, "0") == 0;
+		return spec->markup = style->markup || strcmp(value, "0") == 0;
 	} else if (strcmp(name, "format") == 0) {
 		free(style->format);
-		style->format = strdup(value);
-		return true;
+		return spec->format = !!(style->format = strdup(value));
 	} else if (strcmp(name, "default-timeout") == 0) {
-		return parse_int(value, &style->default_timeout);
+		return spec->default_timeout =
+			parse_int(value, &style->default_timeout);
 	} else if (strcmp(name, "ignore-timeout") == 0) {
+		// TODO
 		style->ignore_timeout = strcmp(value, "1") == 0;
-		return style->ignore_timeout || strcmp(value, "0") == 0;
-	} else {
-		return false;
+		return spec->ignore_timeout = (
+				style->ignore_timeout || strcmp(value, "0") == 0);
 	}
+
+	return false;
 }
 
 static bool file_exists(const char *path) {
@@ -291,34 +288,52 @@ int load_config_file(struct mako_config *config) {
 	int lineno = 0;
 	char *line = NULL;
 	char *section = NULL;
+
+	struct mako_criteria *criteria = global_criteria(config);
+
 	size_t n = 0;
 	while (getline(&line, &n, f) > 0) {
 		++lineno;
 		if (line[0] == '\0' || line[0] == '\n' || line[0] == '#') {
 			continue;
 		}
+
 		if (line[strlen(line) - 1] == '\n') {
 			line[strlen(line) - 1] = '\0';
 		}
+
 		if (line[0] == '[' && line[strlen(line) - 1] == ']') {
 			free(section);
 			section = strndup(line + 1, strlen(line) - 2);
+			criteria = create_criteria(config);
+			parse_criteria(section, criteria);
 			continue;
 		}
+
 		char *eq = strchr(line, '=');
 		if (!eq) {
 			fprintf(stderr, "[%s:%d] Expected key=value\n", base, lineno);
 			ret = -1;
 			break;
 		}
+
+		bool valid_option = false;
 		eq[0] = '\0';
-		if (!apply_config_option(config, section, line, eq + 1)) {
+
+		valid_option = apply_style_option(&criteria->style, line, eq + 1);
+
+		if (section == NULL) {
+			valid_option = apply_config_option(config, line, eq + 1);
+		}
+
+		if (!valid_option) {
 			fprintf(stderr, "[%s:%d] Failed to parse option '%s'\n",
 				base, lineno, line);
 			ret = -1;
 			break;
 		}
 	}
+
 	free(section);
 	free(line);
 	fclose(f);
@@ -364,7 +379,8 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		}
 
 		const char *name = long_options[option_index].name;
-		if (!apply_config_option(config, NULL, name, optarg)) {
+		if (!apply_style_option(&global_criteria(config)->style, name, optarg)
+				|| apply_config_option(config, name, optarg)) {
 			fprintf(stderr, "Failed to parse option '%s'\n", name);
 			return -1;
 		}
