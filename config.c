@@ -307,7 +307,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "margin") == 0) {
 		return spec->margin = parse_directional(value, &style->margin);
 	} else if (strcmp(name, "padding") == 0) {
-		if (!parse_int(value, &style->padding)) return false;
+		return spec->padding = parse_int(value, &style->padding);
 	} else if (strcmp(name, "border-size") == 0) {
 		return spec->border_size = parse_int(value, &style->border_size);
 	} else if (strcmp(name, "border-color") == 0) {
