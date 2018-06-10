@@ -131,8 +131,11 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 	size_t i = 0;
 	int total_height = 0;
+	int pending_bottom_margin = 0;
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
+		// Note that by this point, everything in the style is guaranteed to
+		// be specified, so we don't need to check.
 		struct mako_style *style = &notif->style;
 
 		size_t text_len =
@@ -144,7 +147,12 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		format_text(style->format, text, format_notif_text, notif);
 
 		if (i > 0) {
-			total_height += style->margin.top; // TODO: inner margin
+			if (style->margin.top > pending_bottom_margin) {
+				total_height += style->margin.top;
+			}
+			else {
+				total_height += pending_bottom_margin;
+			}
 		}
 
 		int notif_height = render_notification(
@@ -158,6 +166,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		notif->hotspot.height = notif_height;
 
 		total_height += notif_height;
+		pending_bottom_margin = style->margin.bottom;
 
 		++i;
 		if (config->max_visible >= 0 &&
@@ -168,7 +177,12 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 	if (wl_list_length(&state->notifications) > config->max_visible) {
 		struct mako_style *style = &config->hidden_style;
-		total_height += style->margin.top; // TODO: inner margin
+		if (style->margin.top > pending_bottom_margin) {
+			total_height += style->margin.top;
+		}
+		else {
+			total_height += pending_bottom_margin;
+		}
 
 		size_t text_ln =
 			format_text(style->format, NULL, format_state_text, state);
