@@ -441,7 +441,7 @@ int load_config_file(struct mako_config *config) {
 
 		valid_option = apply_style_option(target_style, line, eq + 1);
 
-		if (section == NULL) {
+		if (!valid_option && section == NULL) {
 			valid_option = apply_config_option(config, line, eq + 1);
 		}
 
