@@ -288,16 +288,6 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 	return false;
 }
 
-	// The hidden criteria is a bit of a lie...
-	// TODO: Convert it to a style.
-	//if (strcmp(section, "hidden") == 0) {
-	//	if (strcmp(name, "format") == 0) {
-	//		free(config->hidden_format);
-	//		config->hidden_format = strdup(value);
-	//		return true;
-	//	}
-	//}
-
 static bool apply_style_option(struct mako_style *style, const char *name,
 		const char *value) {
 	struct mako_style_spec *spec = &style->spec;
