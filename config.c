@@ -16,9 +16,8 @@ void init_default_config(struct mako_config *config) {
 	struct mako_criteria *global_criteria = create_criteria(config);
 	init_default_style(&global_criteria->style);
 
-	init_default_style(&config->hidden_style);
-	free(config->hidden_style.format);
 	config->hidden_style.format = strdup("(%h more)");
+	config->hidden_style.spec.format = true;
 
 	config->output = strdup("");
 	config->max_visible = 5;
