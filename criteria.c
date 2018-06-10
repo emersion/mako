@@ -230,25 +230,30 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 		if (strcmp(key, "app-name") == 0) {
 			criteria->app_name = strdup(value);
 			criteria->spec.app_name = true;
+			return true;
 		}
 		else if (strcmp(key, "app-icon") == 0) {
 			criteria->app_icon = strdup(value);
 			criteria->spec.app_icon = true;
+			return true;
 		}
 		else if (strcmp(key, "urgency") == 0) {
 			if (!parse_urgency(value, &criteria->urgency)) {
-				// TODO
+				fprintf(stderr, "Invalid urgency value '%s'", value);
 				return false;
 			}
 			criteria->spec.urgency = true;
+			return true;
 		}
 		else if (strcmp(key, "category") == 0) {
 			criteria->category = strdup(value);
 			criteria->spec.category = true;
+			return true;
 		}
 		else if (strcmp(key, "desktop-entry") == 0) {
 			criteria->desktop_entry = strdup(value);
 			criteria->spec.desktop_entry = true;
+			return true;
 		}
 		else {
 			// Anything left must be one of the boolean fields, defined using
@@ -258,14 +263,20 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 
 	if (strcmp(key, "actionable") == 0) {
 		if (!parse_boolean(value, &criteria->actionable)) {
-			// TODO
+			fprintf(stderr, "Invalid value '%s' for boolean field '%s'\n",
+					value, key);
 			return false;
 		}
 		criteria->spec.actionable = true;
+		return true;
 	}
 	else {
-		// TODO
-		// if bare_key "invalid boolean field" else "invalid field"
+		if (bare_key) {
+			fprintf(stderr, "Invalid boolean criteria field '%s'\n", key);
+		}
+		else {
+			fprintf(stderr, "Invalid criteria field '%s'\n", key);
+		}
 		return false;
 	}
 
