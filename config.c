@@ -428,7 +428,7 @@ int load_config_file(struct mako_config *config) {
 		eq[0] = '\0';
 
 		struct mako_style *target_style;
-		if (strcmp(section, "hidden") == 0) {
+		if (section != NULL && strcmp(section, "hidden") == 0) {
 			// The hidden criteria is a lie, we store the associated style
 			// directly on the config because there's no "real" notification
 			// object to match against it later.
