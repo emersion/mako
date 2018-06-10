@@ -114,7 +114,6 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	struct mako_config *config = &state->config;
-	struct mako_style *style = &config->style;
 	cairo_t *cairo = buffer->cairo;
 
 	if (wl_list_empty(&state->notifications)) {
@@ -128,17 +127,14 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	cairo_paint(cairo);
 	cairo_restore(cairo);
 
-	int inner_margin = style->margin.top;
-	if (style->margin.bottom > style->margin.top) {
-		inner_margin = style->margin.bottom;
-	}
-
 	int notif_width = state->width;
 
 	size_t i = 0;
 	int total_height = 0;
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
+		struct mako_style *style = &notif->style;
+
 		size_t text_len =
 			format_text(style->format, NULL, format_notif_text, notif);
 		char *text = malloc(text_len + 1);
@@ -148,7 +144,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		format_text(style->format, text, format_notif_text, notif);
 
 		if (i > 0) {
-			total_height += inner_margin;
+			total_height += style->margin.top; // TODO: inner margin
 		}
 
 		int notif_height = render_notification(
