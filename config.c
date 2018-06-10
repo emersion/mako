@@ -13,7 +13,8 @@
 
 void init_default_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
-	create_criteria(config); // Create the global, empty criteria.
+	struct mako_criteria *global_criteria = create_criteria(config);
+	init_default_style(&global_criteria->style);
 
 	init_default_style(&config->hidden_style);
 	free(config->hidden_style.format);
