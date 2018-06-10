@@ -21,6 +21,8 @@ struct mako_criteria *create_criteria(struct mako_config *config) {
 }
 
 void destroy_criteria(struct mako_criteria *criteria) {
+	wl_list_remove(&criteria->link);
+
 	free(criteria->app_name);
 	free(criteria->app_icon);
 	free(criteria->category);

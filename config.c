@@ -28,7 +28,11 @@ void init_default_config(struct mako_config *config) {
 }
 
 void finish_config(struct mako_config *config) {
-	finish_style(&config->style);
+	struct mako_criteria *criteria, *tmp;
+	wl_list_for_each_safe(criteria, tmp, &config->criteria, link) {
+		destroy_criteria(criteria);
+	}
+
 	free(config->hidden_format);
 	free(config->output);
 }
