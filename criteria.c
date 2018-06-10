@@ -151,7 +151,7 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 			case ' ':
 				// New token, apply the old one and reset our state.
 				if (!apply_criteria_field(criteria, token)) {
-					// TODO: Error handling, I guess.
+					// An error should have been printed already.
 					return false;
 				}
 				memset(token, 0, token_max_length);
@@ -167,16 +167,15 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 
 	if (state != MAKO_PARSE_STATE_NORMAL) {
 		if (state & MAKO_PARSE_STATE_QUOTE) {
-			// TODO: Incomplete quote message
+			fprintf(stderr, "Unmatched quote in criteria definition\n");
 			return false;
 		}
 		else if (state & MAKO_PARSE_STATE_ESCAPE) {
-			// TODO: Incomplete escape message
+			fprintf(stderr, "Trailing backslash in criteria definition\n");
 			return false;
 		}
 		else {
-			// TODO: Generic message, someone forgot to update this block with
-			// a new state mask.
+			fprintf(stderr, "Got confused parsing criteria definition\n");
 			return false;
 		}
 	}
@@ -184,7 +183,7 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 	// Apply the last token, which will be left in the buffer after we hit the
 	// final NULL. We know it's valid since we just checked for that.
 	if (!apply_criteria_field(criteria, token)) {
-		// TODO: Error handling, I guess.
+		// An error should have been printed by this point, we don't need to.
 		return false;
 	}
 
