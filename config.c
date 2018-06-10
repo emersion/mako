@@ -413,6 +413,11 @@ int load_config_file(struct mako_config *config) {
 		if (line[0] == '[' && line[strlen(line) - 1] == ']') {
 			free(section);
 			section = strndup(line + 1, strlen(line) - 2);
+			if (strcmp(section, "hidden") == 0) {
+				// Skip making a criteria for the hidden section.
+				criteria = NULL;
+				continue;
+			}
 			criteria = create_criteria(config);
 			if (!parse_criteria(section, criteria)) {
 				fprintf(stderr, "[%s:%d] Invalid criteria definition\n", base,
