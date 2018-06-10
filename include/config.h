@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <wayland-client.h>
 
 struct mako_directional {
 	int32_t top;
@@ -60,7 +61,7 @@ struct mako_style {
 };
 
 struct mako_config {
-	struct mako_style style;
+	struct wl_list criteria; // mako_criteria::link
 
 	int32_t max_visible;
 	char *output;

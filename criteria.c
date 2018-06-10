@@ -16,6 +16,7 @@ struct mako_criteria *create_criteria(struct mako_config *config) {
 		return NULL;
 	}
 
+	wl_list_insert(config->criteria.prev, &criteria->link);
 	return criteria;
 }
 
@@ -257,4 +258,12 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 	}
 
 	return true;
+}
+
+// Retreive the global critiera from a given mako_config. This just so happens
+// to be the first criteria in the list.
+struct mako_criteria *global_criteria(struct mako_config *config) {
+	struct mako_criteria *criteria =
+		wl_container_of(config->criteria.next, criteria, link);
+	return criteria;
 }

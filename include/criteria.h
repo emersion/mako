@@ -32,6 +32,7 @@ struct mako_criteria_spec {
 
 struct mako_criteria {
 	struct mako_criteria_spec spec;
+	struct wl_list link; // mako_config::criteria
 
 	// Style to apply to matches:
 	struct mako_style style;
@@ -56,5 +57,7 @@ bool parse_urgency(const char *string, enum mako_notification_urgency *out);
 
 bool parse_criteria(const char *string, struct mako_criteria *criteria);
 bool apply_criteria_field(struct mako_criteria *criteria, char *token);
+
+struct mako_criteria *global_criteria(struct mako_config *config);
 
 #endif

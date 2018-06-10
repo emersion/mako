@@ -9,9 +9,11 @@
 #include <unistd.h>
 
 #include "config.h"
+#include "criteria.h"
 
 void init_default_config(struct mako_config *config) {
-	init_default_style(&config->style);
+	wl_list_init(&config->criteria);
+	create_criteria(config); // Create the global, empty criteria.
 
 	config->hidden_format = strdup("(%h more)");
 	config->output = strdup("");
