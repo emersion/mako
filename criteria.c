@@ -9,7 +9,7 @@
 #include "criteria.h"
 #include "notification.h"
 
-struct mako_criteria *create_criteria(struct mako_state *state) {
+struct mako_criteria *create_criteria(struct mako_config *config) {
 	struct mako_criteria *criteria = calloc(1, sizeof(struct mako_criteria));
 	if (criteria == NULL) {
 		fprintf(stderr, "allocation failed\n");

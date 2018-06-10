@@ -46,7 +46,7 @@ struct mako_criteria {
 	char *desktop_entry;
 };
 
-struct mako_criteria *create_criteria(struct mako_state *state);
+struct mako_criteria *create_criteria(struct mako_config *config);
 void destroy_criteria(struct mako_criteria *criteria);
 bool match_criteria(struct mako_criteria *criteria,
 		struct mako_notification *notif);
