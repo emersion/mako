@@ -78,7 +78,8 @@ void finish_style(struct mako_style *style) {
 bool apply_style(struct mako_style *style, struct mako_style *target) {
 	// Try to duplicate strings up front in case allocation fails and we have
 	// to bail without changing `target`.
-	char *new_font, *new_format;
+	char *new_font = NULL;
+	char *new_format = NULL;
 
 	if (style->spec.font) {
 		new_font = strdup(style->font);

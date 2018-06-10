@@ -6,11 +6,9 @@
 #include <strings.h>
 #include <wayland-client.h>
 #include "mako.h"
+#include "config.h"
 #include "criteria.h"
 #include "notification.h"
-
-struct mako_style;
-struct mako_style_spec;
 
 struct mako_criteria *create_criteria(struct mako_config *config) {
 	struct mako_criteria *criteria = calloc(1, sizeof(struct mako_criteria));
@@ -26,6 +24,7 @@ struct mako_criteria *create_criteria(struct mako_config *config) {
 void destroy_criteria(struct mako_criteria *criteria) {
 	wl_list_remove(&criteria->link);
 
+	finish_style(&criteria->style);
 	free(criteria->app_name);
 	free(criteria->app_icon);
 	free(criteria->category);
