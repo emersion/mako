@@ -431,7 +431,6 @@ int load_config_file(struct mako_config *config) {
 			// The hidden criteria is a lie, we store the associated style
 			// directly on the config because there's no "real" notification
 			// object to match against it later.
-			// TODO: Raise an error if "hidden" occurs with any other criteria.
 			target_style = &config->hidden_style;
 		}
 		else {
