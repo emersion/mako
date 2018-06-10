@@ -28,21 +28,21 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	if (strstr(state->config.style.format, "%b") != NULL) {
+	if (strstr(global_criteria(&state->config)->style.format, "%b") != NULL) {
 		ret = sd_bus_message_append(reply, "s", "body");
 		if (ret < 0) {
 			return ret;
 		}
 	}
 
-	if (state->config.style.markup) {
+	if (global_criteria(&state->config)->style.markup) {
 		ret = sd_bus_message_append(reply, "s", "body-markup");
 		if (ret < 0) {
 			return ret;
 		}
 	}
 
-	if (state->config.style.actions) {
+	if (global_criteria(&state->config)->style.actions) {
 		ret = sd_bus_message_append(reply, "s", "actions");
 		if (ret < 0) {
 			return ret;
