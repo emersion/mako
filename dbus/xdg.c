@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "criteria.h"
 #include "dbus.h"
 #include "mako.h"
 #include "notification.h"
@@ -212,8 +213,23 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	if (expire_timeout < 0 || state->config.style.ignore_timeout) {
-		expire_timeout = state->config.style.default_timeout;
+	int match_count = apply_each_criteria(&state->config.criteria, notif);
+	if (match_count == -1) {
+		// We encountered an allocation failure or similar while applying
+		// criteria. The notification may be partially matched, but the worst
+		// case is that it has an empty style, so bail.
+		fprintf(stderr, "Failed to apply criteria\n");
+		return -1;
+	}
+	else if (match_count == 0) {
+		// This should be impossible, since the global criteria is always
+		// present in a mako_config and matches everything.
+		fprintf(stderr, "Notification matched zero criteria?!\n");
+		return -1;
+	}
+
+	if (expire_timeout < 0 || notif->style.ignore_timeout) {
+		expire_timeout = notif->style.default_timeout;
 	}
 
 	insert_notification(state, notif);

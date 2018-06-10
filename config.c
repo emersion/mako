@@ -70,6 +70,106 @@ void finish_style(struct mako_style *style) {
 	free(style->format);
 }
 
+// Update `target` with the values specified in `style`. If a failure occurs,
+// `target` will remain unchanged.
+bool apply_style(struct mako_style *style, struct mako_style *target) {
+	// Try to duplicate strings up front in case allocation fails and we have
+	// to bail without changing `target`.
+	char *new_font, *new_format;
+
+	if (style->spec.font) {
+		new_font = strdup(style->font);
+		if (new_font == NULL) {
+			fprintf(stderr, "allocation failed\n");
+			return false;
+		}
+	}
+
+	if (style->spec.format) {
+		new_format = strdup(style->format);
+		if (new_format == NULL) {
+			fprintf(stderr, "allocation failed\n");
+			return false;
+		}
+	}
+
+	// Now on to actually setting things!
+
+	if (style->spec.width) {
+		target->width = style->width;
+		target->spec.width = true;
+	}
+
+	if (style->spec.height) {
+		target->height = style->height;
+		target->spec.height = true;
+	}
+
+	if (style->spec.margin) {
+		target->margin = style->margin;
+		target->spec.margin = true;
+	}
+
+	if (style->spec.padding) {
+		target->padding = style->padding;
+		target->spec.padding = true;
+	}
+
+	if (style->spec.border_size) {
+		target->border_size = style->border_size;
+		target->spec.border_size = true;
+	}
+
+	if (style->spec.font) {
+		free(target->font);
+		target->font = new_font;
+		target->spec.font = true;
+	}
+
+	if (style->spec.markup) {
+		target->markup = style->markup;
+		target->spec.markup = true;
+	}
+
+	if (style->spec.format) {
+		free(target->format);
+		target->format = new_format;
+		target->spec.format = true;
+	}
+
+	if (style->spec.actions) {
+		target->actions = style->actions;
+		target->spec.actions = true;
+	}
+
+	if (style->spec.default_timeout) {
+		target->default_timeout = style->default_timeout;
+		target->spec.default_timeout = true;
+	}
+
+	if (style->spec.ignore_timeout) {
+		target->ignore_timeout = style->ignore_timeout;
+		target->spec.ignore_timeout = true;
+	}
+
+	if (style->spec.colors.background) {
+		target->colors.background = style->colors.background;
+		target->spec.colors.background = true;
+	}
+
+	if (style->spec.colors.text) {
+		target->colors.text = style->colors.text;
+		target->spec.colors.text = true;
+	}
+
+	if (style->spec.colors.border) {
+		target->colors.border = style->colors.border;
+		target->spec.colors.border = true;
+	}
+
+	return true;
+}
+
 static bool parse_int(const char *s, int *out) {
 	errno = 0;
 	char *end;

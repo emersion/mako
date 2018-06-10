@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <wayland-client.h>
 
+#include "config.h"
+
 enum mako_notification_urgency {
 	MAKO_NOTIFICATION_URGENCY_LOW = 0,
 	MAKO_NOTIFICATION_URGENCY_NORMAL = 1,
@@ -23,6 +25,8 @@ struct mako_hotspot {
 struct mako_notification {
 	struct mako_state *state;
 	struct wl_list link; // mako_state::notifications
+
+	struct mako_style style;
 
 	uint32_t id;
 	char *app_name;

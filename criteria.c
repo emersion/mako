@@ -9,6 +9,9 @@
 #include "criteria.h"
 #include "notification.h"
 
+struct mako_style;
+struct mako_style_spec;
+
 struct mako_criteria *create_criteria(struct mako_config *config) {
 	struct mako_criteria *criteria = calloc(1, sizeof(struct mako_criteria));
 	if (criteria == NULL) {
@@ -268,4 +271,27 @@ struct mako_criteria *global_criteria(struct mako_config *config) {
 	struct mako_criteria *criteria =
 		wl_container_of(config->criteria.next, criteria, link);
 	return criteria;
+}
+
+
+// Iterate through `criteria_list`, applying the style from each matching
+// criteria to `notif`. Returns the number of criteria that matched, or -1 if
+// a failure occurs.
+int apply_each_criteria(struct wl_list *criteria_list,
+		struct mako_notification *notif) {
+	int match_count = 0;
+
+	struct mako_criteria *criteria;
+	wl_list_for_each(criteria, criteria_list, link) {
+		if (!match_criteria(criteria, notif)) {
+			continue;
+		}
+		++match_count;
+
+		if (!apply_style(&criteria->style, &notif->style)) {
+			return -1;
+		}
+	}
+
+	return match_count;
 }

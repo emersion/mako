@@ -79,6 +79,7 @@ void finish_config(struct mako_config *config);
 
 void init_default_style(struct mako_style *style);
 void finish_style(struct mako_style *style);
+bool apply_style(struct mako_style *style, struct mako_style *target);
 
 int parse_config_arguments(struct mako_config *config, int argc, char **argv);
 int load_config_file(struct mako_config *config);
