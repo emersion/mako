@@ -414,7 +414,12 @@ int load_config_file(struct mako_config *config) {
 			free(section);
 			section = strndup(line + 1, strlen(line) - 2);
 			criteria = create_criteria(config);
-			parse_criteria(section, criteria);
+			if (!parse_criteria(section, criteria)) {
+				fprintf(stderr, "[%s:%d] Invalid criteria definition\n", base,
+						lineno);
+				ret = -1;
+				break;
+			}
 			continue;
 		}
 
