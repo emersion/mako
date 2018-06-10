@@ -181,6 +181,13 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 		}
 	}
 
+	// Apply the last token, which will be left in the buffer after we hit the
+	// final NULL. We know it's valid since we just checked for that.
+	if (!apply_criteria_field(criteria, token)) {
+		// TODO: Error handling, I guess.
+		return false;
+	}
+
 	return true;
 }
 
