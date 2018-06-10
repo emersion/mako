@@ -65,9 +65,10 @@ struct mako_config {
 
 	int32_t max_visible;
 	char *output;
-	char *hidden_format;
 	uint32_t sort_criteria; //enum mako_sort_criteria
 	uint32_t sort_asc;
+
+	struct mako_style hidden_style;
 
 	struct {
 		enum mako_button_binding left, right, middle;

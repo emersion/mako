@@ -15,7 +15,10 @@ void init_default_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
 	create_criteria(config); // Create the global, empty criteria.
 
-	config->hidden_format = strdup("(%h more)");
+	init_default_style(&config->hidden_style);
+	free(config->hidden_style.format);
+	config->hidden_style.format = strdup("(%h more)");
+
 	config->output = strdup("");
 	config->max_visible = 5;
 
@@ -33,7 +36,7 @@ void finish_config(struct mako_config *config) {
 		destroy_criteria(criteria);
 	}
 
-	free(config->hidden_format);
+	finish_style(&config->hidden_style);
 	free(config->output);
 }
 
@@ -424,7 +427,19 @@ int load_config_file(struct mako_config *config) {
 		bool valid_option = false;
 		eq[0] = '\0';
 
-		valid_option = apply_style_option(&criteria->style, line, eq + 1);
+		struct mako_style *target_style;
+		if (strcmp(section, "hidden") == 0) {
+			// The hidden criteria is a lie, we store the associated style
+			// directly on the config because there's no "real" notification
+			// object to match against it later.
+			// TODO: Raise an error if "hidden" occurs with any other criteria.
+			target_style = &config->hidden_style;
+		}
+		else {
+			target_style = &criteria->style;
+		}
+
+		valid_option = apply_style_option(target_style, line, eq + 1);
 
 		if (section == NULL) {
 			valid_option = apply_config_option(config, line, eq + 1);

@@ -171,16 +171,17 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	}
 
 	if (wl_list_length(&state->notifications) > config->max_visible) {
-		total_height += inner_margin;
+		struct mako_style *style = &config->hidden_style;
+		total_height += style->margin.top; // TODO: inner margin
 
 		size_t text_ln =
-			format_text(config->hidden_format, NULL, format_state_text, state);
+			format_text(style->format, NULL, format_state_text, state);
 		char *text = malloc(text_ln + 1);
 		if (text == NULL) {
 			fprintf(stderr, "allocation failed");
 			return 0;
 		}
-		format_text(config->hidden_format, text, format_state_text, state);
+		format_text(style->format, text, format_state_text, state);
 
 		int hidden_height = render_notification(
 				cairo, state, style, text, total_height, scale);
