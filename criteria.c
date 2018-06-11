@@ -201,6 +201,10 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 	char *value = strstr(key, "=");
 	bool bare_key = !value;
 
+	if (*key == '\0') {
+		return true;
+	}
+
 	if (value) {
 		// Skip past the equal sign to the value itself.
 		*value = '\0';
