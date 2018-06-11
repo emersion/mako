@@ -16,6 +16,7 @@ void init_default_config(struct mako_config *config) {
 	struct mako_criteria *global_criteria = create_criteria(config);
 	init_default_style(&global_criteria->style);
 
+	init_empty_style(&config->hidden_style);
 	config->hidden_style.format = strdup("(%h more)");
 	config->hidden_style.spec.format = true;
 
@@ -66,6 +67,10 @@ void init_default_style(struct mako_style *style) {
 
 	// Everything in the default config is explicitly specified.
 	memset(&style->spec, true, sizeof(struct mako_style_spec));
+}
+
+void init_empty_style(struct mako_style *style) {
+	memset(style, 0, sizeof(struct mako_style));
 }
 
 void finish_style(struct mako_style *style) {

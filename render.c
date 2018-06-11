@@ -181,7 +181,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		// Apply the hidden_style on top of the global style. This has to be
 		// done here since this notification isn't "real" and wasn't processed
 		// by apply_each_criteria.
-		struct mako_style style = {0};
+		struct mako_style style;
+		init_empty_style(&style);
 		apply_style(&global_criteria(config)->style, &style);
 		apply_style(&config->hidden_style, &style);
 
