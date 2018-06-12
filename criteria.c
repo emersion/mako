@@ -291,7 +291,7 @@ ssize_t apply_each_criteria(struct wl_list *criteria_list,
 		}
 		++match_count;
 
-		if (!apply_style(&criteria->style, &notif->style)) {
+		if (!apply_style(&notif->style, &criteria->style)) {
 			return -1;
 		}
 	}

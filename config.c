@@ -80,7 +80,7 @@ void finish_style(struct mako_style *style) {
 
 // Update `target` with the values specified in `style`. If a failure occurs,
 // `target` will remain unchanged.
-bool apply_style(struct mako_style *style, struct mako_style *target) {
+bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	// Try to duplicate strings up front in case allocation fails and we have
 	// to bail without changing `target`.
 	char *new_font = NULL;

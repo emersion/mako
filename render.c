@@ -182,8 +182,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		// by apply_each_criteria.
 		struct mako_style style;
 		init_empty_style(&style);
-		apply_style(&global_criteria(config)->style, &style);
-		apply_style(&config->hidden_style, &style);
+		apply_style(&style, &global_criteria(config)->style);
+		apply_style(&style, &config->hidden_style);
 
 		if (style.margin.top > pending_bottom_margin) {
 			total_height += style.margin.top;
