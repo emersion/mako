@@ -280,9 +280,9 @@ struct mako_criteria *global_criteria(struct mako_config *config) {
 // Iterate through `criteria_list`, applying the style from each matching
 // criteria to `notif`. Returns the number of criteria that matched, or -1 if
 // a failure occurs.
-int apply_each_criteria(struct wl_list *criteria_list,
+ssize_t apply_each_criteria(struct wl_list *criteria_list,
 		struct mako_notification *notif) {
-	int match_count = 0;
+	ssize_t match_count = 0;
 
 	struct mako_criteria *criteria;
 	wl_list_for_each(criteria, criteria_list, link) {
