@@ -103,7 +103,7 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 	int token_max_length = strlen(string) + 1;
 	char token[token_max_length];
 	memset(token, 0, token_max_length);
-	int token_location = 0;
+	size_t token_location = 0;
 
 	enum mako_parse_state state = MAKO_PARSE_STATE_NORMAL;
 	const char *location = string;
