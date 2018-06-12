@@ -127,9 +127,6 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 				state = MAKO_PARSE_STATE_NORMAL;
 				break;
 			case ' ':
-				token[token_location] = ch;
-				++token_location;
-				break;
 			default:
 				token[token_location] = ch;
 				++token_location;
