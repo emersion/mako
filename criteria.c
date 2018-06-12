@@ -73,8 +73,7 @@ bool parse_boolean(const char *string, bool *out) {
 	if (strcasecmp(string, "true") == 0 || strcmp(string, "1") == 0) {
 		*out = true;
 		return true;
-	}
-	else if (strcasecmp(string, "false") == 0 || strcmp(string, "0") == 0) {
+	} else if (strcasecmp(string, "false") == 0 || strcmp(string, "0") == 0) {
 		*out = false;
 		return true;
 	}
@@ -86,12 +85,10 @@ bool parse_urgency(const char *string, enum mako_notification_urgency *out) {
 	if (strcasecmp(string, "low") == 0) {
 		*out = MAKO_NOTIFICATION_URGENCY_LOW;
 		return true;
-	}
-	else if (strcasecmp(string, "normal") == 0) {
+	} else if (strcasecmp(string, "normal") == 0) {
 		*out = MAKO_NOTIFICATION_URGENCY_NORMAL;
 		return true;
-	}
-	else if (strcasecmp(string, "high") == 0) {
+	} else if (strcasecmp(string, "high") == 0) {
 		*out = MAKO_NOTIFICATION_URGENCY_HIGH;
 		return true;
 	}
@@ -168,12 +165,10 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 		if (state & MAKO_PARSE_STATE_QUOTE) {
 			fprintf(stderr, "Unmatched quote in criteria definition\n");
 			return false;
-		}
-		else if (state & MAKO_PARSE_STATE_ESCAPE) {
+		} else if (state & MAKO_PARSE_STATE_ESCAPE) {
 			fprintf(stderr, "Trailing backslash in criteria definition\n");
 			return false;
-		}
-		else {
+		} else {
 			fprintf(stderr, "Got confused parsing criteria definition\n");
 			return false;
 		}
@@ -209,16 +204,14 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 		// Skip past the equal sign to the value itself.
 		*value = '\0';
 		++value;
-	}
-	else {
+	} else {
 		// If there's no value, assume it's a boolean, and set the value
 		// appropriately. This allows uniform parsing later on.
 		if (*key == '!') {
 			// Negated boolean, skip past the exclamation point.
 			++key;
 			value = "false";
-		}
-		else {
+		} else {
 			value = "true";
 		}
 	}
@@ -233,31 +226,26 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			criteria->app_name = strdup(value);
 			criteria->spec.app_name = true;
 			return true;
-		}
-		else if (strcmp(key, "app-icon") == 0) {
+		} else if (strcmp(key, "app-icon") == 0) {
 			criteria->app_icon = strdup(value);
 			criteria->spec.app_icon = true;
 			return true;
-		}
-		else if (strcmp(key, "urgency") == 0) {
+		} else if (strcmp(key, "urgency") == 0) {
 			if (!parse_urgency(value, &criteria->urgency)) {
 				fprintf(stderr, "Invalid urgency value '%s'", value);
 				return false;
 			}
 			criteria->spec.urgency = true;
 			return true;
-		}
-		else if (strcmp(key, "category") == 0) {
+		} else if (strcmp(key, "category") == 0) {
 			criteria->category = strdup(value);
 			criteria->spec.category = true;
 			return true;
-		}
-		else if (strcmp(key, "desktop-entry") == 0) {
+		} else if (strcmp(key, "desktop-entry") == 0) {
 			criteria->desktop_entry = strdup(value);
 			criteria->spec.desktop_entry = true;
 			return true;
-		}
-		else {
+		} else {
 			// Anything left must be one of the boolean fields, defined using
 			// standard syntax. Continue on.
 		}
@@ -271,12 +259,10 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 		}
 		criteria->spec.actionable = true;
 		return true;
-	}
-	else {
+	} else {
 		if (bare_key) {
 			fprintf(stderr, "Invalid boolean criteria field '%s'\n", key);
-		}
-		else {
+		} else {
 			fprintf(stderr, "Invalid criteria field '%s'\n", key);
 		}
 		return false;

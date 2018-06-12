@@ -220,8 +220,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		// case is that it has an empty style, so bail.
 		fprintf(stderr, "Failed to apply criteria\n");
 		return -1;
-	}
-	else if (match_count == 0) {
+	} else if (match_count == 0) {
 		// This should be impossible, since the global criteria is always
 		// present in a mako_config and matches everything.
 		fprintf(stderr, "Notification matched zero criteria?!\n");

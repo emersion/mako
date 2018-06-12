@@ -437,8 +437,7 @@ int load_config_file(struct mako_config *config) {
 			// directly on the config because there's no "real" notification
 			// object to match against it later.
 			target_style = &config->hidden_style;
-		}
-		else {
+		} else {
 			target_style = &criteria->style;
 		}
 

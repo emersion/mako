@@ -151,8 +151,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		if (i > 0) {
 			if (style->margin.top > pending_bottom_margin) {
 				total_height += style->margin.top;
-			}
-			else {
+			} else {
 				total_height += pending_bottom_margin;
 			}
 		}
@@ -188,8 +187,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 		if (style.margin.top > pending_bottom_margin) {
 			total_height += style.margin.top;
-		}
-		else {
+		} else {
 			total_height += pending_bottom_margin;
 		}
 
