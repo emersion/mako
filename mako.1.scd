@@ -152,6 +152,9 @@ The following fields are available in critiera:
 - _category_ (string)
 - _desktop-entry_ (string)
 - _actionable_ (boolean)
+- _hidden_ (boolean)
+	- _hidden_ is special, it defines the style for the placeholder shown when
+	  the number of notifications exceeds _max-visible_.
 
 If a field's value contains special characters, they may be escaped with a
 backslash, or quoted:
