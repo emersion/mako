@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "criteria.h"
 #include "mako.h"
 #include "notification.h"
 #include "render.h"
@@ -407,14 +408,15 @@ void send_frame(struct mako_state *state) {
 		zwlr_layer_surface_v1_add_listener(state->layer_surface,
 			&layer_surface_listener, state);
 
-		struct mako_config *config = &state->config;
-		zwlr_layer_surface_v1_set_size(state->layer_surface,
-			config->style.width, height);
+		struct mako_style *style = &global_criteria(&state->config)->style;
+
+		zwlr_layer_surface_v1_set_size(state->layer_surface, style->width,
+				height);
 		zwlr_layer_surface_v1_set_anchor(state->layer_surface,
 			ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
 		zwlr_layer_surface_v1_set_margin(state->layer_surface,
-			config->style.margin.top, config->style.margin.right,
-			config->style.margin.bottom, config->style.margin.left);
+			style->margin.top, style->margin.right,
+			style->margin.bottom, style->margin.left);
 		wl_surface_commit(state->surface);
 		return;
 	}
@@ -427,7 +429,7 @@ void send_frame(struct mako_state *state) {
 	// requested, we'll enter an infinite loop
 	if (state->height != height) {
 		zwlr_layer_surface_v1_set_size(state->layer_surface,
-			state->config.style.width, height);
+			global_criteria(&state->config)->style.width, height);
 		wl_surface_commit(state->surface);
 		return;
 	}

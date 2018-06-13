@@ -10,6 +10,7 @@
 #include <dev/evdev/input-event-codes.h>
 #endif
 
+#include "config.h"
 #include "dbus.h"
 #include "event-loop.h"
 #include "mako.h"
@@ -49,6 +50,7 @@ void destroy_notification(struct mako_notification *notif) {
 		free(action);
 	}
 	destroy_timer(notif->timer);
+	finish_style(&notif->style);
 	free(notif->app_name);
 	free(notif->app_icon);
 	free(notif->summary);
@@ -212,7 +214,7 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 		char *value = NULL;
 		bool markup = false;
 
-		if (current[1] == '%') { 
+		if (current[1] == '%') {
 			value = strdup("%");
 		} else {
 			value =	format_func(current[1], &markup, data);

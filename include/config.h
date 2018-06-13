@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <wayland-client.h>
 
 struct mako_directional {
 	int32_t top;
@@ -28,7 +29,7 @@ enum mako_sort_criteria {
 // structs are also mirrored.
 struct mako_style_spec {
 	bool width, height, margin, padding, border_size, font, markup, format,
-		 actions, default_timeout;
+		 actions, default_timeout, ignore_timeout;
 
 	struct {
 		bool background, text, border;
@@ -60,13 +61,14 @@ struct mako_style {
 };
 
 struct mako_config {
-	struct mako_style style;
+	struct wl_list criteria; // mako_criteria::link
 
 	int32_t max_visible;
 	char *output;
-	char *hidden_format;
 	uint32_t sort_criteria; //enum mako_sort_criteria
 	uint32_t sort_asc;
+
+	struct mako_style hidden_style;
 
 	struct {
 		enum mako_button_binding left, right, middle;
@@ -77,7 +79,9 @@ void init_default_config(struct mako_config *config);
 void finish_config(struct mako_config *config);
 
 void init_default_style(struct mako_style *style);
+void init_empty_style(struct mako_style *style);
 void finish_style(struct mako_style *style);
+bool apply_style(struct mako_style *target, const struct mako_style *style);
 
 int parse_config_arguments(struct mako_config *config, int argc, char **argv);
 int load_config_file(struct mako_config *config);

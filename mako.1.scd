@@ -19,6 +19,31 @@ dismissed with a click or via *makoctl*(1).
 *-h, --help*
 	Show help message and quit.
 
+# GLOBAL CONFIGURATION OPTIONS
+
+*--max-visible* _n_
+	Set maximum number of visible notifications to _n_. Older notifications will
+	be hidden. If -1, all notifications are visible.
+
+	Default: 5
+
+*--sort* _+/-time_ | _+/-priority_
+	Sorts incoming notifications by time and/or priority in ascending(+)
+	or descending(-) order.
+
+	Default: -time
+
+*--output* _name_
+	Show notifications on the specified output. If empty, notifications will
+	appear on the focused output.
+
+	Requires the compositor to support the Wayland protocol
+	xdg-output-unstable-v1 version 2.
+
+	Default: ""
+
+# STYLE OPTIONS
+
 *--font* _font_
 	Set font to _font_, in Pango format.
 
@@ -79,19 +104,6 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: <b>%s</b>\\n%b
 
-*--max-visible* _n_
-	Set maximum number of visible notifications to _n_. Older notifications will
-	be hidden. If -1, all notifications are visible.
-
-	Default: 5
-
-*--sort* _+/-time_ | _+/-priority_
-	Sorts incoming notifications by time and/or priority in ascending(+)
-	or descending(-) order.
-
-	Default: -time
-
-
 *--default-timeout* _timeout_
 	Set the default timeout to _timeout_ in milliseconds. To disable the
 	timeout, set it to zero.
@@ -104,15 +116,6 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: 0
 
-*--output* _name_
-	Show notifications on the specified output. If empty, notifications will
-	appear on the focused output.
-
-	Requires the compositor to support the Wayland protocol
-	xdg-output-unstable-v1 version 2.
-
-	Default: ""
-
 # CONFIG FILE
 
 The config file is located at *~/.config/mako/config* or at
@@ -124,11 +127,52 @@ Is equivalent to passing *--key=value* to mako from the command line.
 
 Empty lines and lines that begin with # are ignored.
 
-The hidden notifications placeholder can be configured after a *[hidden]*
-section:
+# CRITERIA
 
-	\[hidden\]
-	format=(%h more)
+In addition to the set of options at the top of the file, the config file may
+contain zero or more sections, each containing any combination of the
+*STYLE OPTIONS*. The sections, called criteria, are defined with an INI-like
+square bracket syntax. The brackets may contain any number of fields, like so:
+
+	\[field=value field2=value2 ...\]
+
+When a notification is received, it will be compared to the fields defined in
+each criteria. If all of the fields match, the style options within will be
+applied to the notification. Fields not included in the criteria are not
+considered during the match. A notification may match any number of criteria.
+This matching occurs in the order the criteria are defined in the config file,
+meaning that if multiple criteria match a notification, the last occurrence of
+any given style option will "win".
+
+The following fields are available in critiera:
+
+- _app-name_ (string)
+- _app-icon_ (string)
+- _urgency_ (one of "low", "normal", "high")
+- _category_ (string)
+- _desktop-entry_ (string)
+- _actionable_ (boolean)
+- _hidden_ (boolean)
+	- _hidden_ is special, it defines the style for the placeholder shown when
+	  the number of notifications exceeds _max-visible_.
+
+If a field's value contains special characters, they may be escaped with a
+backslash, or quoted:
+
+	\[app-name="Google Chrome"\]
+
+	\[app-name=Google\\ Chrome\]
+
+Quotes within quotes may also be escaped, and a literal backslack may be
+specified as \\\\. No spaces are allowed around the equal sign. Escaping equal
+signs within values is unnecessary.
+
+Additionally, boolean values may be specified using any of true/false, 0/1, or
+as bare words:
+
+	\[actionable=true\] \[actionable=1\] \[actionable\]
+
+	\[actionable=false\] \[actionable=0\] \[!actionable\]
 
 # COLORS
 
