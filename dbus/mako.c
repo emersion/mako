@@ -71,10 +71,13 @@ static int handle_reload(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
 
-	reload_config(&state->config);
+	if (!reload_config(&state->config)) {
+		return sd_bus_reply_method_return(msg, "b", false);
+	}
+
 	send_frame(state);
 
-	return sd_bus_reply_method_return(msg, "");
+	return sd_bus_reply_method_return(msg, "b", true);
 }
 
 static const sd_bus_vtable service_vtable[] = {
@@ -82,7 +85,7 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_METHOD("DismissAllNotifications", "", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("DismissLastNotification", "", "", handle_dismiss_last_notification, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("InvokeAction", "s", "", handle_invoke_action, SD_BUS_VTABLE_UNPRIVILEGED),
-	SD_BUS_METHOD("Reload", "", "", handle_reload, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("Reload", "", "b", handle_reload, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_VTABLE_END
 };
 

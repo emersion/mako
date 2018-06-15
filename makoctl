@@ -40,7 +40,11 @@ case "$1" in
 	call InvokeAction "s" "$action"
 	;;
 "reload")
-	call Reload
+	success=( $(call Reload) )
+	if [ "${success[1]}" == "false" ] ; then
+		echo "Failed to reload config" >&2
+		exit 1
+	fi
 	;;
 "help"|"--help"|"-h")
 	usage

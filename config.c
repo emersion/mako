@@ -513,9 +513,29 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 	return 0;
 }
 
-void reload_config(struct mako_config *config) {
+bool reload_config(struct mako_config *config) {
+	struct mako_config new_config = {0};
+	init_default_config(&new_config);
+
+	if (load_config_file(&new_config) != 0 ||
+			parse_config_arguments(&new_config, config_argc, config_argv) != 0) {
+		fprintf(stderr, "Failed to reload config\n");
+		finish_config(&new_config);
+		return false;
+	}
+
 	finish_config(config);
-	init_default_config(config);
-	load_config_file(config);
-	parse_config_arguments(config, config_argc, config_argv);
+	*config = new_config;
+
+	// We have to rebuild the wl_list that contains the criteria, as it is
+	// currently pointing to local memory instead of the location of the real
+	// criteria struct.
+	wl_list_init(&config->criteria);
+	struct mako_criteria *criteria, *tmp;
+	wl_list_for_each_safe(criteria, tmp, &new_config.criteria, link) {
+		wl_list_remove(&criteria->link);
+		wl_list_insert(config->criteria.prev, &criteria->link);
+	}
+
+	return true;
 }
