@@ -49,13 +49,13 @@ static bool init(struct mako_state *state) {
 }
 
 static void finish(struct mako_state *state) {
-	finish_event_loop(&state->event_loop);
-	finish_wayland(state);
-	finish_dbus(state);
 	struct mako_notification *notif, *tmp;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
 		destroy_notification(notif);
 	}
+	finish_event_loop(&state->event_loop);
+	finish_wayland(state);
+	finish_dbus(state);
 }
 
 static struct mako_event_loop *event_loop = NULL;
