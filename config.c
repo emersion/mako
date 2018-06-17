@@ -531,11 +531,7 @@ bool reload_config(struct mako_config *config) {
 	// currently pointing to local memory instead of the location of the real
 	// criteria struct.
 	wl_list_init(&config->criteria);
-	struct mako_criteria *criteria, *tmp;
-	wl_list_for_each_safe(criteria, tmp, &new_config.criteria, link) {
-		wl_list_remove(&criteria->link);
-		wl_list_insert(config->criteria.prev, &criteria->link);
-	}
+	wl_list_insert_list(&config->criteria, &new_config.criteria);
 
 	return true;
 }
