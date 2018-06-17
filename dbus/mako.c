@@ -72,12 +72,15 @@ static int handle_reload(sd_bus_message *msg, void *data,
 	struct mako_state *state = data;
 
 	if (!reload_config(&state->config)) {
-		return sd_bus_reply_method_return(msg, "b", false);
+		sd_bus_error_set_const(
+				ret_error, "fr.emersion.Mako.InvalidConfig",
+				"Unable to parse configuration file");
+		return -1;
 	}
 
 	send_frame(state);
 
-	return sd_bus_reply_method_return(msg, "b", true);
+	return sd_bus_reply_method_return(msg, "");
 }
 
 static const sd_bus_vtable service_vtable[] = {
@@ -85,7 +88,7 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_METHOD("DismissAllNotifications", "", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("DismissLastNotification", "", "", handle_dismiss_last_notification, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("InvokeAction", "s", "", handle_invoke_action, SD_BUS_VTABLE_UNPRIVILEGED),
-	SD_BUS_METHOD("Reload", "", "b", handle_reload, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("Reload", "", "", handle_reload, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_VTABLE_END
 };
 
