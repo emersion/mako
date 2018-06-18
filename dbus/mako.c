@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
+#include "criteria.h"
 #include "dbus.h"
 #include "mako.h"
 #include "notification.h"
@@ -76,6 +78,13 @@ static int handle_reload(sd_bus_message *msg, void *data,
 				ret_error, "fr.emersion.Mako.InvalidConfig",
 				"Unable to parse configuration file");
 		return -1;
+	}
+
+	struct mako_notification *notif;
+	wl_list_for_each(notif, &state->notifications, link) {
+		finish_style(&notif->style);
+		init_empty_style(&notif->style);
+		apply_each_criteria(&state->config.criteria, notif);
 	}
 
 	send_frame(state);
