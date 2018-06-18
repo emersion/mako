@@ -71,7 +71,13 @@ static int handle_reload(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
 
-	reload_config(&state->config);
+	if (!reload_config(&state->config)) {
+		sd_bus_error_set_const(
+				ret_error, "fr.emersion.Mako.InvalidConfig",
+				"Unable to parse configuration file");
+		return -1;
+	}
+
 	send_frame(state);
 
 	return sd_bus_reply_method_return(msg, "");
