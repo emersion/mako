@@ -153,6 +153,5 @@ struct pool_buffer *get_next_buffer(struct wl_shm *shm,
 		}
 	}
 
-	buffer->busy = true;
 	return buffer;
 }

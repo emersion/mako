@@ -368,6 +368,7 @@ void send_frame(struct mako_state *state) {
 	state->current_buffer = get_next_buffer(state->shm, state->buffers,
 		state->width * scale, state->height * scale);
 	if (state->current_buffer == NULL) {
+		fprintf(stderr, "no buffer available\n");
 		return;
 	}
 
@@ -442,4 +443,5 @@ void send_frame(struct mako_state *state) {
 	wl_surface_attach(state->surface, state->current_buffer->buffer, 0, 0);
 	wl_surface_damage(state->surface, 0, 0, state->width, state->height);
 	wl_surface_commit(state->surface);
+	state->current_buffer->busy = true;
 }
