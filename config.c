@@ -233,8 +233,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "border-color") == 0) {
 		return spec->colors.border = parse_color(value, &style->colors.border);
 	} else if (strcmp(name, "markup") == 0) {
-		style->markup = strcmp(value, "1") == 0;
-		return spec->markup = style->markup || strcmp(value, "0") == 0;
+		return spec->markup = parse_boolean(value, &style->markup);
 	} else if (strcmp(name, "format") == 0) {
 		free(style->format);
 		return spec->format = !!(style->format = strdup(value));
@@ -242,9 +241,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		return spec->default_timeout =
 			parse_int(value, &style->default_timeout);
 	} else if (strcmp(name, "ignore-timeout") == 0) {
-		style->ignore_timeout = strcmp(value, "1") == 0;
-		return spec->ignore_timeout = (
-				style->ignore_timeout || strcmp(value, "0") == 0);
+		return spec->ignore_timeout =
+			parse_boolean(value, &style->ignore_timeout);
 	}
 
 	return false;
