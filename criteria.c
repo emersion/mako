@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <strings.h>
 #include <wayland-client.h>
+
 #include "mako.h"
 #include "config.h"
 #include "criteria.h"
@@ -67,33 +67,6 @@ bool match_criteria(struct mako_criteria *criteria,
 	}
 
 	return true;
-}
-
-bool parse_boolean(const char *string, bool *out) {
-	if (strcasecmp(string, "true") == 0 || strcmp(string, "1") == 0) {
-		*out = true;
-		return true;
-	} else if (strcasecmp(string, "false") == 0 || strcmp(string, "0") == 0) {
-		*out = false;
-		return true;
-	}
-
-	return false;
-}
-
-bool parse_urgency(const char *string, enum mako_notification_urgency *out) {
-	if (strcasecmp(string, "low") == 0) {
-		*out = MAKO_NOTIFICATION_URGENCY_LOW;
-		return true;
-	} else if (strcasecmp(string, "normal") == 0) {
-		*out = MAKO_NOTIFICATION_URGENCY_NORMAL;
-		return true;
-	} else if (strcasecmp(string, "high") == 0) {
-		*out = MAKO_NOTIFICATION_URGENCY_HIGH;
-		return true;
-	}
-
-	return false;
 }
 
 bool parse_criteria(const char *string, struct mako_criteria *criteria) {

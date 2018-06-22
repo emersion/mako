@@ -10,6 +10,7 @@
 
 #include "config.h"
 #include "criteria.h"
+#include "types.h"
 
 void init_default_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
@@ -176,92 +177,6 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		target->spec.colors.border = true;
 	}
 
-	return true;
-}
-
-static bool parse_int(const char *s, int *out) {
-	errno = 0;
-	char *end;
-	*out = (int)strtol(s, &end, 10);
-	return errno == 0 && end[0] == '\0';
-}
-
-/* Parse between 1 and 4 integers, comma separated, from the provided string.
- * Depending on the number of integers provided, the four fields of the `out`
- * struct will be initialized following the same rules as the CSS "margin"
- * property.
- */
-static bool parse_directional(const char *directional_string,
-		struct mako_directional *out) {
-	char *components = strdup(directional_string);
-
-	int32_t values[] = {0, 0, 0, 0};
-
-	char *saveptr = NULL;
-	char *token = strtok_r(components, ",", &saveptr);
-	size_t count;
-	for (count = 0; count < 4; count++) {
-		if (token == NULL) {
-			break;
-		}
-
-		int32_t number;
-		if (!parse_int(token, &number)) {
-			// There were no digits, or something else went horribly wrong
-			free(components);
-			return false;
-		}
-
-		values[count] = number;
-		token = strtok_r(NULL, ",", &saveptr);
-	}
-
-	switch (count) {
-	case 1: // All values are the same
-		out->top = out->right = out->bottom = out->left = values[0];
-		break;
-	case 2: // Vertical, horizontal
-		out->top = out->bottom = values[0];
-		out->right = out->left = values[1];
-		break;
-	case 3: // Top, horizontal, bottom
-		out->top = values[0];
-		out->right = out->left = values[1];
-		out->bottom = values[2];
-		break;
-	case 4: // Top, right, bottom, left
-		out->top = values[0];
-		out->right = values[1];
-		out->bottom = values[2];
-		out->left = values[3];
-		break;
-	}
-
-	free(components);
-	return true;
-}
-
-static bool parse_color(const char *color, uint32_t *out) {
-	if (color[0] != '#') {
-		return false;
-	}
-	color++;
-
-	size_t len = strlen(color);
-	if (len != 6 && len != 8) {
-		return false;
-	}
-
-	errno = 0;
-	char *end;
-	*out = (uint32_t)strtoul(color, &end, 16);
-	if (errno != 0 || end[0] != '\0') {
-		return false;
-	}
-
-	if (len == 6) {
-		*out = (*out << 8) | 0xFF;
-	}
 	return true;
 }
 

@@ -6,13 +6,7 @@
 #include <wayland-client.h>
 
 #include "config.h"
-
-enum mako_notification_urgency {
-	MAKO_NOTIFICATION_URGENCY_LOW = 0,
-	MAKO_NOTIFICATION_URGENCY_NORMAL = 1,
-	MAKO_NOTIFICATION_URGENCY_HIGH = 2,
-	MAKO_NOTIFICATION_URGENCY_UNKNOWN = -1,
-};
+#include "types.h"
 
 struct mako_state;
 struct mako_timer;
