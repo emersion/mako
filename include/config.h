@@ -5,12 +5,7 @@
 #include <stdint.h>
 #include <wayland-client.h>
 
-struct mako_directional {
-	int32_t top;
-	int32_t right;
-	int32_t bottom;
-	int32_t left;
-};
+#include "types.h"
 
 enum mako_button_binding {
 	MAKO_BUTTON_BINDING_NONE,

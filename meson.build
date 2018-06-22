@@ -39,6 +39,7 @@ executable(
 		'render.c',
 		'wayland.c',
 		'criteria.c',
+		'types.c',
 	]),
 	dependencies: [
 		cairo,
