@@ -27,6 +27,7 @@ struct mako_notification {
 	char *app_icon;
 	char *summary;
 	char *body;
+	int32_t requested_timeout;
 	struct wl_list actions; // mako_action::link
 
 	enum mako_notification_urgency urgency;

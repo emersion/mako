@@ -25,6 +25,7 @@ struct mako_criteria_spec {
 	bool app_name;
 	bool app_icon;
 	bool actionable;
+	bool expiring;
 	bool urgency;
 	bool category;
 	bool desktop_entry;
@@ -41,6 +42,7 @@ struct mako_criteria {
 	char *app_name;
 	char *app_icon;
 	bool actionable; // Whether mako_notification.actions is nonempty
+	bool expiring; // Whether mako_notification.timer is non-null
 
 	enum mako_notification_urgency urgency;
 	char *category;
