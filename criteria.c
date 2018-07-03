@@ -51,6 +51,11 @@ bool match_criteria(struct mako_criteria *criteria,
 		return false;
 	}
 
+	if (spec.expiring &&
+			criteria->expiring != (notif->requested_timeout != 0)) {
+		return false;
+	}
+
 	if (spec.urgency &&
 			criteria->urgency != notif->urgency) {
 		return false;
@@ -228,6 +233,14 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			return false;
 		}
 		criteria->spec.actionable = true;
+		return true;
+	} else if (strcmp(key, "expiring") == 0){
+		if (!parse_boolean(value, &criteria->expiring)) {
+			fprintf(stderr, "Invalid value '%s' for boolean field '%s'\n",
+					value, key);
+			return false;
+		}
+		criteria->spec.expiring = true;
 		return true;
 	} else {
 		if (bare_key) {

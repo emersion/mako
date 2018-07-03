@@ -207,11 +207,12 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	int32_t expire_timeout;
-	ret = sd_bus_message_read(msg, "i", &expire_timeout);
+	int32_t requested_timeout;
+	ret = sd_bus_message_read(msg, "i", &requested_timeout);
 	if (ret < 0) {
 		return ret;
 	}
+	notif->requested_timeout = requested_timeout;
 
 	int match_count = apply_each_criteria(&state->config.criteria, notif);
 	if (match_count == -1) {
@@ -227,6 +228,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		return -1;
 	}
 
+	int32_t expire_timeout = notif->requested_timeout;
 	if (expire_timeout < 0 || notif->style.ignore_timeout) {
 		expire_timeout = notif->style.default_timeout;
 	}
