@@ -228,8 +228,8 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		return -1;
 	}
 
-	int32_t expire_timeout;
-	if (notif->requested_timeout < 0 || notif->style.ignore_timeout) {
+	int32_t expire_timeout = notif->requested_timeout;
+	if (expire_timeout < 0 || notif->style.ignore_timeout) {
 		expire_timeout = notif->style.default_timeout;
 	}
 
