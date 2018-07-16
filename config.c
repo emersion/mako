@@ -208,16 +208,16 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 		}
 		return true;
 	} else if (strcmp(name, "anchor") == 0) {
-		if (strcmp(value, "topright") == 0) {
+		if (strcmp(value, "top-right") == 0) {
 			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
 				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
-		} else if (strcmp(value, "bottomright") == 0) {
+		} else if (strcmp(value, "bottom-right") == 0) {
 			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
 				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
-		} else if (strcmp(value, "bottomleft") == 0) {
+		} else if (strcmp(value, "bottom-left") == 0) {
 			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
 				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
-		} else if (strcmp(value, "topleft") == 0) {
+		} else if (strcmp(value, "top-left") == 0) {
 			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
 				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
 		} else {
