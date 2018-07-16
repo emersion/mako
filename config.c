@@ -11,6 +11,7 @@
 #include "config.h"
 #include "criteria.h"
 #include "types.h"
+#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 void init_default_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
@@ -30,6 +31,9 @@ void init_default_config(struct mako_config *config) {
 	config->button_bindings.left = MAKO_BUTTON_BINDING_INVOKE_DEFAULT_ACTION;
 	config->button_bindings.right = MAKO_BUTTON_BINDING_DISMISS;
 	config->button_bindings.middle = MAKO_BUTTON_BINDING_NONE;
+
+	config->anchor =
+		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
 }
 
 void finish_config(struct mako_config *config) {
@@ -201,6 +205,23 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 		} else if (strcmp(value, "-time") == 0) {
 			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
 			config->sort_asc &= ~MAKO_SORT_CRITERIA_TIME;
+		}
+		return true;
+	} else if (strcmp(name, "anchor") == 0) {
+		if (strcmp(value, "topright") == 0) {
+			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
+				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+		} else if (strcmp(value, "bottomright") == 0) {
+			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
+				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+		} else if (strcmp(value, "bottomleft") == 0) {
+			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
+				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
+		} else if (strcmp(value, "topleft") == 0) {
+			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
+				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
+		} else {
+			return false;
 		}
 		return true;
 	}
@@ -396,6 +417,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"default-timeout", required_argument, 0, 0},
 		{"ignore-timeout", required_argument, 0, 0},
 		{"output", required_argument, 0, 0},
+		{"anchor", required_argument, 0, 0},
 		{"sort", required_argument, 0, 0},
 		{0},
 	};
@@ -414,7 +436,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 
 		const char *name = long_options[option_index].name;
 		if (!apply_style_option(&global_criteria(config)->style, name, optarg)
-				|| apply_config_option(config, name, optarg)) {
+				&& !apply_config_option(config, name, optarg)) {
 			fprintf(stderr, "Failed to parse option '%s'\n", name);
 			return -1;
 		}

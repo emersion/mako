@@ -414,7 +414,7 @@ void send_frame(struct mako_state *state) {
 		zwlr_layer_surface_v1_set_size(state->layer_surface, style->width,
 				height);
 		zwlr_layer_surface_v1_set_anchor(state->layer_surface,
-			ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
+				state->config.anchor);
 		zwlr_layer_surface_v1_set_margin(state->layer_surface,
 			style->margin.top, style->margin.right,
 			style->margin.bottom, style->margin.left);

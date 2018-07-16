@@ -42,6 +42,12 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: ""
 
+*--anchor* _corner_
+	Show notifications in the specified corner of the output. Supported values
+	are _topright_, _bottomright_, _bottomleft_ and _topleft_.
+
+	Default: _topright_
+
 # STYLE OPTIONS
 
 *--font* _font_

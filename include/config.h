@@ -60,6 +60,7 @@ struct mako_config {
 
 	int32_t max_visible;
 	char *output;
+	uint32_t anchor;
 	uint32_t sort_criteria; //enum mako_sort_criteria
 	uint32_t sort_asc;
 
