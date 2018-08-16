@@ -24,6 +24,11 @@ struct mako_output {
 	int32_t scale;
 };
 
+struct mako_seat {
+	struct wl_seat *wl_seat;
+	struct wl_list link; // mako_state::seats
+};
+
 bool init_wayland(struct mako_state *state);
 void finish_wayland(struct mako_state *state);
 void send_frame(struct mako_state *state);
