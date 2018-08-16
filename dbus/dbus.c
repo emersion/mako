@@ -45,5 +45,5 @@ error:
 void finish_dbus(struct mako_state *state) {
 	sd_bus_slot_unref(state->xdg_slot);
 	sd_bus_slot_unref(state->mako_slot);
-	sd_bus_unref(state->bus);
+	sd_bus_flush_close_unref(state->bus);
 }
