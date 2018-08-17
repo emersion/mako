@@ -26,6 +26,7 @@ struct mako_state {
 	struct zxdg_output_manager_v1 *xdg_output_manager;
 	struct wl_list pointers; // mako_pointer::link
 	struct wl_list outputs; // mako_output::link
+	struct wl_list seats; // mako_seat::link
 
 	struct wl_surface *surface;
 	struct mako_output *surface_output;
