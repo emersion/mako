@@ -10,6 +10,7 @@
 #include <wordexp.h>
 #include <unistd.h>
 
+#include "enum.h"
 #include "types.h"
 
 bool parse_boolean(const char *string, bool *out) {
@@ -121,5 +122,57 @@ bool parse_directional(const char *string, struct mako_directional *out) {
 	}
 
 	free(components);
+	return true;
+}
+
+bool parse_format(const char *string, char **out) {
+	int token_max_length = strlen(string) + 1;
+	char token[token_max_length];
+	memset(token, 0, token_max_length);
+	size_t token_location = 0;
+
+	enum mako_parse_state state = MAKO_PARSE_STATE_NORMAL;
+	const char *location = string;
+
+	char ch;
+	while ((ch = *location++) != '\0') {
+		switch (state) {
+			case MAKO_PARSE_STATE_ESCAPE:
+				switch (ch) {
+					case 'n':
+						token[token_location] = '\n';
+						++token_location;
+						break;
+
+					case '\\':
+					default:
+						token[token_location] = ch;
+						++token_location;
+						break;
+				}
+
+				state = MAKO_PARSE_STATE_NORMAL;
+				break;
+
+			case MAKO_PARSE_STATE_NORMAL:
+				switch (ch) {
+					case '\\':
+						state = MAKO_PARSE_STATE_ESCAPE;
+						break;
+
+					default:
+						token[token_location] = ch;
+						++token_location;
+						break;
+				}
+				break;
+
+			default:
+				*out = NULL;
+				return false;
+		}
+	}
+
+	*out = strdup(token);
 	return true;
 }

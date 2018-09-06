@@ -257,7 +257,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		return spec->markup = parse_boolean(value, &style->markup);
 	} else if (strcmp(name, "format") == 0) {
 		free(style->format);
-		return spec->format = !!(style->format = strdup(value));
+		return spec->format = parse_format(value, &style->format);
 	} else if (strcmp(name, "default-timeout") == 0) {
 		return spec->default_timeout =
 			parse_int(value, &style->default_timeout);
