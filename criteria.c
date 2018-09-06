@@ -5,6 +5,7 @@
 #include <string.h>
 #include <wayland-client.h>
 
+#include "enum.h"
 #include "mako.h"
 #include "config.h"
 #include "criteria.h"
