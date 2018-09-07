@@ -137,39 +137,39 @@ bool parse_format(const char *string, char **out) {
 	char ch;
 	while ((ch = *location++) != '\0') {
 		switch (state) {
-			case MAKO_PARSE_STATE_ESCAPE:
-				switch (ch) {
-					case 'n':
-						token[token_location] = '\n';
-						++token_location;
-						break;
-
-					case '\\':
-					default:
-						token[token_location] = ch;
-						++token_location;
-						break;
-				}
-
-				state = MAKO_PARSE_STATE_NORMAL;
+		case MAKO_PARSE_STATE_ESCAPE:
+			switch (ch) {
+			case 'n':
+				token[token_location] = '\n';
+				++token_location;
 				break;
 
-			case MAKO_PARSE_STATE_NORMAL:
-				switch (ch) {
-					case '\\':
-						state = MAKO_PARSE_STATE_ESCAPE;
-						break;
+			case '\\':
+			default:
+				token[token_location] = ch;
+				++token_location;
+				break;
+			}
 
-					default:
-						token[token_location] = ch;
-						++token_location;
-						break;
-				}
+			state = MAKO_PARSE_STATE_NORMAL;
+			break;
+
+		case MAKO_PARSE_STATE_NORMAL:
+			switch (ch) {
+			case '\\':
+				state = MAKO_PARSE_STATE_ESCAPE;
 				break;
 
 			default:
-				*out = NULL;
-				return false;
+				token[token_location] = ch;
+				++token_location;
+				break;
+			}
+			break;
+
+		default:
+			*out = NULL;
+			return false;
 		}
 	}
 
