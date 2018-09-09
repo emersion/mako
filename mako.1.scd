@@ -210,6 +210,10 @@ specifiers.
 
 *%%*	Literal "%"
 
+*\\\\*	Literal "\\"
+
+*\\n*	New Line 
+
 ## For notifications
 
 *%a*	Application name
