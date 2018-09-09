@@ -126,16 +126,15 @@ bool parse_directional(const char *string, struct mako_directional *out) {
 }
 
 bool parse_format(const char *string, char **out) {
-	int token_max_length = strlen(string) + 1;
+	size_t token_max_length = strlen(string) + 1;
 	char token[token_max_length];
 	memset(token, 0, token_max_length);
 	size_t token_location = 0;
 
 	enum mako_parse_state state = MAKO_PARSE_STATE_NORMAL;
-	const char *location = string;
+	for (size_t i = 0; i < token_max_length; ++i) {
+		char ch = string[i];
 
-	char ch;
-	while ((ch = *location++) != '\0') {
 		switch (state) {
 		case MAKO_PARSE_STATE_ESCAPE:
 			switch (ch) {
@@ -145,7 +144,12 @@ bool parse_format(const char *string, char **out) {
 				break;
 
 			case '\\':
+				token[token_location] = '\\';
+				++token_location;
+				break;
+
 			default:
+				++token_location;
 				token[token_location] = ch;
 				++token_location;
 				break;
@@ -157,6 +161,7 @@ bool parse_format(const char *string, char **out) {
 		case MAKO_PARSE_STATE_NORMAL:
 			switch (ch) {
 			case '\\':
+				token[token_location] = ch;
 				state = MAKO_PARSE_STATE_ESCAPE;
 				break;
 
