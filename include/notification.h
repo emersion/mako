@@ -73,4 +73,5 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 void notification_handle_button(struct mako_notification *notif, uint32_t button,
 	enum wl_pointer_button_state state);
 void insert_notification(struct mako_state *state, struct mako_notification *notif);
+
 #endif

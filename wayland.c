@@ -72,6 +72,12 @@ static void create_output(struct mako_state *state,
 }
 
 static void destroy_output(struct mako_output *output) {
+	if (output->state->surface_output == output) {
+		output->state->surface_output = NULL;
+	}
+	if (output->state->layer_surface_output == output) {
+		output->state->layer_surface_output = NULL;
+	}
 	wl_list_remove(&output->link);
 	if (output->xdg_output != NULL) {
 		zxdg_output_v1_destroy(output->xdg_output);
