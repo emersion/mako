@@ -25,5 +25,6 @@ struct mako_directional {
 };
 
 bool parse_directional(const char *string, struct mako_directional *out);
+bool parse_format(const char *string, char **out);
 
 #endif
