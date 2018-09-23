@@ -40,6 +40,14 @@ static void get_xdg_output(struct mako_output *output) {
 		output);
 }
 
+static void output_handle_geometry(void *data, struct wl_output *wl_output,
+		int32_t x, int32_t y, int32_t phy_width, int32_t phy_height,
+		int32_t subpixel, const char *make, const char *model,
+		int32_t transform) {
+	struct mako_output *output = data;
+	output->subpixel = subpixel;
+}
+
 static void output_handle_scale(void *data, struct wl_output *wl_output,
 		int32_t factor) {
 	struct mako_output *output = data;
@@ -47,7 +55,7 @@ static void output_handle_scale(void *data, struct wl_output *wl_output,
 }
 
 static const struct wl_output_listener output_listener = {
-	.geometry = noop,
+	.geometry = output_handle_geometry,
 	.mode = noop,
 	.done = noop,
 	.scale = output_handle_scale,

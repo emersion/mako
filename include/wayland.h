@@ -2,6 +2,7 @@
 #define _MAKO_WAYLAND_H
 
 #include <stdbool.h>
+#include <wayland-client-protocol.h>
 
 struct mako_state;
 
@@ -21,6 +22,7 @@ struct mako_output {
 	struct wl_list link; // mako_state::outputs
 
 	char *name;
+	enum wl_output_subpixel subpixel;
 	int32_t scale;
 };
 

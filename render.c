@@ -37,10 +37,42 @@ static void set_rectangle(cairo_t *cairo, int x, int y, int width, int height,
 	cairo_rectangle(cairo, x * scale, y * scale, width * scale, height * scale);
 }
 
+static cairo_subpixel_order_t get_cairo_subpixel_order(
+		enum wl_output_subpixel subpixel) {
+	switch (subpixel) {
+	case WL_OUTPUT_SUBPIXEL_UNKNOWN:
+	case WL_OUTPUT_SUBPIXEL_NONE:
+		return CAIRO_SUBPIXEL_ORDER_DEFAULT;
+	case WL_OUTPUT_SUBPIXEL_HORIZONTAL_RGB:
+		return CAIRO_SUBPIXEL_ORDER_RGB;
+	case WL_OUTPUT_SUBPIXEL_HORIZONTAL_BGR:
+		return CAIRO_SUBPIXEL_ORDER_BGR;
+	case WL_OUTPUT_SUBPIXEL_VERTICAL_RGB:
+		return CAIRO_SUBPIXEL_ORDER_VRGB;
+	case WL_OUTPUT_SUBPIXEL_VERTICAL_BGR:
+		return CAIRO_SUBPIXEL_ORDER_VBGR;
+	}
+}
+
+static void set_font_options(cairo_t *cairo, struct mako_state *state) {
+	if (state->surface_output == NULL) {
+		return;
+	}
+
+	cairo_font_options_t *fo = cairo_font_options_create();
+	cairo_font_options_set_antialias(fo, CAIRO_ANTIALIAS_SUBPIXEL);
+	cairo_font_options_set_subpixel_order(fo,
+		get_cairo_subpixel_order(state->surface_output->subpixel));
+	cairo_set_font_options(cairo, fo);
+	cairo_font_options_destroy(fo);
+}
+
 static int render_notification(cairo_t *cairo, struct mako_state *state,
 		struct mako_style *style, const char *text, int offset_y, int scale) {
 	int border_size = 2 * style->border_size;
 	int padding_size = 2 * style->padding;
+
+	set_font_options(cairo, state);
 
 	PangoLayout *layout = pango_cairo_create_layout(cairo);
 	set_layout_size(layout,
