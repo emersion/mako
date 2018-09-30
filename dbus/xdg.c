@@ -29,7 +29,7 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	if (strstr(global_criteria(&state->config)->style.format, "%b") != NULL) {
+	if (strstr(state->config.superstyle.format, "%b") != NULL) {
 		ret = sd_bus_message_append(reply, "s", "body");
 		if (ret < 0) {
 			return ret;
