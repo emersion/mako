@@ -41,6 +41,9 @@ struct mako_state {
 
 	uint32_t last_id;
 	struct wl_list notifications; // mako_notification::link
+
+	int argc;
+	char **argv;
 };
 
 #endif

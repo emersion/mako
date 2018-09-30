@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
 #include "dbus.h"
 #include "mako.h"
 #include "notification.h"
@@ -68,13 +69,13 @@ static void handle_signal(int signum) {
 int main(int argc, char *argv[]) {
 	struct mako_state state = {0};
 
-	init_default_config(&state.config);
+	state.argc = argc;
+	state.argv = argv;
 
-	int ret = load_config_file(&state.config);
-	if (ret < 0) {
-		return EXIT_FAILURE;
-	}
-	ret = parse_config_arguments(&state.config, argc, argv);
+	// This is a bit wasteful, but easier than special-casing the reload.
+	init_default_config(&state.config);
+	int ret = reload_config(&state.config, argc, argv);
+
 	if (ret < 0) {
 		return EXIT_FAILURE;
 	} else if (ret > 0) {

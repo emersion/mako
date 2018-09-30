@@ -446,9 +446,6 @@ int load_config_file(struct mako_config *config) {
 	return ret;
 }
 
-static int config_argc = 0;
-static char **config_argv = NULL;
-
 int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 	static const struct option long_options[] = {
 		{"help", no_argument, 0, 'h'},
@@ -495,21 +492,24 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		}
 	}
 
-	config_argc = argc;
-	config_argv = argv;
-
 	return 0;
 }
 
-bool reload_config(struct mako_config *config) {
+// Returns zero on success, negative on error, positive if we should exit
+// immediately due to something the user asked for (like help).
+int reload_config(struct mako_config *config, int argc, char **argv) {
 	struct mako_config new_config = {0};
 	init_default_config(&new_config);
 
-	if (load_config_file(&new_config) != 0 ||
-			parse_config_arguments(&new_config, config_argc, config_argv) != 0) {
+	if (load_config_file(&new_config) != 0) {
 		fprintf(stderr, "Failed to reload config\n");
 		finish_config(&new_config);
-		return false;
+		return -1;
+	}
+
+	int ret = parse_config_arguments(&new_config, argc, argv);
+	if (ret != 0) {
+		return ret;
 	}
 
 	finish_config(config);
@@ -521,5 +521,5 @@ bool reload_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
 	wl_list_insert_list(&config->criteria, &new_config.criteria);
 
-	return true;
+	return 0;
 }

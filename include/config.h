@@ -83,6 +83,6 @@ bool apply_superset_style(
 
 int parse_config_arguments(struct mako_config *config, int argc, char **argv);
 int load_config_file(struct mako_config *config);
-bool reload_config(struct mako_config *config);
+int reload_config(struct mako_config *config, int argc, char **argv);
 
 #endif
