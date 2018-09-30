@@ -13,6 +13,8 @@
 #include "types.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
+#define max(a, b) (((a) > (b)) ? (a) : (b))
+
 void init_default_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
 	struct mako_criteria *global_criteria = create_criteria(config);
@@ -179,6 +181,51 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.colors.border) {
 		target->colors.border = style->colors.border;
 		target->spec.colors.border = true;
+	}
+
+	return true;
+}
+
+// Given a config and a style in which to store the information, this will
+// calculate a style that has the maximum value of all the configured criteria
+// styles (including the default as a base), for values where it makes sense to
+// have a maximum. Those that don't make sense will be unchanged. Usually, you
+// want to pass an empty style as the target.
+//
+// TODO: Maximum of format should be a string of all of the specifiers in use.
+// This can be used to eliminate the last use of global_criteria in dbus/xdg.c.
+bool apply_superset_style(
+		struct mako_style *target, struct mako_config *config) {
+	// Specify eveything that we'll be combining.
+	target->spec.width = true;
+	target->spec.height = true;
+	target->spec.margin = true;
+	target->spec.padding = true;
+	target->spec.border_size = true;
+	target->spec.default_timeout = true;
+	target->spec.markup = true;
+	target->spec.actions = true;
+
+	// Now we loop over the criteria and add together those fields.
+	// We can't use apply_style, because it simply overwrites each field.
+	struct mako_criteria *criteria;
+	wl_list_for_each(criteria, &config->criteria, link) {
+		struct mako_style *style = &criteria->style;
+
+		target->width = max(style->width, target->width);
+		target->height = max(style->height, target->height);
+		target->margin.top = max(style->margin.top, target->margin.top);
+		target->margin.right = max(style->margin.right, target->margin.right);
+		target->margin.bottom =
+			max(style->margin.bottom, target->margin.bottom);
+		target->margin.left = max(style->margin.left, target->margin.left);
+		target->padding = max(style->padding, target->padding);
+		target->border_size = max(style->border_size, target->border_size);
+		target->default_timeout =
+			max(style->default_timeout, target->default_timeout);
+
+		target->markup |= style->markup;
+		target->actions |= style->actions;
 	}
 
 	return true;

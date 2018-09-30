@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
 #include "criteria.h"
 #include "dbus.h"
 #include "mako.h"
@@ -16,6 +17,10 @@ static const char *service_interface = "org.freedesktop.Notifications";
 static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
+
+	struct mako_style superstyle;
+	init_empty_style(&superstyle);
+	apply_superset_style(&superstyle, &state->config);
 
 	sd_bus_message *reply = NULL;
 	int ret = sd_bus_message_new_method_return(msg, &reply);
@@ -35,14 +40,14 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		}
 	}
 
-	if (global_criteria(&state->config)->style.markup) {
+	if (superstyle.markup) {
 		ret = sd_bus_message_append(reply, "s", "body-markup");
 		if (ret < 0) {
 			return ret;
 		}
 	}
 
-	if (global_criteria(&state->config)->style.actions) {
+	if (superstyle.actions) {
 		ret = sd_bus_message_append(reply, "s", "actions");
 		if (ret < 0) {
 			return ret;
