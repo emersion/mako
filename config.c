@@ -198,9 +198,6 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 // styles (including the default as a base), for values where it makes sense to
 // have a maximum. Those that don't make sense will be unchanged. Usually, you
 // want to pass an empty style as the target.
-//
-// TODO: Maximum of format should be a string of all of the specifiers in use.
-// This can be used to eliminate the last use of global_criteria in dbus/xdg.c.
 bool apply_superset_style(
 		struct mako_style *target, struct mako_config *config) {
 	// Specify eveything that we'll be combining.
@@ -212,6 +209,15 @@ bool apply_superset_style(
 	target->spec.default_timeout = true;
 	target->spec.markup = true;
 	target->spec.actions = true;
+	target->spec.format = true;
+
+	if (target->format) {
+		free(target->format);
+	}
+
+	// The "format" needs enough space for one of each specifier.
+	target->format = calloc(1, (2 * strlen(VALID_FORMAT_SPECIFIERS)) + 1);
+	char *target_format_pos = target->format;
 
 	// Now we loop over the criteria and add together those fields.
 	// We can't use apply_style, because it simply overwrites each field.
@@ -219,6 +225,9 @@ bool apply_superset_style(
 	wl_list_for_each(criteria, &config->criteria, link) {
 		struct mako_style *style = &criteria->style;
 
+		// We can cheat and skip checking whether any of these are specified,
+		// since we're looking for the max and unspecified ones will be
+		// initialized to zero.
 		target->width = max(style->width, target->width);
 		target->height = max(style->height, target->height);
 		target->margin.top = max(style->margin.top, target->margin.top);
@@ -233,6 +242,31 @@ bool apply_superset_style(
 
 		target->markup |= style->markup;
 		target->actions |= style->actions;
+
+		// We do need to be safe about this one though.
+		if (style->spec.format) {
+			char *format_pos = style->format;
+			char current_specifier[3] = {0};
+			while (*format_pos) {
+				format_pos = strstr(format_pos, "%");
+				if (!format_pos) {
+					break;
+				}
+
+				// We only want to add the format specifier to the target if we
+				// haven't already seen it.
+				// Need to copy the specifier into its own string to use strstr
+				// here, because there's no way to limit how much of the string
+				// it uses in the comparison.
+				memcpy(&current_specifier, format_pos, 2);
+				if (!strstr(target->format, current_specifier)) {
+					memcpy(target_format_pos, format_pos, 2);
+				}
+
+				++format_pos; // Enough to move to the next match.
+				target_format_pos += 2; // This needs to go to the next slot.
+			}
+		}
 	}
 
 	return true;
