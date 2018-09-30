@@ -473,7 +473,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 	};
 
 	struct mako_criteria *root_criteria =
-		wl_container_of(config->criteria.next, criteria, link);
+		wl_container_of(config->criteria.next, root_criteria, link);
 
 	optind = 1;
 	while (1) {
@@ -488,7 +488,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		}
 
 		const char *name = long_options[option_index].name;
-		if (!apply_style_option(root_criteria->style, name, optarg)
+		if (!apply_style_option(&root_criteria->style, name, optarg)
 				&& !apply_config_option(config, name, optarg)) {
 			fprintf(stderr, "Failed to parse option '%s'\n", name);
 			return -1;
