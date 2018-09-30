@@ -136,6 +136,18 @@ bool parse_format(const char *string, char **out) {
 		char ch = string[i];
 
 		switch (state) {
+		case MAKO_PARSE_STATE_FORMAT:
+			if (!strchr(VALID_FORMAT_SPECIFIERS, ch)) {
+				// There's an invalid format specifier, bail.
+				*out = NULL;
+				return false;
+			}
+
+			token[token_location] = ch;
+			++token_location;
+			state = MAKO_PARSE_STATE_NORMAL;
+			break;
+
 		case MAKO_PARSE_STATE_ESCAPE:
 			switch (ch) {
 			case 'n':
@@ -163,6 +175,12 @@ bool parse_format(const char *string, char **out) {
 			case '\\':
 				token[token_location] = ch;
 				state = MAKO_PARSE_STATE_ESCAPE;
+				break;
+
+			case '%':
+				token[token_location] = ch;
+				++token_location; // Leave the % intact.
+				state = MAKO_PARSE_STATE_FORMAT;
 				break;
 
 			default:

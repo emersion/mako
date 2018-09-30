@@ -163,6 +163,8 @@ static char *mako_asprintf(const char *fmt, ...) {
 	return text;
 }
 
+// Any new format specifiers must also be added to VALID_FORMAT_SPECIFIERS.
+
 char *format_state_text(char variable, bool *markup, void *data) {
 	struct mako_state *state = data;
 	switch (variable) {

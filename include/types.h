@@ -25,6 +25,10 @@ struct mako_directional {
 };
 
 bool parse_directional(const char *string, struct mako_directional *out);
+
+// List of specifier characters that can appear in a format string.
+static const char VALID_FORMAT_SPECIFIERS[] = "%asbht";
+
 bool parse_format(const char *string, char **out);
 
 #endif
