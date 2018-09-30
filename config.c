@@ -17,8 +17,8 @@
 
 void init_default_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
-	struct mako_criteria *global_criteria = create_criteria(config);
-	init_default_style(&global_criteria->style);
+	struct mako_criteria *root_criteria = create_criteria(config);
+	init_default_style(&root_criteria->style);
 
 	init_empty_style(&config->hidden_style);
 	config->hidden_style.format = strdup("(%h more)");
@@ -371,7 +371,10 @@ int load_config_file(struct mako_config *config) {
 	char *line = NULL;
 	char *section = NULL;
 
-	struct mako_criteria *criteria = global_criteria(config);
+	// Until we hit the first criteria section, we want to be modifying the
+	// root criteria's style. We know it's always the first one in the list.
+	struct mako_criteria *criteria =
+		wl_container_of(config->criteria.next, criteria, link);
 
 	size_t n = 0;
 	while (getline(&line, &n, f) > 0) {
@@ -469,6 +472,9 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{0},
 	};
 
+	struct mako_criteria *root_criteria =
+		wl_container_of(config->criteria.next, criteria, link);
+
 	optind = 1;
 	while (1) {
 		int option_index = -1;
@@ -482,7 +488,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		}
 
 		const char *name = long_options[option_index].name;
-		if (!apply_style_option(&global_criteria(config)->style, name, optarg)
+		if (!apply_style_option(root_criteria->style, name, optarg)
 				&& !apply_config_option(config, name, optarg)) {
 			fprintf(stderr, "Failed to parse option '%s'\n", name);
 			return -1;
