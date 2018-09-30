@@ -20,6 +20,8 @@ void init_default_config(struct mako_config *config) {
 	struct mako_criteria *root_criteria = create_criteria(config);
 	init_default_style(&root_criteria->style);
 
+	init_empty_style(&config->superstyle);
+
 	init_empty_style(&config->hidden_style);
 	config->hidden_style.format = strdup("(%h more)");
 	config->hidden_style.spec.format = true;
@@ -44,6 +46,7 @@ void finish_config(struct mako_config *config) {
 		destroy_criteria(criteria);
 	}
 
+	finish_style(&config->superstyle);
 	finish_style(&config->hidden_style);
 	free(config->output);
 }
@@ -81,8 +84,12 @@ void init_empty_style(struct mako_style *style) {
 }
 
 void finish_style(struct mako_style *style) {
-	free(style->font);
-	free(style->format);
+	if (style->spec.font) {
+		free(style->font);
+	}
+	if (style->spec.format) {
+		free(style->format);
+	}
 }
 
 // Update `target` with the values specified in `style`. If a failure occurs,
@@ -511,6 +518,7 @@ int reload_config(struct mako_config *config, int argc, char **argv) {
 	if (ret != 0) {
 		return ret;
 	}
+	apply_superset_style(&new_config.superstyle, &new_config);
 
 	finish_config(config);
 	*config = new_config;
