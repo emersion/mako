@@ -13,7 +13,11 @@
 #include "types.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
-#define max(a, b) (((a) > (b)) ? (a) : (b))
+
+static int32_t max(int32_t a, int32_t b) {
+	return (a > b) ? a : b;
+}
+
 
 void init_default_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
