@@ -13,6 +13,10 @@
 #include "enum.h"
 #include "types.h"
 
+
+const char VALID_FORMAT_SPECIFIERS[] = "%asbht";
+
+
 bool parse_boolean(const char *string, bool *out) {
 	if (strcasecmp(string, "true") == 0 || strcmp(string, "1") == 0) {
 		*out = true;
