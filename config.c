@@ -84,12 +84,8 @@ void init_empty_style(struct mako_style *style) {
 }
 
 void finish_style(struct mako_style *style) {
-	if (style->spec.font) {
-		free(style->font);
-	}
-	if (style->spec.format) {
-		free(style->format);
-	}
+	free(style->font);
+	free(style->format);
 }
 
 // Update `target` with the values specified in `style`. If a failure occurs,
@@ -211,9 +207,7 @@ bool apply_superset_style(
 	target->spec.actions = true;
 	target->spec.format = true;
 
-	if (target->format) {
-		free(target->format);
-	}
+	free(target->format);
 
 	// The "format" needs enough space for one of each specifier.
 	target->format = calloc(1, (2 * strlen(VALID_FORMAT_SPECIFIERS)) + 1);
