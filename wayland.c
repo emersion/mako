@@ -98,20 +98,20 @@ static void destroy_output(struct mako_output *output) {
 
 static void pointer_handle_motion(void *data, struct wl_pointer *wl_pointer,
 		uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y) {
-	struct mako_pointer *pointer = data;
-	pointer->x = wl_fixed_to_int(surface_x);
-	pointer->y = wl_fixed_to_int(surface_y);
+	struct mako_seat *seat = data;
+	seat->pointer.x = wl_fixed_to_int(surface_x);
+	seat->pointer.y = wl_fixed_to_int(surface_y);
 }
 
 static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer,
 		uint32_t serial, uint32_t time, uint32_t button,
 		uint32_t button_state) {
-	struct mako_pointer *pointer = data;
-	struct mako_state *state = pointer->state;
+	struct mako_seat *seat = data;
+	struct mako_state *state = seat->state;
 
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
-		if (hotspot_at(&notif->hotspot, pointer->x, pointer->y)) {
+		if (hotspot_at(&notif->hotspot, seat->pointer.x, seat->pointer.y)) {
 			notification_handle_button(notif, button, button_state);
 			break;
 		}
@@ -128,39 +128,25 @@ static const struct wl_pointer_listener pointer_listener = {
 	.axis = noop,
 };
 
-static void create_pointer(struct mako_state *state,
-		struct wl_pointer *wl_pointer) {
-	struct mako_pointer *pointer = calloc(1, sizeof(struct mako_pointer));
-	if (pointer == NULL) {
-		fprintf(stderr, "allocation failed\n");
-		return;
-	}
-	pointer->state = state;
-	pointer->wl_pointer = wl_pointer;
-	wl_list_insert(&state->pointers, &pointer->link);
 
-	wl_pointer_add_listener(wl_pointer, &pointer_listener, pointer);
-}
-
-static void destroy_pointer(struct mako_pointer *pointer) {
-	wl_list_remove(&pointer->link);
-	wl_pointer_destroy(pointer->wl_pointer);
-	free(pointer);
-}
-
-
-static void seat_handle_capabilities(void *data, struct wl_seat *seat,
+static void seat_handle_capabilities(void *data, struct wl_seat *wl_seat,
 		uint32_t capabilities) {
-	struct mako_state *state = data;
+	struct mako_seat *seat = data;
 
+	if (seat->pointer.wl_pointer != NULL) {
+		wl_pointer_release(seat->pointer.wl_pointer);
+		seat->pointer.wl_pointer = NULL;
+	}
 	if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
-		struct wl_pointer *wl_pointer = wl_seat_get_pointer(seat);
-		create_pointer(state, wl_pointer);
+		seat->pointer.wl_pointer = wl_seat_get_pointer(wl_seat);
+		wl_pointer_add_listener(seat->pointer.wl_pointer,
+			&pointer_listener, seat);
 	}
 }
 
 static const struct wl_seat_listener seat_listener = {
 	.capabilities = seat_handle_capabilities,
+	.name = noop,
 };
 
 static void create_seat(struct mako_state *state, struct wl_seat *wl_seat) {
@@ -169,14 +155,16 @@ static void create_seat(struct mako_state *state, struct wl_seat *wl_seat) {
 		fprintf(stderr, "allocation failed\n");
 		return;
 	}
+	seat->state = state;
 	seat->wl_seat = wl_seat;
 	wl_list_insert(&state->seats, &seat->link);
-	wl_seat_add_listener(wl_seat, &seat_listener, state);
+	wl_seat_add_listener(wl_seat, &seat_listener, seat);
 }
 
 static void destroy_seat(struct mako_seat *seat) {
 	wl_list_remove(&seat->link);
-	wl_seat_destroy(seat->wl_seat);
+	wl_seat_release(seat->wl_seat);
+	wl_pointer_release(seat->pointer.wl_pointer);
 	free(seat);
 }
 
@@ -253,7 +241,7 @@ static void handle_global(void *data, struct wl_registry *registry,
 			&zwlr_layer_shell_v1_interface, 1);
 	} else if (strcmp(interface, wl_seat_interface.name) == 0) {
 		struct wl_seat *seat =
-			wl_registry_bind(registry, name, &wl_seat_interface, 1);
+			wl_registry_bind(registry, name, &wl_seat_interface, 3);
 		create_seat(state, seat);
 	} else if (strcmp(interface, wl_output_interface.name) == 0) {
 		struct wl_output *output =
@@ -286,7 +274,6 @@ static const struct wl_registry_listener registry_listener = {
 };
 
 bool init_wayland(struct mako_state *state) {
-	wl_list_init(&state->pointers);
 	wl_list_init(&state->outputs);
 	wl_list_init(&state->seats);
 
@@ -339,11 +326,6 @@ void finish_wayland(struct mako_state *state) {
 	}
 	finish_buffer(&state->buffers[0]);
 	finish_buffer(&state->buffers[1]);
-
-	struct mako_pointer *pointer, *pointer_tmp;
-	wl_list_for_each_safe(pointer, pointer_tmp, &state->pointers, link) {
-		destroy_pointer(pointer);
-	}
 
 	struct mako_output *output, *output_tmp;
 	wl_list_for_each_safe(output, output_tmp, &state->outputs, link) {

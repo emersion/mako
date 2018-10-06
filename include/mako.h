@@ -24,7 +24,6 @@ struct mako_state {
 	struct wl_shm *shm;
 	struct zwlr_layer_shell_v1 *layer_shell;
 	struct zxdg_output_manager_v1 *xdg_output_manager;
-	struct wl_list pointers; // mako_pointer::link
 	struct wl_list outputs; // mako_output::link
 	struct wl_list seats; // mako_seat::link
 

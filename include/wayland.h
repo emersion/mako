@@ -6,14 +6,6 @@
 
 struct mako_state;
 
-struct mako_pointer {
-	struct mako_state *state;
-	struct wl_pointer *wl_pointer;
-	struct wl_list link; // mako_state::pointers
-
-	int32_t x, y;
-};
-
 struct mako_output {
 	struct mako_state *state;
 	uint32_t global_name;
@@ -27,8 +19,14 @@ struct mako_output {
 };
 
 struct mako_seat {
+	struct mako_state *state;
 	struct wl_seat *wl_seat;
 	struct wl_list link; // mako_state::seats
+
+	struct {
+		struct wl_pointer *wl_pointer;
+		int32_t x, y;
+	} pointer;
 };
 
 bool init_wayland(struct mako_state *state);
