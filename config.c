@@ -13,10 +13,18 @@
 #include "types.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
+
+static int32_t max(int32_t a, int32_t b) {
+	return (a > b) ? a : b;
+}
+
+
 void init_default_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
-	struct mako_criteria *global_criteria = create_criteria(config);
-	init_default_style(&global_criteria->style);
+	struct mako_criteria *root_criteria = create_criteria(config);
+	init_default_style(&root_criteria->style);
+
+	init_empty_style(&config->superstyle);
 
 	init_empty_style(&config->hidden_style);
 	config->hidden_style.format = strdup("(%h more)");
@@ -42,6 +50,7 @@ void finish_config(struct mako_config *config) {
 		destroy_criteria(criteria);
 	}
 
+	finish_style(&config->superstyle);
 	finish_style(&config->hidden_style);
 	free(config->output);
 }
@@ -179,6 +188,83 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.colors.border) {
 		target->colors.border = style->colors.border;
 		target->spec.colors.border = true;
+	}
+
+	return true;
+}
+
+// Given a config and a style in which to store the information, this will
+// calculate a style that has the maximum value of all the configured criteria
+// styles (including the default as a base), for values where it makes sense to
+// have a maximum. Those that don't make sense will be unchanged. Usually, you
+// want to pass an empty style as the target.
+bool apply_superset_style(
+		struct mako_style *target, struct mako_config *config) {
+	// Specify eveything that we'll be combining.
+	target->spec.width = true;
+	target->spec.height = true;
+	target->spec.margin = true;
+	target->spec.padding = true;
+	target->spec.border_size = true;
+	target->spec.default_timeout = true;
+	target->spec.markup = true;
+	target->spec.actions = true;
+	target->spec.format = true;
+
+	free(target->format);
+
+	// The "format" needs enough space for one of each specifier.
+	target->format = calloc(1, (2 * strlen(VALID_FORMAT_SPECIFIERS)) + 1);
+	char *target_format_pos = target->format;
+
+	// Now we loop over the criteria and add together those fields.
+	// We can't use apply_style, because it simply overwrites each field.
+	struct mako_criteria *criteria;
+	wl_list_for_each(criteria, &config->criteria, link) {
+		struct mako_style *style = &criteria->style;
+
+		// We can cheat and skip checking whether any of these are specified,
+		// since we're looking for the max and unspecified ones will be
+		// initialized to zero.
+		target->width = max(style->width, target->width);
+		target->height = max(style->height, target->height);
+		target->margin.top = max(style->margin.top, target->margin.top);
+		target->margin.right = max(style->margin.right, target->margin.right);
+		target->margin.bottom =
+			max(style->margin.bottom, target->margin.bottom);
+		target->margin.left = max(style->margin.left, target->margin.left);
+		target->padding = max(style->padding, target->padding);
+		target->border_size = max(style->border_size, target->border_size);
+		target->default_timeout =
+			max(style->default_timeout, target->default_timeout);
+
+		target->markup |= style->markup;
+		target->actions |= style->actions;
+
+		// We do need to be safe about this one though.
+		if (style->spec.format) {
+			char *format_pos = style->format;
+			char current_specifier[3] = {0};
+			while (*format_pos) {
+				format_pos = strstr(format_pos, "%");
+				if (!format_pos) {
+					break;
+				}
+
+				// We only want to add the format specifier to the target if we
+				// haven't already seen it.
+				// Need to copy the specifier into its own string to use strstr
+				// here, because there's no way to limit how much of the string
+				// it uses in the comparison.
+				memcpy(&current_specifier, format_pos, 2);
+				if (!strstr(target->format, current_specifier)) {
+					memcpy(target_format_pos, format_pos, 2);
+				}
+
+				++format_pos; // Enough to move to the next match.
+				target_format_pos += 2; // This needs to go to the next slot.
+			}
+		}
 	}
 
 	return true;
@@ -324,7 +410,10 @@ int load_config_file(struct mako_config *config) {
 	char *line = NULL;
 	char *section = NULL;
 
-	struct mako_criteria *criteria = global_criteria(config);
+	// Until we hit the first criteria section, we want to be modifying the
+	// root criteria's style. We know it's always the first one in the list.
+	struct mako_criteria *criteria =
+		wl_container_of(config->criteria.next, criteria, link);
 
 	size_t n = 0;
 	while (getline(&line, &n, f) > 0) {
@@ -396,9 +485,6 @@ int load_config_file(struct mako_config *config) {
 	return ret;
 }
 
-static int config_argc = 0;
-static char **config_argv = NULL;
-
 int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 	static const struct option long_options[] = {
 		{"help", no_argument, 0, 'h'},
@@ -422,6 +508,9 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{0},
 	};
 
+	struct mako_criteria *root_criteria =
+		wl_container_of(config->criteria.next, root_criteria, link);
+
 	optind = 1;
 	while (1) {
 		int option_index = -1;
@@ -435,29 +524,33 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		}
 
 		const char *name = long_options[option_index].name;
-		if (!apply_style_option(&global_criteria(config)->style, name, optarg)
+		if (!apply_style_option(&root_criteria->style, name, optarg)
 				&& !apply_config_option(config, name, optarg)) {
 			fprintf(stderr, "Failed to parse option '%s'\n", name);
 			return -1;
 		}
 	}
 
-	config_argc = argc;
-	config_argv = argv;
-
 	return 0;
 }
 
-bool reload_config(struct mako_config *config) {
+// Returns zero on success, negative on error, positive if we should exit
+// immediately due to something the user asked for (like help).
+int reload_config(struct mako_config *config, int argc, char **argv) {
 	struct mako_config new_config = {0};
 	init_default_config(&new_config);
 
-	if (load_config_file(&new_config) != 0 ||
-			parse_config_arguments(&new_config, config_argc, config_argv) != 0) {
+	if (load_config_file(&new_config) != 0) {
 		fprintf(stderr, "Failed to reload config\n");
 		finish_config(&new_config);
-		return false;
+		return -1;
 	}
+
+	int ret = parse_config_arguments(&new_config, argc, argv);
+	if (ret != 0) {
+		return ret;
+	}
+	apply_superset_style(&new_config.superstyle, &new_config);
 
 	finish_config(config);
 	*config = new_config;
@@ -468,5 +561,5 @@ bool reload_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
 	wl_list_insert_list(&config->criteria, &new_config.criteria);
 
-	return true;
+	return 0;
 }

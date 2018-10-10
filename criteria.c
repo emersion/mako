@@ -1,4 +1,5 @@
 #define _POSIX_C_SOURCE 200809L
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -134,6 +135,10 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 				++token_location;
 			}
 			break;
+
+		case MAKO_PARSE_STATE_FORMAT:
+			// Unsupported state for this parser.
+			assert(0);
 		}
 	}
 

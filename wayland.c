@@ -427,7 +427,7 @@ void send_frame(struct mako_state *state) {
 		zwlr_layer_surface_v1_add_listener(state->layer_surface,
 			&layer_surface_listener, state);
 
-		struct mako_style *style = &global_criteria(&state->config)->style;
+		struct mako_style *style = &state->config.superstyle;
 
 		zwlr_layer_surface_v1_set_size(state->layer_surface, style->width,
 				height);
@@ -448,7 +448,7 @@ void send_frame(struct mako_state *state) {
 	// requested, we'll enter an infinite loop
 	if (state->height != height) {
 		zwlr_layer_surface_v1_set_size(state->layer_surface,
-			global_criteria(&state->config)->style.width, height);
+			state->config.superstyle.width, height);
 		wl_surface_commit(state->surface);
 		return;
 	}

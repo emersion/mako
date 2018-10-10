@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
 #include "criteria.h"
 #include "dbus.h"
 #include "mako.h"
@@ -28,21 +29,21 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	if (strstr(global_criteria(&state->config)->style.format, "%b") != NULL) {
+	if (strstr(state->config.superstyle.format, "%b") != NULL) {
 		ret = sd_bus_message_append(reply, "s", "body");
 		if (ret < 0) {
 			return ret;
 		}
 	}
 
-	if (global_criteria(&state->config)->style.markup) {
+	if (state->config.superstyle.markup) {
 		ret = sd_bus_message_append(reply, "s", "body-markup");
 		if (ret < 0) {
 			return ret;
 		}
 	}
 
-	if (global_criteria(&state->config)->style.actions) {
+	if (state->config.superstyle.actions) {
 		ret = sd_bus_message_append(reply, "s", "actions");
 		if (ret < 0) {
 			return ret;
