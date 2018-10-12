@@ -74,12 +74,17 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	int border_size = 2 * style->border_size;
 	int padding_size = 2 * style->padding;
 
+	// If the compositor has forced us to shrink down, do so.
+	int notif_width =
+		(style->width <= state->width) ? style->width : state->width;
+
 	set_font_options(cairo, state);
 
 	PangoLayout *layout = pango_cairo_create_layout(cairo);
 	set_layout_size(layout,
-		state->width - border_size - padding_size,
-		style->height - border_size - padding_size, scale);
+		notif_width - border_size - padding_size,
+		style->height - border_size - padding_size,
+		scale);
 	pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
 	pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
 	PangoFontDescription *desc =
@@ -122,8 +127,9 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	set_rectangle(cairo,
 		style->border_size / 2.0,
 		offset_y + style->border_size / 2.0,
-		state->width - style->border_size,
-		notif_height - style->border_size, scale);
+		notif_width - style->border_size,
+		notif_height - style->border_size,
+		scale);
 	cairo_save(cairo);
 	cairo_set_line_width(cairo, style->border_size * scale);
 	cairo_stroke(cairo);
@@ -132,8 +138,11 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	// Render background
 	set_source_u32(cairo, style->colors.background);
 	set_rectangle(cairo,
-		style->border_size, offset_y + style->border_size,
-		state->width - border_size, notif_height - border_size, scale);
+		style->border_size,
+		offset_y + style->border_size,
+		notif_width - border_size,
+		notif_height - border_size,
+		scale);
 	cairo_fill(cairo);
 
 	// Render text
@@ -163,8 +172,6 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	cairo_paint(cairo);
 	cairo_restore(cairo);
 
-	int notif_width = state->width;
-
 	size_t i = 0;
 	int total_height = 0;
 	int pending_bottom_margin = 0;
@@ -190,6 +197,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 			}
 		}
 
+		int notif_width =
+			(style->width <= state->width) ? style->width : state->width;
 		int notif_height = render_notification(
 				cairo, state, style, text, total_height, scale);
 		free(text);
