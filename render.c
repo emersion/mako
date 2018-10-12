@@ -10,6 +10,7 @@
 #include "notification.h"
 #include "render.h"
 #include "wayland.h"
+#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 // HiDPI conventions: local variables are in surface-local coordinates, unless
 // they have a "buffer_" prefix, in which case they are in buffer-local
@@ -78,6 +79,11 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	int notif_width =
 		(style->width <= state->width) ? style->width : state->width;
 
+	// Calculate the appropriate offset if we're right-aligned.
+	bool right_align =
+		(state->config.anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
+	int offset_x = right_align ? (state->width - notif_width) : 0;
+
 	set_font_options(cairo, state);
 
 	PangoLayout *layout = pango_cairo_create_layout(cairo);
@@ -125,7 +131,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	// Render border
 	set_source_u32(cairo, style->colors.border);
 	set_rectangle(cairo,
-		style->border_size / 2.0,
+		offset_x + style->border_size / 2.0,
 		offset_y + style->border_size / 2.0,
 		notif_width - style->border_size,
 		notif_height - style->border_size,
@@ -138,7 +144,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	// Render background
 	set_source_u32(cairo, style->colors.background);
 	set_rectangle(cairo,
-		style->border_size,
+		offset_x + style->border_size,
 		offset_y + style->border_size,
 		notif_width - border_size,
 		notif_height - border_size,
@@ -147,8 +153,10 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 	// Render text
 	set_source_u32(cairo, style->colors.text);
-	move_to(cairo, style->border_size + style->padding,
-		offset_y + style->border_size + style->padding, scale);
+	move_to(cairo,
+		offset_x + style->border_size + style->padding,
+		offset_y + style->border_size + style->padding,
+		scale);
 	pango_cairo_update_layout(cairo, layout);
 	pango_cairo_show_layout(cairo, layout);
 
