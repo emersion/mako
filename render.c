@@ -82,8 +82,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	int offset_x;
 	if (state->config.anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT) {
 		offset_x = state->width - notif_width - style->margin.right;
-	}
-	else {
+	} else {
 		offset_x = style->margin.left;
 	}
 
