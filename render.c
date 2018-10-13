@@ -197,12 +197,10 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		}
 		format_text(style->format, text, format_notif_text, notif);
 
-		if (i > 0) {
-			if (style->margin.top > pending_bottom_margin) {
-				total_height += style->margin.top;
-			} else {
-				total_height += pending_bottom_margin;
-			}
+		if (style->margin.top > pending_bottom_margin) {
+			total_height += style->margin.top;
+		} else {
+			total_height += pending_bottom_margin;
 		}
 
 		int notif_width =
