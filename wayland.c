@@ -426,27 +426,23 @@ void send_frame(struct mako_state *state) {
 			ZWLR_LAYER_SHELL_V1_LAYER_TOP, "notifications");
 		zwlr_layer_surface_v1_add_listener(state->layer_surface,
 			&layer_surface_listener, state);
+	}
 
+	// If the block above executed, this one always will as well.
+	// TODO: if the compositor doesn't send a configure with the size we
+	// requested, we'll enter an infinite loop
+	if (state->height != height) {
 		struct mako_style *style = &state->config.superstyle;
 
-		zwlr_layer_surface_v1_set_size(state->layer_surface, style->width,
+		zwlr_layer_surface_v1_set_size(state->layer_surface,
+				style->width + style->margin.left + style->margin.right,
 				height);
 		zwlr_layer_surface_v1_set_anchor(state->layer_surface,
 				state->config.anchor);
 		wl_surface_commit(state->surface);
-		return;
-	}
 
-	if (!state->configured) {
-		return;
-	}
-
-	// TODO: if the compositor doesn't send a configure with the size we
-	// requested, we'll enter an infinite loop
-	if (state->height != height) {
-		zwlr_layer_surface_v1_set_size(state->layer_surface,
-			state->config.superstyle.width, height);
-		wl_surface_commit(state->surface);
+		// Early return because we don't actually have a surface to draw on
+		// yet. We will soon be called again by layer_surface_handle_configure.
 		return;
 	}
 
