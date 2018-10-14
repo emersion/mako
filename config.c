@@ -1,4 +1,5 @@
 #define _POSIX_C_SOURCE 200809L
+#include <assert.h>
 #include <errno.h>
 #include <getopt.h>
 #include <libgen.h>
@@ -111,6 +112,7 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.format) {
 		new_format = strdup(style->format);
 		if (new_format == NULL) {
+			free(new_font);
 			fprintf(stderr, "allocation failed\n");
 			return false;
 		}
@@ -463,6 +465,7 @@ int load_config_file(struct mako_config *config) {
 			// object to match against it later.
 			target_style = &config->hidden_style;
 		} else {
+			assert(criteria != NULL);
 			target_style = &criteria->style;
 		}
 

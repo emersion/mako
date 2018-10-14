@@ -85,6 +85,7 @@ static struct pool_buffer *create_buffer(struct wl_shm *shm,
 
 		data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 		if (data == MAP_FAILED) {
+			free(name);
 			return NULL;
 		}
 
