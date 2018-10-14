@@ -341,6 +341,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		return spec->colors.border = parse_color(value, &style->colors.border);
 	} else if (strcmp(name, "markup") == 0) {
 		return spec->markup = parse_boolean(value, &style->markup);
+	} else if (strcmp(name, "actions") == 0) {
+		return spec->actions = parse_boolean(value, &style->actions);
 	} else if (strcmp(name, "format") == 0) {
 		free(style->format);
 		return spec->format = parse_format(value, &style->format);
@@ -498,6 +500,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"border-size", required_argument, 0, 0},
 		{"border-color", required_argument, 0, 0},
 		{"markup", required_argument, 0, 0},
+		{"actions", required_argument, 0, 0},
 		{"format", required_argument, 0, 0},
 		{"max-visible", required_argument, 0, 0},
 		{"default-timeout", required_argument, 0, 0},

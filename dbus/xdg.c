@@ -300,6 +300,11 @@ void notify_notification_closed(struct mako_notification *notif,
 }
 
 void notify_action_invoked(struct mako_action *action) {
+	if (!action->notification->style.actions) {
+		// Actions are disabled for this notification, bail.
+		return;
+	}
+
 	struct mako_state *state = action->notification->state;
 
 	sd_bus_emit_signal(state->bus, service_path, service_interface,
