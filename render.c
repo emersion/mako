@@ -101,19 +101,15 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	pango_font_description_free(desc);
 
 	PangoAttrList *attrs = NULL;
-	if (style->markup) {
-		GError *error = NULL;
-		char *buf = NULL;
-		if (pango_parse_markup(text, -1, 0, &attrs, &buf, NULL, &error)) {
-			pango_layout_set_text(layout, buf, -1);
-			free(buf);
-		} else {
-			fprintf(stderr, "cannot parse pango markup: %s\n", error->message);
-			g_error_free(error);
-			// fallback to plain text
-			pango_layout_set_text(layout, text, -1);
-		}
+	GError *error = NULL;
+	char *buf = NULL;
+	if (pango_parse_markup(text, -1, 0, &attrs, &buf, NULL, &error)) {
+		pango_layout_set_text(layout, buf, -1);
+		free(buf);
 	} else {
+		fprintf(stderr, "cannot parse pango markup: %s\n", error->message);
+		g_error_free(error);
+		// fallback to plain text
 		pango_layout_set_text(layout, text, -1);
 	}
 

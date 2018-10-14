@@ -187,7 +187,7 @@ char *format_notif_text(char variable, bool *markup, void *data) {
 	case 's':
 		return strdup(notif->summary);
 	case 'b':
-		*markup = true;
+		*markup = notif->style.markup;
 		return strdup(notif->body);
 	}
 	return NULL;
