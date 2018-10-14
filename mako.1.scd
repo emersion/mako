@@ -104,6 +104,12 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: 1
 
+*--actions* 0|1
+	Applications may request an action to be associated with activating a
+	notification. Disabling this will cause mako to ignore these requests.
+
+	Default: 1
+
 *--format* _format_
 	Set notification format string to _format_. See *FORMAT SPECIFIERS* for
 	more information.
