@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pango/pangocairo.h>
 #include <wayland-client.h>
 #ifdef __linux__
 #include <linux/input-event-codes.h>
@@ -186,7 +187,7 @@ char *format_notif_text(char variable, bool *markup, void *data) {
 	case 's':
 		return strdup(notif->summary);
 	case 'b':
-		*markup = true;
+		*markup = notif->style.markup;
 		return strdup(notif->body);
 	}
 	return NULL;
@@ -226,7 +227,7 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 		}
 
 		size_t value_len;
-		if (!markup) {
+		if (!markup || !pango_parse_markup(value, -1, 0, NULL, NULL, NULL, NULL)) {
 			char *escaped = NULL;
 			if (buf != NULL) {
 				escaped = buf + len;
