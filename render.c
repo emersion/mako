@@ -79,10 +79,12 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	int notif_width =
 		(style->width <= state->width) ? style->width : state->width;
 
-	// Calculate the appropriate offset if we're right-aligned.
-	bool right_align =
-		(state->config.anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
-	int offset_x = right_align ? (state->width - notif_width) : 0;
+	int offset_x;
+	if (state->config.anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT) {
+		offset_x = state->width - notif_width - style->margin.right;
+	} else {
+		offset_x = style->margin.left;
+	}
 
 	set_font_options(cairo, state);
 
@@ -197,12 +199,10 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		}
 		format_text(style->format, text, format_notif_text, notif);
 
-		if (i > 0) {
-			if (style->margin.top > pending_bottom_margin) {
-				total_height += style->margin.top;
-			} else {
-				total_height += pending_bottom_margin;
-			}
+		if (style->margin.top > pending_bottom_margin) {
+			total_height += style->margin.top;
+		} else {
+			total_height += pending_bottom_margin;
 		}
 
 		int notif_width =
