@@ -393,6 +393,8 @@ void send_frame(struct mako_state *state) {
 	struct mako_output *output = get_configured_output(state);
 	int height = render(state, state->current_buffer, scale);
 
+	// There are two cases where we want to tear down the surface: zero
+	// notifications (height = 0) or moving between outputs.
 	if (height == 0 || state->layer_surface_output != output) {
 		if (state->layer_surface != NULL) {
 			zwlr_layer_surface_v1_destroy(state->layer_surface);
@@ -407,10 +409,15 @@ void send_frame(struct mako_state *state) {
 		state->configured = false;
 	}
 
+	// If there are no notifications, there's no point in recreating the
+	// surface right now.
 	if (height == 0) {
-		return; // nothing to render
+		return;
 	}
 
+	// If we've made it here, there is something to draw. If the surface
+	// doesn't exist (this is the first notification, or we moved to a
+	// different output), we need to create it.
 	if (state->layer_surface == NULL) {
 		struct wl_output *wl_output = NULL;
 		if (output != NULL) {
@@ -426,11 +433,23 @@ void send_frame(struct mako_state *state) {
 			ZWLR_LAYER_SHELL_V1_LAYER_TOP, "notifications");
 		zwlr_layer_surface_v1_add_listener(state->layer_surface,
 			&layer_surface_listener, state);
+
+		// Because we're creating a new surface, we aren't going to draw
+		// anything into it during this call. We don't know what size the
+		// surface will be until we've asked the compositor for what we want
+		// and it has responded with what it actually gave us. We also know
+		// that the height we would _like_ to draw (greater than zero, or we
+		// would have bailed already) is different from our state->height
+		// (which has to be zero here), so we can fall through to the next
+		// block to let it set the size for us.
 	}
 
-	// If the block above executed, this one always will as well.
-	// TODO: if the compositor doesn't send a configure with the size we
-	// requested, we'll enter an infinite loop
+	assert(state->layer_surface);
+
+	// We now want to resize the surface if it isn't the right size. If the
+	// surface is brand new, it doesn't even have a size yet. If it already
+	// exists, we might need to resize if the list of notifications has changed
+	// since the last time we drew.
 	if (state->height != height) {
 		struct mako_style *style = &state->config.superstyle;
 
@@ -441,11 +460,24 @@ void send_frame(struct mako_state *state) {
 				state->config.anchor);
 		wl_surface_commit(state->surface);
 
-		// Early return because we don't actually have a surface to draw on
-		// yet. We will soon be called again by layer_surface_handle_configure.
+		// Now we're going to bail without drawing anything. This gives the
+		// compositor a chance to create the surface and tell us what size we
+		// were actually granted, which may be smaller than what we asked for
+		// depending on the screen size and layout of other layer surfaces.
+		// This information is provided in layer_surface_handle_configure,
+		// which will then call send_frame again. When that call happens, the
+		// layer surface will exist and the height will hopefully match what
+		// we asked for. That means we won't return here, and will actually
+		// draw into the surface down below.
+		// TODO: If the compositor doesn't send a configure with the size we
+		// requested, we'll enter an infinite loop. We need to keep track of
+		// the fact that a request was sent separately from what height we are.
 		return;
 	}
 
+	assert(state->configured);
+
+	// Yay we can finally draw something!
 	struct wl_region *input_region = get_input_region(state);
 	wl_surface_set_input_region(state->surface, input_region);
 	wl_region_destroy(input_region);
