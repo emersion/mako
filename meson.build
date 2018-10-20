@@ -17,11 +17,15 @@ add_project_arguments('-Wno-missing-braces', language: 'c')
 mako_inc = include_directories('include')
 
 cairo = dependency('cairo')
-libsystemd = dependency('libsystemd')
 pango = dependency('pango')
 pangocairo = dependency('pangocairo')
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
+
+logind = dependency('libsystemd', required: false)
+if not logind.found()
+	logind = dependency('libelogind')
+endif
 
 subdir('protocol')
 
@@ -44,7 +48,7 @@ executable(
 	dependencies: [
 		cairo,
 		client_protos,
-		libsystemd,
+		logind,
 		pango,
 		pangocairo,
 		wayland_client,
