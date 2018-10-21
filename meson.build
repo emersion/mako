@@ -23,8 +23,11 @@ wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 
 logind = dependency('libsystemd', required: false)
-if not logind.found()
+if logind.found()
+	add_project_arguments('-DHAVE_SYSTEMD=1', language : 'c')
+else
 	logind = dependency('libelogind')
+	add_project_arguments('-DHAVE_ELOGIND=1', language : 'c')
 endif
 
 subdir('protocol')
