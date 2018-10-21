@@ -3,9 +3,13 @@
 
 #include <poll.h>
 #include <stdbool.h>
-#include <systemd/sd-bus.h>
 #include <time.h>
 #include <wayland-client.h>
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-bus.h>
+#elif HAVE_ELOGIND
+#include <elogind/sd-bus.h>
+#endif
 
 enum mako_event {
 	MAKO_EVENT_DBUS,

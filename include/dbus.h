@@ -2,7 +2,11 @@
 #define _MAKO_DBUS_H
 
 #include <stdbool.h>
+#ifdef HAVE_SYSTEMD
 #include <systemd/sd-bus.h>
+#elif HAVE_ELOGIND
+#include <elogind/sd-bus.h>
+#endif
 
 struct mako_state;
 struct mako_notification;

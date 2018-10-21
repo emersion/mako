@@ -2,8 +2,12 @@
 #define _MAKO_H
 
 #include <stdbool.h>
-#include <systemd/sd-bus.h>
 #include <wayland-client.h>
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-bus.h>
+#elif HAVE_ELOGIND
+#include <elogind/sd-bus.h>
+#endif
 
 #include "config.h"
 #include "event-loop.h"
