@@ -1,6 +1,5 @@
 #define _POSIX_C_SOURCE 200809L
 #include <errno.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,7 +44,11 @@ static bool init(struct mako_state *state) {
 		finish_dbus(state);
 		return false;
 	}
-	init_event_loop(&state->event_loop, state->bus, state->display);
+	if (!init_event_loop(&state->event_loop, state->bus, state->display)) {
+		finish_dbus(state);
+		finish_wayland(state);
+		return false;
+	}
 	wl_list_init(&state->notifications);
 	return true;
 }
@@ -61,10 +64,6 @@ static void finish(struct mako_state *state) {
 }
 
 static struct mako_event_loop *event_loop = NULL;
-
-static void handle_signal(int signum) {
-	stop_event_loop(event_loop);
-}
 
 int main(int argc, char *argv[]) {
 	struct mako_state state = {0};
@@ -89,9 +88,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	event_loop = &state.event_loop;
-	struct sigaction sa = { .sa_handler = handle_signal };
-	sigaction(SIGINT, &sa, NULL);
-	sigaction(SIGTERM, &sa, NULL);
 
 	ret = run_event_loop(&state.event_loop);
 
