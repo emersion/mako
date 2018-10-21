@@ -253,7 +253,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		finish_style(&style);
 
 		total_height += hidden_height;
+		pending_bottom_margin = style.margin.bottom;
 	}
 
-	return total_height;
+	return total_height + pending_bottom_margin;
 }
