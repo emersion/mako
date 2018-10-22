@@ -4,13 +4,46 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/timerfd.h>
+#include <signal.h>
+#include <sys/signalfd.h>
 #include <time.h>
 #include <unistd.h>
 
 #include "event-loop.h"
 
-void init_event_loop(struct mako_event_loop *loop, sd_bus *bus,
+static int init_signalfd() {
+	sigset_t mask;
+	int sfd;
+
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGINT);
+	sigaddset(&mask, SIGTERM);
+	sigaddset(&mask, SIGQUIT);
+
+	if (sigprocmask(SIG_BLOCK, &mask, NULL) == -1) {
+		fprintf(stderr, "sigprocmask: %s", strerror(errno));
+		return -1;
+	}
+
+	if ((sfd = signalfd(-1, &mask, SFD_NONBLOCK)) == -1) {
+		fprintf(stderr, "signalfd: %s", strerror(errno));
+		return -1;
+	}
+
+	return sfd;
+}
+
+bool init_event_loop(struct mako_event_loop *loop, sd_bus *bus,
 		struct wl_display *display) {
+	if ((loop->sfd = init_signalfd()) == -1) {
+		return false;
+	}
+
+	loop->fds[MAKO_EVENT_SIGNAL] = (struct pollfd){
+		.fd = loop->sfd,
+		.events = POLLIN,
+	};
+
 	loop->fds[MAKO_EVENT_DBUS] = (struct pollfd){
 		.fd = sd_bus_get_fd(bus),
 		.events = POLLIN,
@@ -29,6 +62,8 @@ void init_event_loop(struct mako_event_loop *loop, sd_bus *bus,
 	loop->bus = bus;
 	loop->display = display;
 	wl_list_init(&loop->timers);
+
+	return true;
 }
 
 void finish_event_loop(struct mako_event_loop *loop) {
@@ -172,6 +207,10 @@ int run_event_loop(struct mako_event_loop *loop) {
 			break;
 		}
 
+		if (loop->fds[MAKO_EVENT_SIGNAL].revents & POLLIN) {
+			break;
+		}
+
 		if (!(loop->fds[MAKO_EVENT_WAYLAND].revents & POLLIN)) {
 			wl_display_cancel_read(loop->display);
 		}
@@ -210,15 +249,4 @@ int run_event_loop(struct mako_event_loop *loop) {
 		}
 	}
 	return ret;
-}
-
-static void handle_stop_event_loop_timer(void *data) {
-	// No-op
-}
-
-void stop_event_loop(struct mako_event_loop *loop) {
-	loop->running = false;
-
-	// Wake up the event loop
-	add_event_loop_timer(loop, 0, handle_stop_event_loop_timer, NULL);
 }
