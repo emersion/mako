@@ -71,7 +71,8 @@ static void set_font_options(cairo_t *cairo, struct mako_state *state) {
 }
 
 static int render_notification(cairo_t *cairo, struct mako_state *state,
-		struct mako_style *style, const char *text, int offset_y, int scale) {
+		struct mako_style *style, const char *text, int offset_y, int scale,
+		struct mako_hotspot *hotspot) {
 	int border_size = 2 * style->border_size;
 	int padding_size = 2 * style->padding;
 
@@ -158,6 +159,14 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	pango_cairo_update_layout(cairo, layout);
 	pango_cairo_show_layout(cairo, layout);
 
+	// Update hotspot with calculated location
+	if (hotspot != NULL) {
+		hotspot->x = offset_x;
+		hotspot->y = offset_y;
+		hotspot->width = notif_width;
+		hotspot->height = notif_height;
+	}
+
 	g_object_unref(layout);
 
 	return notif_height;
@@ -201,17 +210,9 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 			total_height += pending_bottom_margin;
 		}
 
-		int notif_width =
-			(style->width <= state->width) ? style->width : state->width;
 		int notif_height = render_notification(
-				cairo, state, style, text, total_height, scale);
+				cairo, state, style, text, total_height, scale, &notif->hotspot);
 		free(text);
-
-		// Update hotspot
-		notif->hotspot.x = 0;
-		notif->hotspot.y = total_height;
-		notif->hotspot.width = notif_width;
-		notif->hotspot.height = notif_height;
 
 		total_height += notif_height;
 		pending_bottom_margin = style->margin.bottom;
@@ -248,7 +249,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		format_text(style.format, text, format_state_text, state);
 
 		int hidden_height = render_notification(
-				cairo, state, &style, text, total_height, scale);
+				cairo, state, &style, text, total_height, scale, NULL);
 		free(text);
 		finish_style(&style);
 
