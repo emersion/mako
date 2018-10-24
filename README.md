@@ -2,7 +2,7 @@
 
 A lightweight notification daemon for Wayland.
 
-It currently works on Sway 1.0 alpha.
+It currently works on Sway 1.0.
 
 <p align="center">
   <img src="https://sr.ht/meoc.png" alt="mako screenshot">
