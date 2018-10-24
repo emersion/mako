@@ -15,7 +15,7 @@ Install dependencies:
 * wayland
 * pango
 * cairo
-* systemd (for the sd-bus library)
+* systemd or elogind (for the sd-bus library)
 
 Then run:
 
