@@ -74,7 +74,8 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 		struct mako_style *style, const char *text, int offset_y, int scale,
 		struct mako_hotspot *hotspot) {
 	int border_size = 2 * style->border_size;
-	int padding_size = 2 * style->padding;
+	int padding_height = style->padding.top + style->padding.bottom;
+	int padding_width = style->padding.left + style->padding.right;
 
 	// If the compositor has forced us to shrink down, do so.
 	int notif_width =
@@ -91,8 +92,8 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 	PangoLayout *layout = pango_cairo_create_layout(cairo);
 	set_layout_size(layout,
-		notif_width - border_size - padding_size,
-		style->height - border_size - padding_size,
+		notif_width - border_size - padding_width,
+		style->height - border_size - padding_height,
 		scale);
 	pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
 	pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
@@ -125,7 +126,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	pango_layout_get_pixel_size(layout, NULL, &buffer_text_height);
 	int text_height = buffer_text_height / scale;
 
-	int notif_height = border_size + padding_size + text_height;
+	int notif_height = border_size + padding_height + text_height;
 
 	// Render border
 	set_source_u32(cairo, style->colors.border);
@@ -153,8 +154,8 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	// Render text
 	set_source_u32(cairo, style->colors.text);
 	move_to(cairo,
-		offset_x + style->border_size + style->padding,
-		offset_y + style->border_size + style->padding,
+		offset_x + style->border_size + style->padding.left,
+		offset_y + style->border_size + style->padding.top,
 		scale);
 	pango_cairo_update_layout(cairo, layout);
 	pango_cairo_show_layout(cairo, layout);

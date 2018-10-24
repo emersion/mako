@@ -65,7 +65,11 @@ void init_default_style(struct mako_style *style) {
 	style->margin.bottom = 10;
 	style->margin.left = 10;
 
-	style->padding = 5;
+	style->padding.top = 5;
+	style->padding.right = 5;
+	style->padding.bottom = 5;
+	style->padding.left = 5;
+
 	style->border_size = 2;
 
 	style->font = strdup("monospace 10");
@@ -235,7 +239,11 @@ bool apply_superset_style(
 		target->margin.bottom =
 			max(style->margin.bottom, target->margin.bottom);
 		target->margin.left = max(style->margin.left, target->margin.left);
-		target->padding = max(style->padding, target->padding);
+		target->padding.top = max(style->padding.top, target->padding.top);
+		target->padding.right = max(style->padding.right, target->padding.right);
+		target->padding.bottom =
+			max(style->padding.bottom, target->padding.bottom);
+		target->padding.left = max(style->padding.left, target->padding.left);
 		target->border_size = max(style->border_size, target->border_size);
 		target->default_timeout =
 			max(style->default_timeout, target->default_timeout);
@@ -336,7 +344,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "margin") == 0) {
 		return spec->margin = parse_directional(value, &style->margin);
 	} else if (strcmp(name, "padding") == 0) {
-		return spec->padding = parse_int(value, &style->padding);
+		return spec->padding = parse_directional(value, &style->padding);
 	} else if (strcmp(name, "border-size") == 0) {
 		return spec->border_size = parse_int(value, &style->border_size);
 	} else if (strcmp(name, "border-color") == 0) {

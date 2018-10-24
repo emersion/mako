@@ -82,8 +82,9 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: 10
 
-*--padding* _px_
-	Set padding to _px_ pixels from the edge of the popup.
+*--padding* _directional_
+	Set padding on each side to the size specified by _directional_. See
+	*DIRECTIONAL VALUES* for more information.
 
 	Default: 5
 

@@ -37,7 +37,7 @@ struct mako_style {
 	int32_t width;
 	int32_t height;
 	struct mako_directional margin;
-	int32_t padding;
+	struct mako_directional padding;
 	int32_t border_size;
 
 	char *font;
