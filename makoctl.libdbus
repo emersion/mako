@@ -1,0 +1,52 @@
+#!/bin/sh
+
+set -e
+
+usage() {
+	echo "Usage: makoctl <command> [options...]"
+	echo ""
+	echo "Commands:"
+	echo "  dismiss [-a|--all] Dismiss the last or all notifications"
+	echo "  invoke [action]    Invoke an action on the last notification"
+	echo "  reload             Reload the configuration file"
+	echo "  help               Show this help"
+}
+
+call() {
+	dbus-send --session --dest=org.freedesktop.Notifications /fr/emersion/Mako \
+		fr.emersion.Mako."$@"
+}
+
+case "$1" in
+"dismiss")
+	case "$2" in
+	"-a"|"--all")
+		call DismissAllNotifications
+		;;
+	"")
+		call DismissLastNotification
+		;;
+	*)
+		echo "makoctl: unrecognized option '$2'"
+		exit 1
+		;;
+	esac
+	;;
+"invoke")
+	action="$2"
+	if [ -z "$action" ] ; then
+		action="default"
+	fi
+	call InvokeAction "s" "$action"
+	;;
+"reload")
+	call Reload
+	;;
+"help"|"--help"|"-h")
+	usage
+	;;
+*)
+	echo "makoctl: unrecognized command '$1'"
+	exit 1
+	;;
+esac

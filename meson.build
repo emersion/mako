@@ -3,7 +3,7 @@ project(
 	'c',
 	version: '1.1.0',
 	license: 'MIT',
-	meson_version: '>=0.43.0',
+	meson_version: '>=0.47.0',
 	default_options: [
 		'c_std=c11',
 		'warning_level=2',
@@ -79,8 +79,11 @@ executable(
 	install: true,
 )
 
+makoctl = sdbus.found() ? 'makoctl' : 'makoctl.libdbus'
+
 install_data(
-	'makoctl',
+	makoctl,
+	rename: 'makoctl',
 	install_dir: get_option('bindir'),
 	install_mode: 'rwxr-xr-x',
 )
