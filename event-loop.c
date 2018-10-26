@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/timerfd.h>
 #include <signal.h>
 #include <sys/signalfd.h>
@@ -76,7 +77,7 @@ bool init_event_loop(struct mako_event_loop *loop, sd_bus *bus,
 	struct pollfd pollfds[MAKO_EVENT_COUNT];
 
 	pollfds[MAKO_EVENT_SIGNAL] = (struct pollfd){
-		.fd = loop->sfd;
+		.fd = loop->sfd,
 		.events = POLLIN,
 	};
 
@@ -92,15 +93,14 @@ bool init_event_loop(struct mako_event_loop *loop, sd_bus *bus,
 
 	DBusError error;
 	dbus_error_init(&error);
-	loop->watches = subd_init_watches(connection, pollfds, MAKO_EVENT_COUNT,
-		&error);
+	loop->watches = subd_init_watches(bus, pollfds, MAKO_EVENT_COUNT, &error);
 	if (loop->watches == NULL) {
 		fprintf(stderr, "failed to initialize loop: %s\n", error.message);
 		return false;
 	}
 
 	loop->fds = loop->watches->fds;
-	loop->bus = connection;
+	loop->bus = bus;
 	loop->display = display;
 	wl_list_init(&loop->timers);
 
