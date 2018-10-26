@@ -1,4 +1,4 @@
-#define _XOPEN_SOURCE 500
+#define _POSIX_C_SOURCE 200809L
 #include <cairo/cairo.h>
 #include <fcntl.h>
 #include <pango/pangocairo.h>
