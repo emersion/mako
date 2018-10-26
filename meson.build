@@ -19,43 +19,62 @@ mako_inc = include_directories('include')
 cairo = dependency('cairo')
 pango = dependency('pango')
 pangocairo = dependency('pangocairo')
+sdbus = dependency(get_option('sdbus-provider'), required: get_option('sdbus'))
+dbus1 = dependency('dbus-1', required: not sdbus.found())
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 
-logind = dependency('libsystemd', required: false)
-if logind.found()
-	add_project_arguments('-DHAVE_SYSTEMD=1', language : 'c')
+mako_deps = []
+mako_files = []
+
+if sdbus.found()
+	mako_deps += sdbus
+	add_project_arguments('-DHAVE_' + get_option('logind-provider').to_upper(), language: 'c')
 else
-	logind = dependency('libelogind')
-	add_project_arguments('-DHAVE_ELOGIND=1', language : 'c')
+	mako_deps += dbus1
+	mako_files += [
+		'dbus/subd-vtable.c',
+		'dbus/subd-watch.c',
+		'dbus/subd-sdbus.c',
+	]
+	add_project_arguments('-DHAVE_SUBD', language: 'c')
 endif
 
 subdir('protocol')
 
+mako_deps += [
+	cairo,
+	client_protos,
+	sdbus,
+	pango,
+	pangocairo,
+	wayland_client,
+]
+
+mako_files += [
+	'config.c',
+	'dbus/dbus.c',
+	'dbus/mako.c',
+	'dbus/xdg.c',
+	'event-loop.c',
+	'main.c',
+	'notification.c',
+	'pool-buffer.c',
+	'render.c',
+	'wayland.c',
+	'criteria.c',
+	'types.c',
+]
+
+# epoll is a separate library in FreeBSD
+if host_machine.system() == 'freebsd'
+	mako_deps += dependency('epoll-shim')
+endif
+
 executable(
 	'mako',
-	files([
-		'config.c',
-		'event-loop.c',
-		'dbus/dbus.c',
-		'dbus/mako.c',
-		'dbus/xdg.c',
-		'main.c',
-		'notification.c',
-		'pool-buffer.c',
-		'render.c',
-		'wayland.c',
-		'criteria.c',
-		'types.c',
-	]),
-	dependencies: [
-		cairo,
-		client_protos,
-		logind,
-		pango,
-		pangocairo,
-		wayland_client,
-	],
+	files(mako_files),
+	dependencies: mako_deps,
 	include_directories: [mako_inc],
 	install: true,
 )

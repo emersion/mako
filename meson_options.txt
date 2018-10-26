@@ -1,0 +1,2 @@
+option('sdbus', type: 'feature', value: 'auto', description: 'Use sd-bus library')
+option('sdbus-provider', type: 'combo', choices: ['systemd', 'elogind'], value: 'systemd', description: 'Provider of sd-bus support library')
