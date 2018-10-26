@@ -9,10 +9,14 @@
 #include <systemd/sd-bus.h>
 #elif HAVE_ELOGIND
 #include <elogind/sd-bus.h>
+#elif HAVE_SUBD
+#include "subd.h"
 #endif
 
 enum mako_event {
+#if defined(HAVE_SYSTEMD) || defined(HAVE_ELOGIND)
 	MAKO_EVENT_DBUS,
+#endif
 	MAKO_EVENT_WAYLAND,
 	MAKO_EVENT_TIMER,
 	MAKO_EVENT_SIGNAL,
@@ -20,7 +24,12 @@ enum mako_event {
 };
 
 struct mako_event_loop {
+#if defined(HAVE_SYSTEMD) || defined(HAVE_ELOGIND)
 	struct pollfd fds[MAKO_EVENT_COUNT];
+#else
+	struct subd_watches *watches;
+	struct pollfd *fds;
+#endif
 	sd_bus *bus;
 	struct wl_display *display;
 	int sfd;

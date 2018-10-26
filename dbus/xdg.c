@@ -275,6 +275,7 @@ static int handle_get_server_information(sd_bus_message *msg, void *data,
 		spec_version);
 }
 
+#if defined(HAVE_SYSTEMD) || defined(HAVE_ELOGIND)
 static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_VTABLE_START(0),
 	SD_BUS_METHOD("GetCapabilities", "", "as", handle_get_capabilities, SD_BUS_VTABLE_UNPRIVILEGED),
@@ -285,6 +286,17 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_SIGNAL("NotificationClosed", "uu", 0),
 	SD_BUS_VTABLE_END
 };
+#else
+static const struct subd_member service_vtable[] = {
+	{SUBD_METHOD, .m = {"GetCapabilities", handle_get_capabilities, "", "as"}},
+	{SUBD_METHOD, .m = {"Notify", handle_notify, "susssasa{sv}i", "u"}},
+	{SUBD_METHOD, .m = {"CloseNotification", handle_close_notification, "u", ""}},
+	{SUBD_METHOD, .m = {"GetServerInformation", handle_get_server_information, "", "ssss"}},
+	{SUBD_SIGNAL, .s = {"ActionInvoked", "us"}},
+	{SUBD_SIGNAL, .s = {"NotificationClosed", "uu"}},
+	{SUBD_MEMBERS_END, .e=0},
+};
+#endif
 
 int init_dbus_xdg(struct mako_state *state) {
 	return sd_bus_add_object_vtable(state->bus, &state->xdg_slot, service_path,

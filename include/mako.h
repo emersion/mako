@@ -7,6 +7,8 @@
 #include <systemd/sd-bus.h>
 #elif HAVE_ELOGIND
 #include <elogind/sd-bus.h>
+#elif HAVE_SUBD
+#include "subd.h"
 #endif
 
 #include "config.h"

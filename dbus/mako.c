@@ -92,6 +92,7 @@ static int handle_reload(sd_bus_message *msg, void *data,
 	return sd_bus_reply_method_return(msg, "");
 }
 
+#if defined(HAVE_SYSTEMD) || defined(HAVE_ELOGIND)
 static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_VTABLE_START(0),
 	SD_BUS_METHOD("DismissAllNotifications", "", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
@@ -100,6 +101,15 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_METHOD("Reload", "", "", handle_reload, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_VTABLE_END
 };
+#else
+static const struct subd_member service_vtable[] = {
+	{SUBD_METHOD, .m = {"DismissAllNotifications", handle_dismiss_all_notifications, "", ""}},
+	{SUBD_METHOD, .m = {"DismissLastNotification", handle_dismiss_last_notification, "", ""}},
+	{SUBD_METHOD, .m = {"InvokeAction", handle_invoke_action, "s", ""}},
+	{SUBD_METHOD, .m = {"Reload", handle_reload, "", ""}},
+	{SUBD_MEMBERS_END, .e=0},
+};
+#endif
 
 int init_dbus_mako(struct mako_state *state) {
 	return sd_bus_add_object_vtable(state->bus, &state->mako_slot, service_path,
