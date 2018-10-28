@@ -189,11 +189,12 @@ static bool call_method(const struct subd_member *member, DBusConnection *conn,
 	DBusError error;
 	dbus_error_init(&error);
 	if (member->m.handler(message, userdata, &error) < 0) {
-		//XXX: handle error == NULL
-		DBusMessage *error_message =
-			dbus_message_new_error(msg, error.name, error.message);
-		dbus_connection_send(conn, error_message, 0);
-		dbus_error_free(&error);
+		if (dbus_error_is_set(&error)) {
+			DBusMessage *error_message =
+				dbus_message_new_error(msg, error.name, error.message);
+			dbus_connection_send(conn, error_message, 0);
+			dbus_error_free(&error);
+		}
 		return false;
 	}
 	return true;
