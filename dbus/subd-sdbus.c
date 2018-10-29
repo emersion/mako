@@ -213,7 +213,7 @@ int sd_bus_message_readv(sd_bus_message *msg, const char *signature, va_list ap)
 		dbus_message_iter_next(msg->iter);
 	} while (dbus_signature_iter_next(&iter));
 
-	return dbus_message_iter_has_next(msg->iter);
+	return 1;
 }
 
 int sd_bus_message_read(sd_bus_message *msg, const char *signature, ...) {

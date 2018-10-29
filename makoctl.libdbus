@@ -37,7 +37,7 @@ case "$1" in
 	if [ -z "$action" ] ; then
 		action="default"
 	fi
-	call InvokeAction "s" "$action"
+	call InvokeAction "string:$action"
 	;;
 "reload")
 	call Reload
