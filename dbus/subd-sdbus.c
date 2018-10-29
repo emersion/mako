@@ -41,6 +41,8 @@ void sd_bus_error_set_const(sd_bus_error *err, const char *name, const char *msg
 int sd_bus_message_new_method_return(sd_bus_message *msg, sd_bus_message **newmsg) {
 	sd_bus_message *new_message = NULL;
 	DBusMessage *message = NULL;
+	struct msg_iter *iter = NULL;
+
 	// Allocate a new "method return" DBusMessage
 	if ((message = dbus_message_new_method_return(msg->message)) == NULL) {
 		goto error;
@@ -58,7 +60,7 @@ int sd_bus_message_new_method_return(sd_bus_message *msg, sd_bus_message **newms
 	new_message->message = message;
 	new_message->ref_count = 1;
 
-	//Also initialize  the sd_bus_message's iterator stack, ...
+	//Also initialize the sd_bus_message's iterator stack, ...
 	new_message->iters = malloc(sizeof(struct wl_list));
 	if (new_message->iters == NULL) {
 		goto error;
@@ -66,7 +68,7 @@ int sd_bus_message_new_method_return(sd_bus_message *msg, sd_bus_message **newms
 	wl_list_init(new_message->iters);
 
 	// ... and push a new append iterator to it.
-	struct msg_iter *iter = malloc(sizeof(struct msg_iter));
+	iter = malloc(sizeof(struct msg_iter));
 	if (iter == NULL) {
 		goto error;
 	}
@@ -78,7 +80,8 @@ int sd_bus_message_new_method_return(sd_bus_message *msg, sd_bus_message **newms
 	return 0;
 
 error:
-	//XXX list_destroy(new_message->iters);
+	free(iter);
+	free(new_message->iters);
 	free(new_message);
 	dbus_message_unref(message);
 	*newmsg = NULL;
@@ -152,8 +155,12 @@ int sd_bus_message_append(sd_bus_message *msg, const char *signature, ...) {
 
 void sd_bus_message_unref(sd_bus_message *msg) {
 	dbus_message_unref(msg->message);
-	if (msg->ref_count == 0) {
-		//XXX list_destroy(msg->iters);
+	if (--msg->ref_count == 0) {
+		struct msg_iter *iter, *itertmp = NULL;
+		wl_list_for_each_safe(iter, itertmp, msg->iters, link) {
+			free(iter);
+		}
+		free(msg->iters);
 		free(msg);
 	}
 }
