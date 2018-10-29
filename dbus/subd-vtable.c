@@ -236,10 +236,75 @@ static const DBusObjectPathVTable dbus_vtable = {
 	.unregister_function = NULL,
 };
 
+static struct path *register_new_path(sd_bus * bus, const char *path_name,
+		void *userdata) {
+	struct wl_list *interfaces = NULL;
+	struct interface *new_interface = NULL;
+	struct path *new_path = NULL;
+	struct vtable_userdata *data = NULL;
+
+	// We create an interface list, and append Introspectable to it. We want
+	// every path to implement org.freedesktop.DBus.Introspectable.
+	// TODO: Also implement the following:
+	//        - org.freedesktop.DBus.Peer
+	//        - org.freedesktop.DBus.Properties
+	interfaces = malloc(sizeof(struct wl_list));
+	if (interfaces == NULL) {
+		goto error;
+	}
+	wl_list_init(interfaces);
+
+	new_interface = malloc(sizeof(struct interface));
+	if (new_interface == NULL) {
+		goto error;
+	}
+
+	new_interface->name = strdup("org.freedesktop.DBus.Introspectable");
+	new_interface->members = introspectable_members;
+	wl_list_insert(interfaces, &new_interface->link);
+
+	// Create the path with the new interface list
+	new_path = malloc(sizeof(struct path));
+	if (new_path == NULL) {
+		goto error;
+	}
+
+	new_path->path = strdup(path_name);
+	new_path->interfaces = interfaces;
+	new_path->introspection_data = NULL; // This will be set later.
+
+	// ... and also register it.
+	// We merge userdata with the interfaces list in a struct
+	// vtable_userdata here, so vtable_dispatch will know what interfaces to
+	// traverse, and what userdata to pass to the actual handler functions.
+	data = malloc(sizeof(struct vtable_userdata));
+	if (data == NULL) {
+		goto error;
+	}
+
+	data->interfaces = interfaces;
+	data->userdata = userdata;
+	if (!dbus_connection_try_register_object_path(bus, path_name, &dbus_vtable,
+			data, NULL)) {
+		goto error;
+	}
+
+	// Append the path to the list of paths
+	wl_list_insert(paths, &new_path->link);
+
+	return new_path;
+
+error:
+	free(data);
+	free(new_path);
+	free(new_interface);
+	free(interfaces);
+	return NULL;
+}
+
 int sd_bus_add_object_vtable(sd_bus *bus, sd_bus_slot **slot,
-		const char *path_name, const char *interface,
+		const char *path_name, const char *interface_name,
 		const sd_bus_vtable *vtable, void *userdata) {
-	int ret = 0;
 
 	if (paths == NULL) {
 		paths = malloc(sizeof(struct path));
@@ -249,90 +314,46 @@ int sd_bus_add_object_vtable(sd_bus *bus, sd_bus_slot **slot,
 		wl_list_init(paths);
 	}
 
-	// See if this path is already registered. If it is, it must have at least
-	// one interface, so get a pointer to the interfaces list.
-	struct wl_list *interfaces = NULL;
+	// See if this path is already registered, ...
 	struct path *p, *path = NULL;
 	wl_list_for_each(p, paths, link) {
 		if (strcmp(path_name, p->path) == 0) {
 			path = p;
-			interfaces = p->interfaces;
 			break;
 		}
 	}
 
-	if (interfaces == NULL) {
-		// Path was not registered before, so first we create an interface list,
-		// and append Introspectable to it. We want every path to implement
-		// org.freedesktop.DBus.Introspectable.
-		// TODO: Also implement the following:
-		//        - org.freedesktop.DBus.Peer
-		//        - org.freedesktop.DBus.Properties
-		interfaces = malloc(sizeof(struct wl_list));
-		if (interfaces == NULL) {
-			ret = -ENOMEM;
-			goto finish;
+	// ... and if it is not, register it.
+	if (path == NULL && 
+			(path = register_new_path(bus, path_name, userdata)) == NULL) {
+		return -ENOMEM;
+	}
+
+	// See if the path already has an interface with this name, ...
+	struct interface *i, *interface = NULL;
+	wl_list_for_each(i, path->interfaces, link) {
+		if (strcmp(i->name, interface_name) == 0) {
+			interface = i;
+			break;
 		}
-		wl_list_init(interfaces);
-		struct interface *new_interface = malloc(sizeof(struct interface));
+	}
+
+	// ... and create it, if not. If it does, replace the vtable for the
+	// existing interface.
+	if (interface == NULL) {
+		interface = malloc(sizeof(struct interface));
 		if (interface == NULL) {
-			ret = -ENOMEM;
-			goto finish;
+			return -ENOMEM;
 		}
-		new_interface->name = strdup("org.freedesktop.DBus.Introspectable");
-		new_interface->members = introspectable_members;
-		wl_list_insert(interfaces, &new_interface->link);
-
-		// Create the path with the new interface list
-		struct path *new_path = malloc(sizeof(struct path));
-		if (new_path == NULL) {
-			ret = -ENOMEM;
-			goto finish;
-		}
-		new_path->path = strdup(path_name);
-		new_path->interfaces = interfaces;
-		new_path->introspection_data = NULL; // This will be set later.
-		path = new_path;
-
-		// ... and also register it.
-		// We merge userdata with the interfaces list in a struct
-		// vtable_userdata here, so vtable_dispatch will know what interfaces to
-		// traverse, and what userdata to pass to the actual handler functions.
-		struct vtable_userdata *data = malloc(sizeof(struct vtable_userdata));
-		if (data == NULL) {
-			free(new_path);
-			ret = -ENOMEM;
-			goto finish;
-		}
-		data->interfaces = interfaces;
-		data->userdata = userdata;
-		if (!dbus_connection_try_register_object_path(bus, path_name,
-				&dbus_vtable, data, NULL)) {
-			free(new_path);
-			ret = -ENXIO;
-			goto finish;
-		}
+		interface->name = strdup(interface_name);
+		interface->members = vtable;
+		wl_list_insert(path->interfaces, &interface->link);
+	} else {
+		interface->members = vtable;
 	}
-
-	//TODO: Decide what to do if interface is already registered. Replace
-	//memeber list? Append new members to list? Throw an error?
-
-	// Append the new interface to the path's interface list.
-	struct interface *new_interface = malloc(sizeof(struct interface));
-	if (new_interface == NULL) {
-		ret = -ENOMEM;
-		goto finish;
-	}
-	new_interface->name = strdup(interface);
-	new_interface->members = vtable;
-	wl_list_insert(interfaces, &new_interface->link);
-
-	// Append the path to the list of paths
-	wl_list_insert(paths, &path->link);
 
 	// (Re)generate introspection XML for this path.
 	generate_introspection_data(path);
 
-finish:
-	return ret;
+	return 0;
 }

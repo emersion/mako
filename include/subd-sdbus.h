@@ -137,6 +137,6 @@ int sd_bus_reply_method_return(sd_bus_message *msg, const char *signature, ...);
 int sd_bus_send(sd_bus *bus, sd_bus_message *msg, dbus_uint32_t *cookie);
 
 int sd_bus_add_object_vtable(sd_bus *bus, sd_bus_slot **slot, const char *path_name,
-	const char *interface, const sd_bus_vtable *vtable, void *data);
+	const char *interface_name, const sd_bus_vtable *vtable, void *userdata);
 
 #endif
