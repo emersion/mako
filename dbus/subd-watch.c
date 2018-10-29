@@ -168,9 +168,8 @@ void subd_process_watches(DBusConnection *conn, struct subd_watches *watches) {
 				flags |= DBUS_WATCH_ERROR;
 			}
 
-			//TODO: Error handling. Not sure, what is the right move here. Log
-			//      and ignore? Make them fatal?
 			dbus_watch_handle(watch, flags);
+
 			while (dbus_connection_dispatch(conn) ==
 					DBUS_DISPATCH_DATA_REMAINS);
 		}
