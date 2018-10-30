@@ -62,11 +62,7 @@ int sd_bus_message_new_method_return(sd_bus_message *msg, sd_bus_message **newms
 	new_message->ref_count = 1;
 
 	//Also initialize the sd_bus_message's iterator stack, ...
-	new_message->iters = malloc(sizeof(struct wl_list));
-	if (new_message->iters == NULL) {
-		goto error;
-	}
-	wl_list_init(new_message->iters);
+	wl_list_init(&new_message->iters);
 
 	// ... and push a new append iterator to it.
 	iter = malloc(sizeof(struct msg_iter));
@@ -74,7 +70,7 @@ int sd_bus_message_new_method_return(sd_bus_message *msg, sd_bus_message **newms
 		goto error;
 	}
 	dbus_message_iter_init_append(new_message->message, &iter->iter);
-	wl_list_insert(new_message->iters, &iter->link);
+	wl_list_insert(&new_message->iters, &iter->link);
 	new_message->iter = &iter->iter;
 
 	*newmsg = new_message;
@@ -82,7 +78,6 @@ int sd_bus_message_new_method_return(sd_bus_message *msg, sd_bus_message **newms
 
 error:
 	free(iter);
-	free(new_message->iters);
 	free(new_message);
 	dbus_message_unref(message);
 	*newmsg = NULL;
@@ -99,7 +94,7 @@ int sd_bus_message_open_container(sd_bus_message *msg, char type,
 	if (!dbus_message_iter_open_container(msg->iter, type, signature, &sub->iter)) {
 		goto error;
 	}
-	wl_list_insert(msg->iters, &sub->link);
+	wl_list_insert(&msg->iters, &sub->link);
 	msg->iter = &sub->iter;
 
 	return 0;
@@ -111,11 +106,11 @@ error:
 
 int sd_bus_message_close_container(sd_bus_message *msg) {
 	// Remove the iterator we want to close from from the iterator stack
-	struct msg_iter *iter = wl_container_of(msg->iters->next, iter, link);
+	struct msg_iter *iter = wl_container_of(msg->iters.next, iter, link);
 	wl_list_remove(&iter->link);
 
 	// Set msg's current iterator to the top of the iterator stack.
-	struct msg_iter *new_head = wl_container_of(msg->iters->next, iter, link);
+	struct msg_iter *new_head = wl_container_of(msg->iters.next, iter, link);
 	msg->iter = &new_head->iter;
 
 	// Close the container.
@@ -158,10 +153,9 @@ void sd_bus_message_unref(sd_bus_message *msg) {
 	dbus_message_unref(msg->message);
 	if (--msg->ref_count == 0) {
 		struct msg_iter *iter, *itertmp = NULL;
-		wl_list_for_each_safe(iter, itertmp, msg->iters, link) {
+		wl_list_for_each_safe(iter, itertmp, &msg->iters, link) {
 			free(iter);
 		}
-		free(msg->iters);
 		free(msg);
 	}
 }
@@ -292,7 +286,7 @@ int sd_bus_message_enter_container(sd_bus_message *msg, char type,
 	}
 
 	dbus_message_iter_recurse(msg->iter, &sub_iter->iter);
-	wl_list_insert(msg->iters, &sub_iter->link);
+	wl_list_insert(&msg->iters, &sub_iter->link);
 	msg->iter = &sub_iter->iter;
 
 	return dbus_message_iter_has_next(&sub_iter->iter);
@@ -300,12 +294,12 @@ int sd_bus_message_enter_container(sd_bus_message *msg, char type,
 
 int sd_bus_message_exit_container(sd_bus_message *msg) {
 	// Remove the iterator we want to exit from from the iterator stack
-	struct msg_iter *iter = wl_container_of(msg->iters->next, iter, link);
+	struct msg_iter *iter = wl_container_of(msg->iters.next, iter, link);
 	wl_list_remove(&iter->link);
 
 	// Set msg's current iterator to the top of the iterator stack, and use
 	// dbus_message_iter_next to "step over" the iterator we are exiting.
-	iter = wl_container_of(msg->iters->next, iter, link);
+	iter = wl_container_of(msg->iters.next, iter, link);
 	msg->iter = &iter->iter;
 	dbus_message_iter_next(msg->iter);
 

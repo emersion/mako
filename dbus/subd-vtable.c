@@ -173,18 +173,14 @@ static bool call_method(const struct subd_member *member, DBusConnection *conn,
 	message->bus = conn;
 	message->message = msg;
 	message->ref_count = 1;
-	message->iters = malloc(sizeof(struct wl_list));
-	if (message->iters == NULL) {
-		return false;
-	}
-	wl_list_init(message->iters);
+	wl_list_init(&message->iters);
 
 	struct msg_iter *iter = malloc(sizeof(struct msg_iter));
 	if (iter == NULL) {
 		return false;
 	}
 	dbus_message_iter_init(message->message, &iter->iter);
-	wl_list_insert(message->iters, &iter->link);
+	wl_list_insert(&message->iters, &iter->link);
 	message->iter = &iter->iter;
 
 	DBusError error;
@@ -325,7 +321,7 @@ int sd_bus_add_object_vtable(sd_bus *bus, sd_bus_slot **slot,
 	}
 
 	// ... and if it is not, register it.
-	if (path == NULL && 
+	if (path == NULL &&
 			(path = register_new_path(bus, path_name, userdata)) == NULL) {
 		return -ENOMEM;
 	}

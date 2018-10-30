@@ -18,7 +18,7 @@ typedef struct DBusError sd_bus_error;
 typedef struct subd_member sd_bus_vtable;
 
 /**
- * his is not used, but typedef-d to preserve sd-bus function signatures.
+ * This is not used, but typedef-d to preserve sd-bus function signatures.
  */
 typedef int sd_bus_slot;
 
@@ -39,7 +39,7 @@ typedef struct sd_bus_message {
 	sd_bus *bus;
 	DBusMessage *message;
 	DBusMessageIter *iter;
-	struct wl_list *iters;
+	struct wl_list iters;
 	int ref_count;
 } sd_bus_message;
 
