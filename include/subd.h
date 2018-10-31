@@ -14,7 +14,7 @@ struct pollfd;
  * If you add non-watch file descriptors, make sure to set their corresponding
  * watch to NULL, so that #subd_process_watches knows to skip them.
  */
-struct subd_watches {
+struct subd_watch_store {
 	struct pollfd *fds;
 	DBusWatch **watches;
 	int capacity;	
@@ -28,14 +28,14 @@ struct subd_watches {
  * remove and toggle functions that will handle automatic file descriptor
  * additions/removals.
  */
-struct subd_watches *subd_init_watches(DBusConnection *conn, struct pollfd *fds,
-	int size, DBusError *error);
+struct subd_watch_store *subd_init_watches(DBusConnection *conn,
+	struct pollfd *fds, int size, DBusError *err);
 
 /**
  * This function should be called from the event loop after a successful poll to
  * handle the DBus watches that need to be handled (= the watches whose file
  * descriptor returned an event).
  */
-void subd_process_watches(DBusConnection *conn, struct subd_watches *watches);
+void subd_process_watches(DBusConnection *conn, struct subd_watch_store *watch_store);
 
 #endif

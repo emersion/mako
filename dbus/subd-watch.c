@@ -6,34 +6,34 @@
 #include "subd.h"
 
 static dbus_bool_t add_watch(DBusWatch *watch, void *data) {
-	struct subd_watches *watches = data;
-	sem_wait(&watches->mutex);
+	struct subd_watch_store *watch_store = data;
+	sem_wait(&watch_store->mutex);
 
 	if (!dbus_watch_get_enabled(watch)) {
-		sem_post(&watches->mutex);
+		sem_post(&watch_store->mutex);
 		return TRUE;
 	}
 
-	if (watches->length == watches->capacity) {
-		int c = watches->capacity + 10;
+	if (watch_store->length == watch_store->capacity) {
+		int c = watch_store->capacity + 10;
 
-		void *new_fds = realloc(watches->fds, sizeof(struct pollfd) * c);
+		void *new_fds = realloc(watch_store->fds, sizeof(struct pollfd) * c);
 		if (new_fds != NULL) {
-			watches->fds = new_fds;
+			watch_store->fds = new_fds;
 		} else {
-			sem_post(&watches->mutex);
+			sem_post(&watch_store->mutex);
 			return FALSE;
 		}
 
-		void *new_watches = realloc(watches->watches, sizeof(DBusWatch *) * c);
+		void *new_watches = realloc(watch_store->watches, sizeof(DBusWatch *) * c);
 		if (new_watches != NULL) {
-			watches->watches = new_watches;
+			watch_store->watches = new_watches;
 		} else {
-			sem_post(&watches->mutex);
+			sem_post(&watch_store->mutex);
 			return FALSE;
 		}
 
-		watches->capacity = c;
+		watch_store->capacity = c;
 	}
 
 	short mask = 0;
@@ -47,35 +47,35 @@ static dbus_bool_t add_watch(DBusWatch *watch, void *data) {
 
 	int fd = dbus_watch_get_unix_fd(watch);
 	struct pollfd pollfd = {fd, mask, 0};
-	int index = watches->length++;
-	watches->fds[index] = pollfd;
-	watches->watches[index] = watch;
+	int index = watch_store->length++;
+	watch_store->fds[index] = pollfd;
+	watch_store->watches[index] = watch;
 
-	sem_post(&watches->mutex);
+	sem_post(&watch_store->mutex);
 	return TRUE;
 }
 
 static void remove_watch(DBusWatch *watch, void *data) {
-	struct subd_watches *watches = data;
-	sem_wait(&watches->mutex);
+	struct subd_watch_store *watch_store = data;
+	sem_wait(&watch_store->mutex);
 
 	int index = -1;
-	for (int i = 0; i < watches->length; ++i) {
-		if (watches->watches[i] == watch) {
+	for (int i = 0; i < watch_store->length; ++i) {
+		if (watch_store->watches[i] == watch) {
 			index = i;
 			break;
 		}
 	}
 
 	if (index != -1) {
-		--watches->length;
-		memmove(&watches->fds[index], &watches->fds[index + 1],
-			sizeof(struct pollfd) * watches->length - index);
-		memmove(&watches->watches[index], &watches->watches[index + 1],
-			sizeof(DBusWatch *) * watches->length - index);
+		--watch_store->length;
+		memmove(&watch_store->fds[index], &watch_store->fds[index + 1],
+			sizeof(struct pollfd) * watch_store->length - index);
+		memmove(&watch_store->watches[index], &watch_store->watches[index + 1],
+			sizeof(DBusWatch *) * watch_store->length - index);
 	}
 
-	sem_post(&watches->mutex);
+	sem_post(&watch_store->mutex);
 }
 
 static void toggle_watch(DBusWatch *watch, void *data) {
@@ -86,22 +86,22 @@ static void toggle_watch(DBusWatch *watch, void *data) {
 	}
 }
 
-struct subd_watches *subd_init_watches(struct DBusConnection *connection,
-		struct pollfd *fds, int size, DBusError *error) {
+struct subd_watch_store *subd_init_watches(DBusConnection *conn,
+		struct pollfd *fds, int size, DBusError *err) {
 	const char *error_code = NULL;
 
 	// Initialize the watches structure.
-	struct subd_watches *watches = malloc(sizeof(struct subd_watches));
-	if (watches == NULL) {
+	struct subd_watch_store *watch_store = malloc(sizeof(struct subd_watch_store));
+	if (watch_store == NULL) {
 		error_code = DBUS_ERROR_NO_MEMORY;
 		goto error;
 	}
 
-	watches->capacity = 10 + size;
-	watches->length = size;
-	watches->fds = calloc(watches->capacity, sizeof(struct pollfd));
-	watches->watches = calloc(watches->capacity, sizeof(DBusWatch*));
-	if (watches->fds == NULL || watches->watches == NULL) {
+	watch_store->capacity = 10 + size;
+	watch_store->length = size;
+	watch_store->fds = calloc(watch_store->capacity, sizeof(struct pollfd));
+	watch_store->watches = calloc(watch_store->capacity, sizeof(DBusWatch*));
+	if (watch_store->fds == NULL || watch_store->watches == NULL) {
 		error_code = DBUS_ERROR_NO_MEMORY;
 		goto error;
 	}
@@ -109,7 +109,7 @@ struct subd_watches *subd_init_watches(struct DBusConnection *connection,
 	// Initialize a semaphore for the watches. It is needed to prevent the add,
 	// remove and toggle functions accessing the watch storage while it is being
 	// processed by subd_process_watches.
-	if (sem_init(&watches->mutex, 0, 1) == -1) {
+	if (sem_init(&watch_store->mutex, 0, 1) == -1) {
 		if (errno == EINVAL) {
 			error_code = DBUS_ERROR_INVALID_ARGS;
 		} else {
@@ -120,41 +120,41 @@ struct subd_watches *subd_init_watches(struct DBusConnection *connection,
 
 	// Add any non-dbus file descriptors.
 	for (int i = 0; i < size; ++i) {
-		watches->fds[i] = (struct pollfd){
+		watch_store->fds[i] = (struct pollfd){
 			.fd = fds->fd,
 			.events = fds->events
 		};
-		watches->watches[i] = NULL;
+		watch_store->watches[i] = NULL;
 		++fds;
 	}
 
 	// Register the add, remove, and toggle functions.
 	// NOTE: Can't use the free_data_function argument to automatically free
 	// watches when connection finalizes, because sometimes it does not work.
-	if (!dbus_connection_set_watch_functions(connection, add_watch,
-			remove_watch, toggle_watch, watches, NULL)) {
+	if (!dbus_connection_set_watch_functions(conn, add_watch, remove_watch,
+			toggle_watch, watch_store, NULL)) {
 		error_code = DBUS_ERROR_NO_MEMORY;
 		goto error;
 	}
 
-	return watches;
+	return watch_store;
 
 error:
-	if (watches != NULL) {
-		free(watches->fds);
-		free(watches->watches);
-		free(watches);
+	if (watch_store != NULL) {
+		free(watch_store->fds);
+		free(watch_store->watches);
+		free(watch_store);
 	}
-	dbus_set_error(error, error_code, NULL);
+	dbus_set_error(err, error_code, NULL);
 	return NULL;
 }
 
-void subd_process_watches(DBusConnection *conn, struct subd_watches *watches) {
-	sem_wait(&watches->mutex);
+void subd_process_watches(DBusConnection *conn, struct subd_watch_store *watch_store) {
+	sem_wait(&watch_store->mutex);
 
-	for (int i = 0; i < watches->length; ++i) {
-		struct pollfd pollfd = watches->fds[i];
-		DBusWatch *watch = watches->watches[i];
+	for (int i = 0; i < watch_store->length; ++i) {
+		struct pollfd pollfd = watch_store->fds[i];
+		DBusWatch *watch = watch_store->watches[i];
 
 		if (watch == NULL || !dbus_watch_get_enabled(watch)) {
 			continue;
@@ -182,5 +182,5 @@ void subd_process_watches(DBusConnection *conn, struct subd_watches *watches) {
 		}
 	}
 
-	sem_post(&watches->mutex);
+	sem_post(&watch_store->mutex);
 }

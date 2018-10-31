@@ -93,13 +93,13 @@ bool init_event_loop(struct mako_event_loop *loop, sd_bus *bus,
 
 	DBusError error;
 	dbus_error_init(&error);
-	loop->watches = subd_init_watches(bus, pollfds, MAKO_EVENT_COUNT, &error);
-	if (loop->watches == NULL) {
+	loop->watch_store = subd_init_watches(bus, pollfds, MAKO_EVENT_COUNT, &error);
+	if (loop->watch_store == NULL) {
 		fprintf(stderr, "failed to initialize loop: %s\n", error.message);
 		return false;
 	}
 
-	loop->fds = loop->watches->fds;
+	loop->fds = loop->watch_store->fds;
 	loop->bus = bus;
 	loop->display = display;
 	wl_list_init(&loop->timers);
@@ -122,7 +122,7 @@ static int poll_event_loop(struct mako_event_loop *loop) {
 #if defined(HAVE_SYSTEMD) || defined(HAVE_ELOGIND)
 	return poll(loop->fds, MAKO_EVENT_COUNT, -1);
 #else
-	return poll(loop->fds, loop->watches->length, -1);
+	return poll(loop->fds, loop->watch_store->length, -1);
 #endif
 }
 
@@ -281,7 +281,7 @@ int run_event_loop(struct mako_event_loop *loop) {
 			}
 		}
 #else
-		subd_process_watches(loop->bus, loop->watches);
+		subd_process_watches(loop->bus, loop->watch_store);
 #endif
 
 		if (loop->fds[MAKO_EVENT_WAYLAND].revents & POLLIN) {

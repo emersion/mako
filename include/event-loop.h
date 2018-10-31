@@ -27,7 +27,7 @@ struct mako_event_loop {
 #if defined(HAVE_SYSTEMD) || defined(HAVE_ELOGIND)
 	struct pollfd fds[MAKO_EVENT_COUNT];
 #else
-	struct subd_watches *watches;
+	struct subd_watch_store *watch_store;
 	struct pollfd *fds;
 #endif
 	sd_bus *bus;
