@@ -16,14 +16,24 @@ static dbus_bool_t add_watch(DBusWatch *watch, void *data) {
 
 	if (watches->length == watches->capacity) {
 		int c = watches->capacity + 10;
-		void *t1 = realloc(watches->fds, sizeof(struct pollfd) * c);
-		void *t2 = realloc(watches->watches, sizeof(DBusWatch *) * c);
-		if (t1 == NULL || t2 == NULL) {
+
+		void *new_fds = realloc(watches->fds, sizeof(struct pollfd) * c);
+		if (new_fds != NULL) {
+			watches->fds = new_fds;
+		} else {
 			sem_post(&watches->mutex);
 			return FALSE;
-		} else {
-			watches->capacity = c;
 		}
+
+		void *new_watches = realloc(watches->watches, sizeof(DBusWatch *) * c);
+		if (new_watches != NULL) {
+			watches->watches = new_watches;
+		} else {
+			sem_post(&watches->mutex);
+			return FALSE;
+		}
+
+		watches->capacity = c;
 	}
 
 	short mask = 0;
@@ -89,8 +99,8 @@ struct subd_watches *subd_init_watches(struct DBusConnection *connection,
 
 	watches->capacity = 10 + size;
 	watches->length = size;
-	watches->fds = malloc(watches->capacity * sizeof(struct pollfd));
-	watches->watches = malloc(watches->capacity * sizeof(DBusWatch*));
+	watches->fds = calloc(watches->capacity, sizeof(struct pollfd));
+	watches->watches = calloc(watches->capacity, sizeof(DBusWatch*));
 	if (watches->fds == NULL || watches->watches == NULL) {
 		error_code = DBUS_ERROR_NO_MEMORY;
 		goto error;
@@ -131,12 +141,9 @@ struct subd_watches *subd_init_watches(struct DBusConnection *connection,
 
 error:
 	if (watches != NULL) {
-		if (watches->fds != NULL) {
-			free(watches->fds);
-		}
-		if (watches->watches != NULL) {
-			free(watches->watches);
-		}
+		free(watches->fds);
+		free(watches->watches);
+		free(watches);
 	}
 	dbus_set_error(error, error_code, NULL);
 	return NULL;
