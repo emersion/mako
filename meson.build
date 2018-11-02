@@ -19,8 +19,8 @@ mako_inc = include_directories('include')
 cairo = dependency('cairo')
 pango = dependency('pango')
 pangocairo = dependency('pangocairo')
-sdbus = dependency(get_option('sdbus-provider'), required: get_option('sdbus'))
-dbus1 = dependency('dbus-1', required: not sdbus.found())
+sdbus = dependency('lib' + get_option('sdbus-provider'), required: get_option('sdbus'))
+threads = dependency('threads')
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 
@@ -29,9 +29,9 @@ mako_files = []
 
 if sdbus.found()
 	mako_deps += sdbus
-	add_project_arguments('-DHAVE_' + get_option('logind-provider').to_upper(), language: 'c')
+	add_project_arguments('-DHAVE_' + get_option('sdbus-provider').to_upper(), language: 'c')
 else
-	mako_deps += dbus1
+	mako_deps += dependency('dbus-1')
 	mako_files += [
 		'dbus/subd-vtable.c',
 		'dbus/subd-watch.c',
@@ -45,9 +45,9 @@ subdir('protocol')
 mako_deps += [
 	cairo,
 	client_protos,
-	sdbus,
 	pango,
 	pangocairo,
+	threads,
 	wayland_client,
 ]
 
