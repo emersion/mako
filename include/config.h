@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <wayland-client.h>
 
+#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "types.h"
 
 enum mako_button_binding {
@@ -60,6 +61,7 @@ struct mako_config {
 
 	int32_t max_visible;
 	char *output;
+	enum zwlr_layer_shell_v1_layer layer;
 	uint32_t anchor;
 	uint32_t sort_criteria; //enum mako_sort_criteria
 	uint32_t sort_asc;
