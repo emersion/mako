@@ -34,6 +34,7 @@ static const char usage[] =
 	"      --max-visible <n>           Max number of visible notifications.\n"
 	"      --default-timeout <timeout> Default timeout in milliseconds.\n"
 	"      --output <name>             Show notifications on this output.\n"
+	"      --layer <layer>             Arrange notifications at this layer.\n"
 	"      --anchor <position>         Position on output to put notifications.\n"
 	"\n"
 	"Colors can be specified with the format #RRGGBB or #RRGGBBAA.\n";

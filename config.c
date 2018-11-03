@@ -12,7 +12,6 @@
 #include "config.h"
 #include "criteria.h"
 #include "types.h"
-#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 
 static int32_t max(int32_t a, int32_t b) {
@@ -32,8 +31,9 @@ void init_default_config(struct mako_config *config) {
 	config->hidden_style.spec.format = true;
 
 	config->output = strdup("");
-	config->max_visible = 5;
+	config->layer = ZWLR_LAYER_SHELL_V1_LAYER_TOP;
 
+	config->max_visible = 5;
 	config->sort_criteria = MAKO_SORT_CRITERIA_TIME;
 	config->sort_asc = 0;
 
@@ -288,6 +288,19 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 		free(config->output);
 		config->output = strdup(value);
 		return true;
+	} else if (strcmp(name, "layer") == 0) {
+		if (strcmp(value, "background") == 0) {
+			config->layer = ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
+		} else if (strcmp(value, "bottom") == 0) {
+			config->layer = ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM;
+		} else if (strcmp(value, "top") == 0) {
+			config->layer = ZWLR_LAYER_SHELL_V1_LAYER_TOP;
+		} else if (strcmp(value, "overlay") == 0) {
+			config->layer = ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY;
+		} else {
+			return false;
+		}
+		return true;
 	} else if (strcmp(name, "sort") == 0) {
 		if (strcmp(value, "+priority") == 0) {
 			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
@@ -301,6 +314,8 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 		} else if (strcmp(value, "-time") == 0) {
 			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
 			config->sort_asc &= ~MAKO_SORT_CRITERIA_TIME;
+		} else {
+			return false;
 		}
 		return true;
 	} else if (strcmp(name, "anchor") == 0) {
@@ -521,6 +536,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"default-timeout", required_argument, 0, 0},
 		{"ignore-timeout", required_argument, 0, 0},
 		{"output", required_argument, 0, 0},
+		{"layer", required_argument, 0, 0},
 		{"anchor", required_argument, 0, 0},
 		{"sort", required_argument, 0, 0},
 		{0},
