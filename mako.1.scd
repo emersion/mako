@@ -42,12 +42,20 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: ""
 
+*--layer* _layer_
+	Arrange mako at the specified layer, relative to normal windows. Supported
+	values are _background_, _bottom_, _top_, and _overlay_. Using _overlay_
+	will cause notifications to be displayed above fullscreen windows, though
+	this may also occur at _top_ depending on your compositor.
+
+	Default: top
+
 *--anchor* _position_
 	Show notifications at the specified position on the output. Supported values
 	are _top-right_, _bottom-right_, _bottom-center_, _bottom-left_, _top-left_
 	and _top-center_.
 
-	Default: _top-right_
+	Default: top-right
 
 # STYLE OPTIONS
 
@@ -220,7 +228,7 @@ specifiers.
 
 *\\\\*	Literal "\\"
 
-*\\n*	New Line 
+*\\n*	New Line
 
 ## For notifications
 
