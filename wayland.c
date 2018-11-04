@@ -431,7 +431,7 @@ void send_frame(struct mako_state *state) {
 
 		state->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
 			state->layer_shell, state->surface, wl_output,
-			ZWLR_LAYER_SHELL_V1_LAYER_TOP, "notifications");
+			state->config.layer, "notifications");
 		zwlr_layer_surface_v1_add_listener(state->layer_surface,
 			&layer_surface_listener, state);
 

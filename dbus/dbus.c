@@ -4,7 +4,7 @@
 #include "dbus.h"
 #include "mako.h"
 
-static const char *service_name = "org.freedesktop.Notifications";
+static const char service_name[] = "org.freedesktop.Notifications";
 
 bool init_dbus(struct mako_state *state) {
 	int ret = 0;
@@ -13,7 +13,7 @@ bool init_dbus(struct mako_state *state) {
 
 	ret = sd_bus_open_user(&state->bus);
 	if (ret < 0) {
-		fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-ret));
+		fprintf(stderr, "Failed to connect to user bus: %s\n", strerror(-ret));
 		goto error;
 	}
 
