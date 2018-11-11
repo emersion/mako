@@ -197,10 +197,9 @@ int run_event_loop(struct mako_event_loop *loop) {
 			break;
 		}
 
-		bool stop = false;
 		for (size_t i = 0; i < MAKO_EVENT_COUNT; ++i) {
 			if (loop->fds[i].revents & POLLHUP) {
-				stop = true;
+				loop->running = false;
 				break;
 			}
 			if (loop->fds[i].revents & POLLERR) {
@@ -209,7 +208,7 @@ int run_event_loop(struct mako_event_loop *loop) {
 				break;
 			}
 		}
-		if (stop || ret < 0) {
+		if (!loop->running || ret < 0) {
 			break;
 		}
 
