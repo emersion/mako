@@ -76,10 +76,6 @@ void finish_event_loop(struct mako_event_loop *loop) {
 	}
 }
 
-static int poll_event_loop(struct mako_event_loop *loop) {
-	return poll(loop->fds, MAKO_EVENT_COUNT, -1);
-}
-
 static void timespec_add(struct timespec *t, int delta_ms) {
 	static const long ms = 1000000, s = 1000000000;
 
@@ -190,13 +186,14 @@ int run_event_loop(struct mako_event_loop *loop) {
 
 	int ret = 0;
 	while (loop->running) {
-		ret = poll_event_loop(loop);
+		errno = 0;
+		ret = poll(loop->fds, MAKO_EVENT_COUNT, -1);
 		if (!loop->running) {
 			ret = 0;
 			break;
 		}
 		if (ret < 0) {
-			fprintf(stderr, "failed to poll(): %s\n", strerror(-ret));
+			fprintf(stderr, "failed to poll(): %s\n", strerror(errno));
 			break;
 		}
 
