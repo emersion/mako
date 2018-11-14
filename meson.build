@@ -16,9 +16,12 @@ add_project_arguments('-Wno-missing-braces', language: 'c')
 
 mako_inc = include_directories('include')
 
+cc = meson.get_compiler('c')
+
 cairo = dependency('cairo')
 pango = dependency('pango')
 pangocairo = dependency('pangocairo')
+realtime = cc.find_library('rt')
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 
@@ -54,6 +57,7 @@ executable(
 		logind,
 		pango,
 		pangocairo,
+		realtime,
 		wayland_client,
 	],
 	include_directories: [mako_inc],

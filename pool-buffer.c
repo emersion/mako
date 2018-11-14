@@ -1,53 +1,47 @@
-#define _XOPEN_SOURCE 500
+#define _POSIX_C_SOURCE 200112L
 #include <cairo/cairo.h>
+#include <errno.h>
 #include <fcntl.h>
-#include <pango/pangocairo.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/mman.h>
+#include <time.h>
 #include <unistd.h>
 #include <wayland-client.h>
 
 #include "pool-buffer.h"
 
-static bool set_cloexec(int fd) {
-	long flags = fcntl(fd, F_GETFD);
-	if (flags == -1) {
-		return false;
+static void randname(char *buf) {
+	struct timespec ts;
+	clock_gettime(CLOCK_REALTIME, &ts);
+	long r = ts.tv_nsec;
+	for (int i = 0; i < 6; ++i) {
+		buf[i] = 'A'+(r&15)+(r&16)*2;
+		r >>= 5;
 	}
-
-	if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC) == -1) {
-		return false;
-	}
-
-	return true;
 }
 
-static int create_pool_file(size_t size, char **name) {
-	static const char template[] = "mako-XXXXXX";
-	const char *path = getenv("XDG_RUNTIME_DIR");
-	if (path == NULL) {
-		fprintf(stderr, "XDG_RUNTIME_DIR is not set\n");
-		return -1;
-	}
+static int anonymous_shm_open(void) {
+	char name[] = "/grim-XXXXXX";
+	int retries = 100;
 
-	size_t name_size = strlen(template) + 1 + strlen(path) + 1;
-	*name = malloc(name_size);
-	if (*name == NULL) {
-		fprintf(stderr, "allocation failed\n");
-		return -1;
-	}
-	snprintf(*name, name_size, "%s/%s", path, template);
+	do {
+		randname(name + strlen(name) - 6);
 
-	int fd = mkstemp(*name);
+		--retries;
+		// shm_open guarantees that O_CLOEXEC is set
+		int fd = shm_open(name, O_RDWR | O_CREAT | O_EXCL, 0600);
+		if (fd >= 0) {
+			shm_unlink(name);
+			return fd;
+		}
+	} while (retries > 0 && errno == EEXIST);
+
+	return -1;
+}
+
+static int create_shm_file(off_t size) {
+	int fd = anonymous_shm_open();
 	if (fd < 0) {
-		return -1;
-	}
-
-	if (!set_cloexec(fd)) {
-		close(fd);
-		return -1;
+		return fd;
 	}
 
 	if (ftruncate(fd, size) < 0) {
@@ -77,15 +71,14 @@ static struct pool_buffer *create_buffer(struct wl_shm *shm,
 
 	void *data = NULL;
 	if (size > 0) {
-		char *name;
-		int fd = create_pool_file(size, &name);
+		int fd = create_shm_file(size);
 		if (fd == -1) {
 			return NULL;
 		}
 
 		data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 		if (data == MAP_FAILED) {
-			free(name);
+			close(fd);
 			return NULL;
 		}
 
@@ -96,9 +89,6 @@ static struct pool_buffer *create_buffer(struct wl_shm *shm,
 		wl_shm_pool_destroy(pool);
 
 		close(fd);
-		fd = -1;
-		unlink(name);
-		free(name);
 	}
 
 	buf->data = data;
