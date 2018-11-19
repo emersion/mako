@@ -31,6 +31,8 @@ void destroy_criteria(struct mako_criteria *criteria) {
 	free(criteria->app_icon);
 	free(criteria->category);
 	free(criteria->desktop_entry);
+	free(criteria->summary);
+	free(criteria->body);
 	free(criteria);
 }
 
@@ -70,6 +72,16 @@ bool match_criteria(struct mako_criteria *criteria,
 
 	if (spec.desktop_entry &&
 			strcmp(criteria->desktop_entry, notif->desktop_entry) != 0) {
+		return false;
+	}
+
+	if (spec.summary &&
+			strcmp(criteria->summary, notif->summary) != 0) {
+		return false;
+	}
+
+	if (spec.body &&
+			strcmp(criteria->body, notif->body) != 0) {
 		return false;
 	}
 
@@ -227,6 +239,7 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			criteria->spec.desktop_entry = true;
 			return true;
 		} else {
+			// TODO: summary + body, once we support regex and they're useful.
 			// Anything left must be one of the boolean fields, defined using
 			// standard syntax. Continue on.
 		}
@@ -316,6 +329,8 @@ struct mako_criteria *create_criteria_from_notification(
 	criteria->urgency = notif->urgency;
 	criteria->category = strdup(notif->category);
 	criteria->desktop_entry = strdup(notif->desktop_entry);
+	criteria->summary = strdup(notif->summary);
+	criteria->body = strdup(notif->body);
 
 	return criteria;
 }

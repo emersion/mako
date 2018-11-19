@@ -20,6 +20,8 @@ struct mako_criteria_spec {
 	bool urgency;
 	bool category;
 	bool desktop_entry;
+	bool summary;
+	bool body;
 };
 
 struct mako_criteria {
@@ -34,10 +36,11 @@ struct mako_criteria {
 	char *app_icon;
 	bool actionable; // Whether mako_notification.actions is nonempty
 	bool expiring; // Whether mako_notification.requested_timeout is non-zero
-
 	enum mako_notification_urgency urgency;
 	char *category;
 	char *desktop_entry;
+	char *summary;
+	char *body;
 };
 
 struct mako_criteria *create_criteria(struct mako_config *config);
