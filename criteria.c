@@ -268,7 +268,6 @@ struct mako_criteria *global_criteria(struct mako_config *config) {
 	return criteria;
 }
 
-
 // Iterate through `criteria_list`, applying the style from each matching
 // criteria to `notif`. Returns the number of criteria that matched, or -1 if
 // a failure occurs.
@@ -289,4 +288,34 @@ ssize_t apply_each_criteria(struct wl_list *criteria_list,
 	}
 
 	return match_count;
+}
+
+// Given a notification and a criteria spec, create a criteria that matches the
+// specified fields of that notification. Unlike create_criteria, this new
+// criteria will not be automatically inserted into the configuration. It is
+// instead intended to be used for comparing notifications. The spec will be
+// copied, so the caller is responsible for doing whatever it needs to do with
+// the original after the call completes.
+struct mako_criteria *create_criteria_from_notification(
+		struct mako_notification *notif, struct mako_criteria_spec *spec) {
+	struct mako_criteria *criteria = calloc(1, sizeof(struct mako_criteria));
+	if (criteria == NULL) {
+		fprintf(stderr, "allocation failed\n");
+		return NULL;
+	}
+
+	memcpy(&criteria->spec, spec, sizeof(struct mako_criteria_spec));
+
+	// We only really need to copy the ones that are in the spec, but it
+	// doesn't hurt anything to do the rest and it makes this code much nicer
+	// to look at.
+	criteria->app_name = strdup(notif->app_name);
+	criteria->app_icon = strdup(notif->app_icon);
+	criteria->actionable = !wl_list_empty(&notif->actions);
+	criteria->expiring = (notif->requested_timeout != 0);
+	criteria->urgency = notif->urgency;
+	criteria->category = strdup(notif->category);
+	criteria->desktop_entry = strdup(notif->desktop_entry);
+
+	return criteria;
 }

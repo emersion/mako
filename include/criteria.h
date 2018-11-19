@@ -51,5 +51,7 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token);
 struct mako_criteria *global_criteria(struct mako_config *config);
 ssize_t apply_each_criteria(struct wl_list *criteria_list,
 		struct mako_notification *notif);
+struct mako_criteria *create_criteria_from_notification(
+		struct mako_notification *notif, struct mako_criteria_spec *spec);
 
 #endif
