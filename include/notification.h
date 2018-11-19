@@ -10,6 +10,7 @@
 
 struct mako_state;
 struct mako_timer;
+struct mako_criteria;
 
 struct mako_hotspot {
 	int32_t x, y;
@@ -73,5 +74,6 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 void notification_handle_button(struct mako_notification *notif, uint32_t button,
 	enum wl_pointer_button_state state);
 void insert_notification(struct mako_state *state, struct mako_notification *notif);
+int group_notifications(struct mako_state *state, struct mako_criteria *criteria);
 
 #endif

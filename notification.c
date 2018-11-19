@@ -12,6 +12,7 @@
 #endif
 
 #include "config.h"
+#include "criteria.h"
 #include "dbus.h"
 #include "event-loop.h"
 #include "mako.h"
@@ -64,6 +65,16 @@ void destroy_notification(struct mako_notification *notif) {
 void close_notification(struct mako_notification *notif,
 		enum mako_notification_close_reason reason) {
 	notify_notification_closed(notif, reason);
+	wl_list_remove(&notif->link);  // Remove so regrouping works...
+	wl_list_init(&notif->link);  // ...but destroy will remove again.
+
+	struct mako_criteria *notif_criteria = create_criteria_from_notification(
+			notif, &notif->style.group_criteria_spec);
+	if (notif_criteria) {
+		group_notifications(notif->state, notif_criteria);
+		free(notif_criteria);
+	}
+
 	destroy_notification(notif);
 }
 
@@ -343,4 +354,58 @@ void insert_notification(struct mako_state *state, struct mako_notification *not
 	}
 
 	wl_list_insert(insert_node, &notif->link);
+}
+
+// Iterate through all of the current notifications and group any that share
+// the same values for all of the criteria fields in `spec`. Returns the number
+// of notifications in the resulting group, or -1 if something goes wrong
+// with criteria.
+int group_notifications(struct mako_state *state, struct mako_criteria *criteria) {
+	struct wl_list matches = {0};
+	wl_list_init(&matches);
+
+	// Now we're going to find all of the matching notifications and stick
+	// them in a different list. Removing the first one from the global list
+	// is technically unnecessary, since it will go back in the same place, but
+	// it makes the rest of this logic nicer.
+	struct wl_list *location = NULL;  // The place we're going to reinsert them.
+	struct mako_notification *notif, *tmp;
+	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
+		if (!match_criteria(criteria, notif)) {
+			continue;
+		}
+
+		if (!location) {
+			location = notif->link.prev;
+		}
+
+		wl_list_remove(&notif->link);
+		wl_list_insert(&matches, &notif->link);
+	}
+
+	// Now we need to rematch criteria for all of the grouped notifications,
+	// in case it changes their styles.
+	wl_list_for_each(notif, &matches, link) {
+		int rematch_count = apply_each_criteria(&state->config.criteria, notif);
+		if (rematch_count == -1) {
+			// We encountered an allocation failure or similar while applying
+			// criteria. The notification may be partially matched, but the
+			// worst case is that it has an empty style, so bail.
+			fprintf(stderr, "Failed to apply criteria\n");
+			return -1;
+		} else if (rematch_count == 0) {
+			// This should be impossible, since the global criteria is always
+			// present in a mako_config and matches everything.
+			fprintf(stderr, "Notification matched zero criteria?!\n");
+			return -1;
+		}
+	}
+
+	int count = wl_list_length(&matches);
+
+	// Place all of the matches back into the list where the first one was
+	// originally.
+	wl_list_insert_list(location, &matches);
+
+	return count;
 }
