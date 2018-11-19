@@ -49,6 +49,8 @@ bool match_criteria(struct mako_criteria *criteria,
 		struct mako_notification *notif);
 
 bool parse_criteria(const char *string, struct mako_criteria *criteria);
+bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out);
+
 bool apply_criteria_field(struct mako_criteria *criteria, char *token);
 
 struct mako_criteria *global_criteria(struct mako_config *config);
