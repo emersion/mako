@@ -129,6 +129,46 @@ bool parse_directional(const char *string, struct mako_directional *out) {
 	return true;
 }
 
+bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out) {
+	// Clear any existing specified fields in the output spec.
+	memset(out, 0, sizeof(struct mako_criteria_spec));
+
+	char *components = strdup(string);
+	char *saveptr = NULL;
+	char *token = strtok_r(components, ",", &saveptr);
+
+	while (token) {
+		// Can't just use &= because then we nave no way to report invalid
+		// values. :(
+		if (strcmp(token, "app-name") == 0) {
+			out->app_name = true;
+		} else if (strcmp(token, "app-icon") == 0) {
+			out->app_icon = true;
+		} else if (strcmp(token, "actionable") == 0) {
+			out->actionable = true;
+		} else if (strcmp(token, "expiring") == 0) {
+			out->expiring = true;
+		} else if (strcmp(token, "urgency") == 0) {
+			out->urgency = true;
+		} else if (strcmp(token, "category") == 0) {
+			out->category = true;
+		} else if (strcmp(token, "desktop-entry") == 0) {
+			out->desktop_entry = true;
+		} else if (strcmp(token, "summary") == 0) {
+			out->summary = true;
+		} else if (strcmp(token, "body") == 0) {
+			out->body = true;
+		} else {
+			fprintf(stderr, "Unknown criteria field '%s'\n", token);
+			return false;
+		}
+
+		token = strtok_r(NULL, ",", &saveptr);
+	}
+
+	return true;
+}
+
 bool parse_format(const char *string, char **out) {
 	size_t token_max_length = strlen(string) + 1;
 	char token[token_max_length];

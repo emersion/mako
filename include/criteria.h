@@ -3,26 +3,12 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <wayland-client.h>
 #include "config.h"
-#include "notification.h"
+#include "types.h"
 
 struct mako_config;
-
-// Stores whether or not each field was part of the criteria specification, so
-// that, for example, "not actionable" can be distinguished from "don't care".
-// This is unnecessary for string fields, but it's best to just keep it
-// consistent.
-struct mako_criteria_spec {
-	bool app_name;
-	bool app_icon;
-	bool actionable;
-	bool expiring;
-	bool urgency;
-	bool category;
-	bool desktop_entry;
-	bool summary;
-	bool body;
-};
+struct mako_notification;
 
 struct mako_criteria {
 	struct mako_criteria_spec spec;
@@ -49,7 +35,6 @@ bool match_criteria(struct mako_criteria *criteria,
 		struct mako_notification *notif);
 
 bool parse_criteria(const char *string, struct mako_criteria *criteria);
-bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out);
 
 bool apply_criteria_field(struct mako_criteria *criteria, char *token);
 
