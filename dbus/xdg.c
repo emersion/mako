@@ -92,6 +92,12 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	if (ret < 0) {
 		return ret;
 	}
+
+	free(notif->app_name);
+	free(notif->app_icon);
+	free(notif->summary);
+	free(notif->body);
+
 	notif->app_name = strdup(app_name);
 	notif->app_icon = strdup(app_icon);
 	notif->summary = strdup(summary);
@@ -182,6 +188,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			if (ret < 0) {
 				return ret;
 			}
+			free(notif->category);
 			notif->category = strdup(category);
 		} else if (strcmp(hint, "desktop-entry") == 0) {
 			const char *desktop_entry = NULL;
@@ -189,6 +196,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			if (ret < 0) {
 				return ret;
 			}
+			free(notif->desktop_entry);
 			notif->desktop_entry = strdup(desktop_entry);
 		} else {
 			ret = sd_bus_message_skip(msg, "v");

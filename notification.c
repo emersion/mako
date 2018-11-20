@@ -39,6 +39,16 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	notif->id = state->last_id;
 	wl_list_init(&notif->actions);
 	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNOWN;
+
+	// Make sure everything is a valid string so we can always compare
+	// notifications, even if they don't have a certain field.
+	notif->app_name = strdup("");
+	notif->app_icon = strdup("");
+	notif->summary = strdup("");
+	notif->body = strdup("");
+	notif->category = strdup("");
+	notif->desktop_entry = strdup("");
+
 	return notif;
 }
 
