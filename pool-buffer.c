@@ -6,6 +6,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <wayland-client.h>
+#include <string.h>
 
 #include "pool-buffer.h"
 
