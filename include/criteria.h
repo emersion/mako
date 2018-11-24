@@ -1,5 +1,5 @@
-#ifndef _MAKO_CRITERIA_H
-#define _MAKO_CRITERIA_H
+#ifndef MAKO_CRITERIA_H
+#define MAKO_CRITERIA_H
 
 #include <stdbool.h>
 #include <stdint.h>

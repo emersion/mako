@@ -1,5 +1,5 @@
-#ifndef _MAKO_POOL_BUFFER_H
-#define _MAKO_POOL_BUFFER_H
+#ifndef MAKO_POOL_BUFFER_H
+#define MAKO_POOL_BUFFER_H
 
 #include <cairo/cairo.h>
 #include <pango/pangocairo.h>

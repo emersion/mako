@@ -1,5 +1,5 @@
-#ifndef _MAKO_CONFIG_H
-#define _MAKO_CONFIG_H
+#ifndef MAKO_CONFIG_H
+#define MAKO_CONFIG_H
 
 #include <stdbool.h>
 #include <stdint.h>
