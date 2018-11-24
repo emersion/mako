@@ -1,5 +1,5 @@
-#ifndef _MAKO_NOTIFICATION_H
-#define _MAKO_NOTIFICATION_H
+#ifndef MAKO_NOTIFICATION_H
+#define MAKO_NOTIFICATION_H
 
 #include <stdbool.h>
 #include <stdint.h>

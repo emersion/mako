@@ -1,5 +1,5 @@
-#ifndef _EVENT_LOOP_H
-#define _EVENT_LOOP_H
+#ifndef MAKO_EVENT_LOOP_H
+#define MAKO_EVENT_LOOP_H
 
 #include <poll.h>
 #include <stdbool.h>

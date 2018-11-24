@@ -1,5 +1,5 @@
-#ifndef _MAKO_WAYLAND_H
-#define _MAKO_WAYLAND_H
+#ifndef MAKO_WAYLAND_H
+#define MAKO_WAYLAND_H
 
 #include <stdbool.h>
 #include <wayland-client-protocol.h>

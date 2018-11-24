@@ -1,5 +1,5 @@
-#ifndef _MAKO_DBUS_H
-#define _MAKO_DBUS_H
+#ifndef MAKO_DBUS_H
+#define MAKO_DBUS_H
 
 #include <stdbool.h>
 #ifdef HAVE_SYSTEMD

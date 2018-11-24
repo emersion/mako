@@ -1,5 +1,5 @@
-#ifndef _MAKO_TYPES_H
-#define _MAKO_TYPES_H
+#ifndef MAKO_TYPES_H
+#define MAKO_TYPES_H
 
 #include <stdbool.h>
 #include <stdint.h>
