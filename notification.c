@@ -388,6 +388,7 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 	// it makes the rest of this logic nicer.
 	struct wl_list *location = NULL;  // The place we're going to reinsert them.
 	struct mako_notification *notif, *tmp;
+	int count = 0;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
 		if (!match_criteria(criteria, notif)) {
 			continue;
@@ -399,11 +400,28 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 
 		wl_list_remove(&notif->link);
 		wl_list_insert(&matches, &notif->link);
+		notif->group_index = ++count;
+	}
+
+	if (count == 1) {
+		// A single notification doesn't count as a group. We want to set its
+		// group_index to 0 so that we can distinguish single notifications
+		// from groups in criteria. Handily, if we only matched one, we still
+		// have a pointer to it.
+		notif->group_index = 0;
 	}
 
 	// Now we need to rematch criteria for all of the grouped notifications,
-	// in case it changes their styles.
+	// in case it changes their styles. We also take this opportunity to record
+	// the total number of notifications in the group, so that it can be used
+	// in the notifications' format.
+	// We can't skip this even if there was only a single match, as we may be
+	// removing the second-to-last notification of a group, and still need to
+	// potentially change style now that the matched one isn't in a group
+	// anymore.
 	wl_list_for_each(notif, &matches, link) {
+		notif->group_count = count;
+
 		int rematch_count = apply_each_criteria(&state->config.criteria, notif);
 		if (rematch_count == -1) {
 			// We encountered an allocation failure or similar while applying
@@ -418,8 +436,6 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 			return -1;
 		}
 	}
-
-	int count = wl_list_length(&matches);
 
 	// Place all of the matches back into the list where the first one was
 	// originally.
