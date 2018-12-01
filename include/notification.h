@@ -24,6 +24,9 @@ struct mako_notification {
 	struct mako_style style;
 
 	uint32_t id;
+	int group_index;
+	int group_count;
+
 	char *app_name;
 	char *app_icon;
 	char *summary;
