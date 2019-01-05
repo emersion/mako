@@ -31,6 +31,6 @@ struct mako_seat {
 
 bool init_wayland(struct mako_state *state);
 void finish_wayland(struct mako_state *state);
-void send_frame(struct mako_state *state);
+void set_dirty(struct mako_state *state);
 
 #endif

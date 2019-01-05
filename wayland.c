@@ -118,7 +118,7 @@ static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer,
 		}
 	}
 
-	send_frame(state);
+	set_dirty(state);
 }
 
 static const struct wl_pointer_listener pointer_listener = {
@@ -175,7 +175,7 @@ static void surface_handle_enter(void *data, struct wl_surface *surface,
 	// Don't bother keeping a list of outputs, a layer surface can only be on
 	// one output a a time
 	state->surface_output = wl_output_get_user_data(wl_output);
-	send_frame(state);
+	set_dirty(state);
 }
 
 static void surface_handle_leave(void *data, struct wl_surface *surface,
@@ -189,6 +189,8 @@ static const struct wl_surface_listener surface_listener = {
 	.leave = surface_handle_leave,
 };
 
+
+static void send_frame(struct mako_state *state);
 
 static void layer_surface_handle_configure(void *data,
 		struct zwlr_layer_surface_v1 *surface,
@@ -217,7 +219,7 @@ static void layer_surface_handle_closed(void *data,
 		state->configured = false;
 		state->width = state->height = 0;
 
-		send_frame(state);
+		set_dirty(state);
 	}
 }
 
@@ -378,7 +380,10 @@ static struct mako_output *get_configured_output(struct mako_state *state) {
 	return NULL;
 }
 
-void send_frame(struct mako_state *state) {
+static void schedule_frame_and_commit(struct mako_state *state);
+
+// Draw and commit a new frame.
+static void send_frame(struct mako_state *state) {
 	int scale = 1;
 	if (state->surface_output != NULL) {
 		scale = state->surface_output->scale;
@@ -413,6 +418,7 @@ void send_frame(struct mako_state *state) {
 	// If there are no notifications, there's no point in recreating the
 	// surface right now.
 	if (height == 0) {
+		state->dirty = false;
 		return;
 	}
 
@@ -484,8 +490,52 @@ void send_frame(struct mako_state *state) {
 	wl_region_destroy(input_region);
 
 	wl_surface_set_buffer_scale(state->surface, scale);
-	wl_surface_attach(state->surface, state->current_buffer->buffer, 0, 0);
 	wl_surface_damage(state->surface, 0, 0, state->width, state->height);
-	wl_surface_commit(state->surface);
+	wl_surface_attach(state->surface, state->current_buffer->buffer, 0, 0);
 	state->current_buffer->busy = true;
+
+	// Schedule a frame in case the state becomes dirty again
+	schedule_frame_and_commit(state);
+
+	state->dirty = false;
+}
+
+static void frame_handle_done(void *data, struct wl_callback *callback,
+		uint32_t time) {
+	struct mako_state *state = data;
+
+	wl_callback_destroy(callback);
+	state->frame_pending = false;
+
+	// Only draw again if we need to
+	if (state->dirty) {
+		send_frame(state);
+	}
+}
+
+static const struct wl_callback_listener frame_listener = {
+	.done = frame_handle_done,
+};
+
+static void schedule_frame_and_commit(struct mako_state *state) {
+	if (state->frame_pending) {
+		return;
+	}
+	if (state->surface == NULL) {
+		// We don't yet have a surface, create it immediately
+		send_frame(state);
+		return;
+	}
+	struct wl_callback *callback = wl_surface_frame(state->surface);
+	wl_callback_add_listener(callback, &frame_listener, state);
+	wl_surface_commit(state->surface);
+	state->frame_pending = true;
+}
+
+void set_dirty(struct mako_state *state) {
+	if (state->dirty) {
+		return;
+	}
+	state->dirty = true;
+	schedule_frame_and_commit(state);
 }

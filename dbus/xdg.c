@@ -71,7 +71,7 @@ static void handle_notification_timer(void *data) {
 	struct mako_state *state = notif->state;
 
 	close_notification(notif, MAKO_NOTIFICATION_CLOSE_EXPIRED);
-	send_frame(state);
+	set_dirty(state);
 }
 
 static int handle_notify(sd_bus_message *msg, void *data,
@@ -272,7 +272,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	group_notifications(state, notif_criteria);
 	free(notif_criteria);
 
-	send_frame(state);
+	set_dirty(state);
 
 	return sd_bus_reply_method_return(msg, "u", notif->id);
 }
@@ -291,7 +291,7 @@ static int handle_close_notification(sd_bus_message *msg, void *data,
 	struct mako_notification *notif = get_notification(state, id);
 	if (notif) {
 		close_notification(notif, MAKO_NOTIFICATION_CLOSE_REQUEST);
-		send_frame(state);
+		set_dirty(state);
 	}
 
 	return sd_bus_reply_method_return(msg, "");
