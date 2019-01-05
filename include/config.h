@@ -4,9 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <wayland-client.h>
-
-#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "types.h"
+#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 enum mako_button_binding {
 	MAKO_BUTTON_BINDING_NONE,
@@ -25,7 +24,7 @@ enum mako_sort_criteria {
 // structs are also mirrored.
 struct mako_style_spec {
 	bool width, height, margin, padding, border_size, font, markup, format,
-		 actions, default_timeout, ignore_timeout;
+		 actions, default_timeout, ignore_timeout, group_criteria_spec;
 
 	struct {
 		bool background, text, border;
@@ -54,6 +53,8 @@ struct mako_style {
 		uint32_t text;
 		uint32_t border;
 	} colors;
+
+	struct mako_criteria_spec group_criteria_spec;
 };
 
 struct mako_config {

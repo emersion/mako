@@ -26,6 +26,26 @@ struct mako_directional {
 
 bool parse_directional(const char *string, struct mako_directional *out);
 
+// Criteria specifications are used for two things.
+// Primarily, they keep track of whether or not each field was part of the a
+// criteria specification, so that, for example, "not actionable" can be
+// distinguished from "don't care".
+// Additionally, they are used to store the set of criteria that must match for
+// notifications to group with each other.
+struct mako_criteria_spec {
+	bool app_name;
+	bool app_icon;
+	bool actionable;
+	bool expiring;
+	bool urgency;
+	bool category;
+	bool desktop_entry;
+	bool summary;
+	bool body;
+};
+
+bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out);
+
 // List of specifier characters that can appear in a format string.
 extern const char VALID_FORMAT_SPECIFIERS[];
 

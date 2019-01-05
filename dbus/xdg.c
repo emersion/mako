@@ -92,6 +92,12 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	if (ret < 0) {
 		return ret;
 	}
+
+	free(notif->app_name);
+	free(notif->app_icon);
+	free(notif->summary);
+	free(notif->body);
+
 	notif->app_name = strdup(app_name);
 	notif->app_icon = strdup(app_icon);
 	notif->summary = strdup(summary);
@@ -182,6 +188,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			if (ret < 0) {
 				return ret;
 			}
+			free(notif->category);
 			notif->category = strdup(category);
 		} else if (strcmp(hint, "desktop-entry") == 0) {
 			const char *desktop_entry = NULL;
@@ -189,6 +196,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			if (ret < 0) {
 				return ret;
 			}
+			free(notif->desktop_entry);
 			notif->desktop_entry = strdup(desktop_entry);
 		} else {
 			ret = sd_bus_message_skip(msg, "v");
@@ -215,17 +223,27 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	}
 	notif->requested_timeout = requested_timeout;
 
+	// We can insert a notification prior to matching criteria, because sort is
+	// global. We also know that inserting a notification into the global list
+	// regardless of the configured sort criteria places it in the correct
+	// position relative to any of its potential group mates even before
+	// knowing what criteria we will be grouping them by (proof left as an
+	// exercise to the reader).
+	insert_notification(state, notif);
+
 	int match_count = apply_each_criteria(&state->config.criteria, notif);
 	if (match_count == -1) {
 		// We encountered an allocation failure or similar while applying
 		// criteria. The notification may be partially matched, but the worst
 		// case is that it has an empty style, so bail.
 		fprintf(stderr, "Failed to apply criteria\n");
+		destroy_notification(notif);
 		return -1;
 	} else if (match_count == 0) {
 		// This should be impossible, since the global criteria is always
 		// present in a mako_config and matches everything.
 		fprintf(stderr, "Notification matched zero criteria?!\n");
+		destroy_notification(notif);
 		return -1;
 	}
 
@@ -234,11 +252,25 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		expire_timeout = notif->style.default_timeout;
 	}
 
-	insert_notification(state, notif);
 	if (expire_timeout > 0) {
 		notif->timer = add_event_loop_timer(&state->event_loop, expire_timeout,
 			handle_notification_timer, notif);
 	}
+
+	// Now we need to perform the grouping based on the new notification's
+	// group criteria specification (list of critera which must match). We
+	// don't necessarily want to start with the new notification, as depending
+	// on the sort criteria, there may be matching ones earlier in the list.
+	// After this call, the matching notifications will be contiguous in the
+	// list, and the first one that matches will always still be first.
+	struct mako_criteria *notif_criteria = create_criteria_from_notification(
+			notif, &notif->style.group_criteria_spec);
+	if (!notif_criteria) {
+		destroy_notification(notif);
+		return -1;
+	}
+	group_notifications(state, notif_criteria);
+	free(notif_criteria);
 
 	send_frame(state);
 
