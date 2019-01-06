@@ -490,7 +490,7 @@ static void send_frame(struct mako_state *state) {
 	wl_region_destroy(input_region);
 
 	wl_surface_set_buffer_scale(state->surface, scale);
-	wl_surface_damage(state->surface, 0, 0, state->width, state->height);
+	wl_surface_damage_buffer(state->surface, 0, 0, INT32_MAX, INT32_MAX);
 	wl_surface_attach(state->surface, state->current_buffer->buffer, 0, 0);
 	state->current_buffer->busy = true;
 
