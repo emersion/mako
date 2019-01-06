@@ -19,7 +19,7 @@ static int handle_dismiss_all_notifications(sd_bus_message *msg, void *data,
 	struct mako_state *state = data;
 
 	close_all_notifications(state, MAKO_NOTIFICATION_CLOSE_DISMISSED);
-	send_frame(state);
+	set_dirty(state);
 
 	return sd_bus_reply_method_return(msg, "");
 }
@@ -35,7 +35,7 @@ static int handle_dismiss_last_notification(sd_bus_message *msg, void *data,
 	struct mako_notification *notif =
 		wl_container_of(state->notifications.next, notif, link);
 	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
-	send_frame(state);
+	set_dirty(state);
 
 done:
 	return sd_bus_reply_method_return(msg, "");
@@ -87,7 +87,7 @@ static int handle_reload(sd_bus_message *msg, void *data,
 		apply_each_criteria(&state->config.criteria, notif);
 	}
 
-	send_frame(state);
+	set_dirty(state);
 
 	return sd_bus_reply_method_return(msg, "");
 }

@@ -36,6 +36,8 @@ struct mako_state {
 	struct zwlr_layer_surface_v1 *layer_surface;
 	struct mako_output *layer_surface_output;
 	bool configured;
+	bool frame_pending; // Have we requested a frame callback?
+	bool dirty; // Do we need to redraw?
 	int32_t scale;
 
 	int32_t width, height;
