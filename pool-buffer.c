@@ -21,7 +21,7 @@ static void randname(char *buf) {
 }
 
 static int anonymous_shm_open(void) {
-	char name[] = "/grim-XXXXXX";
+	char name[] = "/mako-XXXXXX";
 	int retries = 100;
 
 	do {
