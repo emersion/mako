@@ -295,7 +295,9 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 		return false;
 	}
 
-	return true;
+	// This should be unreachable.
+	fprintf(stderr, "Mysterious error parsing critiera field\n");
+	return false;
 }
 
 // Retreive the global critiera from a given mako_config. This just so happens
