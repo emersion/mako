@@ -20,13 +20,15 @@ struct mako_criteria {
 	// Fields that can be matched:
 	char *app_name;
 	char *app_icon;
-	bool actionable; // Whether mako_notification.actions is nonempty
-	bool expiring; // Whether mako_notification.requested_timeout is non-zero
+	bool actionable;  // Whether mako_notification.actions is nonempty
+	bool expiring;  // Whether mako_notification.requested_timeout is non-zero
 	enum mako_notification_urgency urgency;
 	char *category;
 	char *desktop_entry;
 	char *summary;
 	char *body;
+	int group_index;
+	bool grouped;  // Whether group_index is non-zero
 };
 
 struct mako_criteria *create_criteria(struct mako_config *config);

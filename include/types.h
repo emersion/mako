@@ -42,6 +42,8 @@ struct mako_criteria_spec {
 	bool desktop_entry;
 	bool summary;
 	bool body;
+	bool group_index;
+	bool grouped;
 };
 
 bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out);
