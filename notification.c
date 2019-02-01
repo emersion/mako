@@ -392,15 +392,15 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 
 		wl_list_remove(&notif->link);
 		wl_list_insert(&matches, &notif->link);
-		notif->group_index = ++count;
+		notif->group_index = count++;
 	}
 
 	if (count == 1) {
 		// A single notification doesn't count as a group. We want to set its
-		// group_index to 0 so that we can distinguish single notifications
+		// group_index to -1 so that we can distinguish single notifications
 		// from groups in criteria. Handily, if we only matched one, we still
 		// have a pointer to it.
-		notif->group_index = 0;
+		notif->group_index = -1;
 	}
 
 	// Now we need to rematch criteria for all of the grouped notifications,
