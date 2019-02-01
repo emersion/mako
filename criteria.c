@@ -85,6 +85,16 @@ bool match_criteria(struct mako_criteria *criteria,
 		return false;
 	}
 
+	if (spec.group_index &&
+			criteria->group_index != notif->group_index) {
+		return false;
+	}
+
+	if (spec.grouped &&
+			criteria->grouped != (notif->group_index >= 0)) {
+		return false;
+	}
+
 	return true;
 }
 
@@ -238,6 +248,13 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			criteria->desktop_entry = strdup(value);
 			criteria->spec.desktop_entry = true;
 			return true;
+		} else if (strcmp(key, "group_index") == 0){
+			if (!parse_int(value, &criteria->group_index)) {
+				fprintf(stderr, "Invalid group_index value '%s'", value);
+				return false;
+			}
+			criteria->spec.group_index = true;
+			return true;
 		} else {
 			// TODO: summary + body, once we support regex and they're useful.
 			// Anything left must be one of the boolean fields, defined using
@@ -260,6 +277,14 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			return false;
 		}
 		criteria->spec.expiring = true;
+		return true;
+	} else if (strcmp(key, "grouped") == 0) {
+		if (!parse_boolean(value, &criteria->grouped)) {
+			fprintf(stderr, "Invalid value '%s' for boolean field '%s'\n",
+					value, key);
+			return false;
+		}
+		criteria->spec.grouped = true;
 		return true;
 	} else {
 		if (bare_key) {
@@ -331,6 +356,8 @@ struct mako_criteria *create_criteria_from_notification(
 	criteria->desktop_entry = strdup(notif->desktop_entry);
 	criteria->summary = strdup(notif->summary);
 	criteria->body = strdup(notif->body);
+	criteria->group_index = notif->group_index;
+	criteria->grouped = (notif->group_index >= 0);
 
 	return criteria;
 }
