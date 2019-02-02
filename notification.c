@@ -406,11 +406,17 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 		notif->group_index = count++;
 	}
 
+	// If count is zero, we don't need to worry about changing anything. The
+	// notification's style has its grouping critiera set to none.
+
 	if (count == 1) {
-		// A single notification doesn't count as a group. We want to set its
-		// group_index to -1 so that we can distinguish single notifications
-		// from groups in criteria. Handily, if we only matched one, we still
-		// have a pointer to it.
+		// If we matched a single notification, it means that it has grouping
+		// criteria set, but didn't have any others to group with. This makes
+		// it ungrouped just as if it had no grouping criteria. If this is a
+		// new notification, its index is already set to -1. However, this also
+		// happens when a notification had been part of a group and all the
+		// others have closed, so we need to set it anyway. Handily, if we only
+		// matched one, we still have a pointer to it.
 		notif->group_index = -1;
 	}
 
