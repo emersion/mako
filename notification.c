@@ -49,6 +49,9 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	notif->category = strdup("");
 	notif->desktop_entry = strdup("");
 
+	// Start ungrouped.
+	notif->group_index = -1;
+
 	return notif;
 }
 
