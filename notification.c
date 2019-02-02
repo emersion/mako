@@ -390,7 +390,7 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 	// is technically unnecessary, since it will go back in the same place, but
 	// it makes the rest of this logic nicer.
 	struct wl_list *location = NULL;  // The place we're going to reinsert them.
-	struct mako_notification *notif, *tmp;
+	struct mako_notification *notif = NULL, *tmp = NULL;
 	int count = 0;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
 		if (!match_criteria(criteria, notif)) {
@@ -415,8 +415,9 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 		// it ungrouped just as if it had no grouping criteria. If this is a
 		// new notification, its index is already set to -1. However, this also
 		// happens when a notification had been part of a group and all the
-		// others have closed, so we need to set it anyway. Handily, if we only
-		// matched one, we still have a pointer to it.
+		// others have closed, so we need to set it anyway.
+		// We can't use the current pointer, wl_list_for_each_safe clobbers it.
+		notif = wl_container_of(matches.prev, notif, link);
 		notif->group_index = -1;
 	}
 
