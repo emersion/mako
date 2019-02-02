@@ -394,7 +394,7 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 		}
 
 		wl_list_remove(&notif->link);
-		wl_list_insert(&matches, &notif->link);
+		wl_list_insert(matches.prev, &notif->link);
 		notif->group_index = count++;
 	}
 
