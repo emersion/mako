@@ -69,6 +69,9 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	wl_list_init(&notif->actions);
 	reset_notification(notif);
 
+	// Start ungrouped.
+	notif->group_index = -1;
+
 	return notif;
 }
 
