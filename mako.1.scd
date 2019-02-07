@@ -107,6 +107,12 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: #4C7899FF
 
+*--progress-color* _color_
+	Set popup progress indicator color to _color_. See *COLOR* for more
+	information.
+
+	Default: #5588AAFF
+
 *--markup* 0|1
 	If 1, enable Pango markup. If 0, disable Pango markup. If enabled, Pango
 	markup will be interpreted in your format specifier and in the body of

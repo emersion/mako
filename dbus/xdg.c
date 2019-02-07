@@ -198,6 +198,13 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			}
 			free(notif->desktop_entry);
 			notif->desktop_entry = strdup(desktop_entry);
+		} else if (strcmp(hint, "value") == 0) {
+			int32_t progress = 0;
+			ret = sd_bus_message_read(msg, "v", "i", &progress);
+			if (ret < 0) {
+				return ret;
+			}
+			notif->progress = progress;
 		} else {
 			ret = sd_bus_message_skip(msg, "v");
 			if (ret < 0) {

@@ -34,6 +34,7 @@ struct mako_notification {
 	enum mako_notification_urgency urgency;
 	char *category;
 	char *desktop_entry;
+	int32_t progress;
 
 	struct mako_hotspot hotspot;
 	struct mako_timer *timer;

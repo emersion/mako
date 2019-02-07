@@ -83,6 +83,7 @@ void init_default_style(struct mako_style *style) {
 	style->colors.background = 0x285577FF;
 	style->colors.text = 0xFFFFFFFF;
 	style->colors.border = 0x4C7899FF;
+	style->colors.progress = 0x5588AAFF;
 
 	// Only completely identical notifications should group by default.
 	memset(&style->group_criteria_spec, true, sizeof(struct mako_criteria_spec));
@@ -197,6 +198,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.colors.border) {
 		target->colors.border = style->colors.border;
 		target->spec.colors.border = true;
+	}
+
+	if (style->spec.colors.progress) {
+		target->colors.progress = style->colors.progress;
+		target->spec.colors.progress = true;
 	}
 
 	if (style->spec.group_criteria_spec) {
@@ -376,6 +382,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		return spec->border_size = parse_int(value, &style->border_size);
 	} else if (strcmp(name, "border-color") == 0) {
 		return spec->colors.border = parse_color(value, &style->colors.border);
+	} else if (strcmp(name, "progress-color") == 0) {
+		return spec->colors.progress = parse_color(value, &style->colors.progress);
 	} else if (strcmp(name, "markup") == 0) {
 		return spec->markup = parse_boolean(value, &style->markup);
 	} else if (strcmp(name, "actions") == 0) {
@@ -540,6 +548,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"padding", required_argument, 0, 0},
 		{"border-size", required_argument, 0, 0},
 		{"border-color", required_argument, 0, 0},
+		{"progress-color", required_argument, 0, 0},
 		{"markup", required_argument, 0, 0},
 		{"actions", required_argument, 0, 0},
 		{"format", required_argument, 0, 0},

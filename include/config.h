@@ -27,7 +27,7 @@ struct mako_style_spec {
 		 actions, default_timeout, ignore_timeout, group_criteria_spec;
 
 	struct {
-		bool background, text, border;
+		bool background, text, border, progress;
 	} colors;
 };
 
@@ -52,6 +52,7 @@ struct mako_style {
 		uint32_t background;
 		uint32_t text;
 		uint32_t border;
+		uint32_t progress;
 	} colors;
 
 	struct mako_criteria_spec group_criteria_spec;

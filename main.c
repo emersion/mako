@@ -28,6 +28,7 @@ static const char usage[] =
 	"                                  meaning as in CSS.\n"
 	"      --border-size <px>          Border size.\n"
 	"      --border-color <color>      Border color.\n"
+	"      --progress-color <color>    Progress indicator color.\n"
 	"      --markup <0|1>              Enable/disable markup.\n"
 	"      --format <format>           Format string.\n"
 	"      --hidden-format <format>    Format string.\n"
