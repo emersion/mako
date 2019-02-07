@@ -39,6 +39,7 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	notif->id = state->last_id;
 	wl_list_init(&notif->actions);
 	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNOWN;
+	notif->progress = -1;
 
 	// Make sure everything is a valid string so we can always compare
 	// notifications, even if they don't have a certain field.

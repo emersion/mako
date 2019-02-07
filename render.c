@@ -72,7 +72,7 @@ static void set_font_options(cairo_t *cairo, struct mako_state *state) {
 
 static int render_notification(cairo_t *cairo, struct mako_state *state,
 		struct mako_style *style, const char *text, int offset_y, int scale,
-		struct mako_hotspot *hotspot) {
+		struct mako_hotspot *hotspot, int progress) {
 	int border_size = 2 * style->border_size;
 	int padding_height = style->padding.top + style->padding.bottom;
 	int padding_width = style->padding.left + style->padding.right;
@@ -141,15 +141,35 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	cairo_stroke(cairo);
 	cairo_restore(cairo);
 
+
+	int notif_background_width = notif_width - border_size;
+	int progress_width = notif_background_width * progress / 100;
+	if (progress_width < 0) {
+		progress_width = 0;
+	} else if (progress_width > notif_background_width) {
+		progress_width = notif_background_width;
+	}
+
 	// Render background
 	set_source_u32(cairo, style->colors.background);
 	set_rectangle(cairo,
-		offset_x + style->border_size,
+		offset_x + style->border_size + progress_width,
 		offset_y + style->border_size,
-		notif_width - border_size,
+		notif_background_width - progress_width,
 		notif_height - border_size,
 		scale);
 	cairo_fill(cairo);
+
+	// Render progress
+	set_source_u32(cairo, style->colors.progress);
+	set_rectangle(cairo,
+		offset_x + style->border_size,
+		offset_y + style->border_size,
+		progress_width,
+		notif_height - border_size,
+		scale);
+	cairo_fill(cairo);
+
 
 	// Render text
 	set_source_u32(cairo, style->colors.text);
@@ -212,7 +232,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		}
 
 		int notif_height = render_notification(
-				cairo, state, style, text, total_height, scale, &notif->hotspot);
+			cairo, state, style, text, total_height, scale,
+			&notif->hotspot, notif->progress);
 		free(text);
 
 		total_height += notif_height;
@@ -250,7 +271,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		format_text(style.format, text, format_state_text, state);
 
 		int hidden_height = render_notification(
-				cairo, state, &style, text, total_height, scale, NULL);
+			cairo, state, &style, text, total_height, scale, NULL, 0);
 		free(text);
 		finish_style(&style);
 
