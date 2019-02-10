@@ -82,9 +82,23 @@ static int handle_reload(sd_bus_message *msg, void *data,
 
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
+		// Reset the notifications' grouped state so that if criteria have been
+		// removed they'll separate properly.
+		notif->group_index = -1;
+
 		finish_style(&notif->style);
 		init_empty_style(&notif->style);
 		apply_each_criteria(&state->config.criteria, notif);
+
+		// Having to do this for every single notification really hurts... but
+		// it does do The Right Thing (tm).
+		struct mako_criteria *notif_criteria = create_criteria_from_notification(
+				notif, &notif->style.group_criteria_spec);
+		if (!notif_criteria) {
+			continue;
+		}
+		group_notifications(state, notif_criteria);
+		free(notif_criteria);
 	}
 
 	set_dirty(state);
