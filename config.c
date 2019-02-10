@@ -84,8 +84,7 @@ void init_default_style(struct mako_style *style) {
 	style->colors.text = 0xFFFFFFFF;
 	style->colors.border = 0x4C7899FF;
 
-	// Only completely identical notifications should group by default.
-	memset(&style->group_criteria_spec, true, sizeof(struct mako_criteria_spec));
+	style->group_criteria_spec.none = true;
 
 	// Everything in the default config is explicitly specified.
 	memset(&style->spec, true, sizeof(struct mako_style_spec));

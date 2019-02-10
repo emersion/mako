@@ -40,6 +40,11 @@ bool match_criteria(struct mako_criteria *criteria,
 		struct mako_notification *notif) {
 	struct mako_criteria_spec spec = criteria->spec;
 
+	if (spec.none) {
+		// `none` short-circuits all other criteria.
+		return false;
+	}
+
 	if (spec.app_name &&
 			strcmp(criteria->app_name, notif->app_name) != 0) {
 		return false;

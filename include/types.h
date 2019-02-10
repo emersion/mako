@@ -44,6 +44,8 @@ struct mako_criteria_spec {
 	bool body;
 	bool group_index;
 	bool grouped;
+
+	bool none; // Special criteria that never matches, used for grouping
 };
 
 bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out);
