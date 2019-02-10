@@ -221,6 +221,8 @@ char *format_notif_text(char variable, bool *markup, void *data) {
 	case 'b':
 		*markup = notif->style.markup;
 		return strdup(notif->body);
+	case 'g':
+		return mako_asprintf("%d", notif->group_count);
 	}
 	return NULL;
 }

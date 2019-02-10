@@ -14,7 +14,7 @@
 #include "types.h"
 
 
-const char VALID_FORMAT_SPECIFIERS[] = "%asbht";
+const char VALID_FORMAT_SPECIFIERS[] = "%asbhtg";
 
 
 bool parse_boolean(const char *string, bool *out) {
