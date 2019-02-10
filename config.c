@@ -86,8 +86,7 @@ void init_default_style(struct mako_style *style) {
 	style->colors.progress.value = 0x5588AAFF;
 	style->colors.progress.operator = CAIRO_OPERATOR_OVER;
 
-	// Only completely identical notifications should group by default.
-	memset(&style->group_criteria_spec, true, sizeof(struct mako_criteria_spec));
+	style->group_criteria_spec.none = true;
 
 	// Everything in the default config is explicitly specified.
 	memset(&style->spec, true, sizeof(struct mako_style_spec));

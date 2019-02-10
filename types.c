@@ -188,6 +188,8 @@ bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out) {
 			out->summary = true;
 		} else if (strcmp(token, "body") == 0) {
 			out->body = true;
+		} else if (strcmp(token, "none") == 0) {
+			out->none = true;
 		} else {
 			fprintf(stderr, "Unknown criteria field '%s'\n", token);
 			return false;
