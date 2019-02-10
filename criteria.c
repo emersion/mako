@@ -248,9 +248,9 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			criteria->desktop_entry = strdup(value);
 			criteria->spec.desktop_entry = true;
 			return true;
-		} else if (strcmp(key, "group-index") == 0){
+		} else if (strcmp(key, "group-index") == 0) {
 			if (!parse_int(value, &criteria->group_index)) {
-				fprintf(stderr, "Invalid group_index value '%s'", value);
+				fprintf(stderr, "Invalid group-index value '%s'", value);
 				return false;
 			}
 			criteria->spec.group_index = true;
