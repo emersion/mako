@@ -153,15 +153,17 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	// Render background
 	set_source_u32(cairo, style->colors.background);
 	set_rectangle(cairo,
-		offset_x + style->border_size + progress_width,
+		offset_x + style->border_size,
 		offset_y + style->border_size,
-		notif_background_width - progress_width,
+		notif_background_width,
 		notif_height - border_size,
 		scale);
 	cairo_fill(cairo);
 
 	// Render progress
-	set_source_u32(cairo, style->colors.progress);
+	cairo_save(cairo);
+	cairo_set_operator(cairo, style->colors.progress.operator);
+	set_source_u32(cairo, style->colors.progress.value);
 	set_rectangle(cairo,
 		offset_x + style->border_size,
 		offset_y + style->border_size,
@@ -169,6 +171,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 		notif_height - border_size,
 		scale);
 	cairo_fill(cairo);
+	cairo_restore(cairo);
 
 
 	// Render text

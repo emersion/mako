@@ -83,7 +83,8 @@ void init_default_style(struct mako_style *style) {
 	style->colors.background = 0x285577FF;
 	style->colors.text = 0xFFFFFFFF;
 	style->colors.border = 0x4C7899FF;
-	style->colors.progress = 0x5588AAFF;
+	style->colors.progress.value = 0x5588AAFF;
+	style->colors.progress.operator = CAIRO_OPERATOR_OVER;
 
 	// Only completely identical notifications should group by default.
 	memset(&style->group_criteria_spec, true, sizeof(struct mako_criteria_spec));
@@ -383,7 +384,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "border-color") == 0) {
 		return spec->colors.border = parse_color(value, &style->colors.border);
 	} else if (strcmp(name, "progress-color") == 0) {
-		return spec->colors.progress = parse_color(value, &style->colors.progress);
+		return spec->colors.progress = parse_mako_color(value, &style->colors.progress);
 	} else if (strcmp(name, "markup") == 0) {
 		return spec->markup = parse_boolean(value, &style->markup);
 	} else if (strcmp(name, "actions") == 0) {

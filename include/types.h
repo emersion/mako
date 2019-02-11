@@ -3,10 +3,17 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <cairo.h>
+
+struct mako_color {
+	uint32_t value;
+	cairo_operator_t operator;
+};
 
 bool parse_boolean(const char *string, bool *out);
 bool parse_int(const char *string, int *out);
 bool parse_color(const char *string, uint32_t *out);
+bool parse_mako_color(const char *string, struct mako_color *out);
 
 enum mako_notification_urgency {
 	MAKO_NOTIFICATION_URGENCY_LOW = 0,

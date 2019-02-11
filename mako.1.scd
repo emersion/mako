@@ -107,11 +107,14 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: #4C7899FF
 
-*--progress-color* _color_
+*--progress-color* [over|source] _color_
 	Set popup progress indicator color to _color_. See *COLOR* for more
-	information.
+	information. To draw the progess indicator on top of the background
+	color, use the *over* attribute. To replace the background color, use
+	the *source* attribute (this can be useful when the notification is
+	semi-transparent).
 
-	Default: #5588AAFF
+	Default: over #5588AAFF
 
 *--markup* 0|1
 	If 1, enable Pango markup. If 0, disable Pango markup. If enabled, Pango

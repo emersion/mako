@@ -31,6 +31,7 @@ struct mako_style_spec {
 	} colors;
 };
 
+
 struct mako_style {
 	struct mako_style_spec spec;
 
@@ -52,7 +53,7 @@ struct mako_style {
 		uint32_t background;
 		uint32_t text;
 		uint32_t border;
-		uint32_t progress;
+		struct mako_color progress;
 	} colors;
 
 	struct mako_criteria_spec group_criteria_spec;
