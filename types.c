@@ -60,6 +60,36 @@ bool parse_color(const char *string, uint32_t *out) {
 	return true;
 }
 
+bool parse_mako_color(const char *string, struct mako_color *out) {
+	char *components = strdup(string);
+
+	char *saveptr = NULL;
+	char *token = strtok_r(components, " \t", &saveptr);
+
+	if (token[0] == '#') {
+		out->operator = CAIRO_OPERATOR_OVER;
+	} else {
+		if (strcasecmp(token, "over") == 0) {
+			out->operator = CAIRO_OPERATOR_OVER;
+		} else if (strcasecmp(token, "source") == 0) {
+			out->operator = CAIRO_OPERATOR_SOURCE;
+		} else {
+			free(components);
+			return false;
+		}
+
+		token = strtok_r(NULL, " \t", &saveptr);
+		if (token == NULL) {
+			return false;
+		}
+	}
+
+	bool ok = parse_color(token, &out->value);
+
+	free(components);
+	return ok;
+}
+
 bool parse_urgency(const char *string, enum mako_notification_urgency *out) {
 	if (strcasecmp(string, "low") == 0) {
 		*out = MAKO_NOTIFICATION_URGENCY_LOW;
