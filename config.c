@@ -31,8 +31,8 @@ void init_default_config(struct mako_config *config) {
 	init_empty_style(&new_criteria->style);
 	new_criteria->grouped = true;
 	new_criteria->spec.grouped = true;
-	new_criteria->style.hidden = true;
-	new_criteria->style.spec.hidden = true;
+	new_criteria->style.invisible = true;
+	new_criteria->style.spec.invisible = true;
 	new_criteria->style.format = strdup("(%g) <b>%s</b>\n%b");
 	new_criteria->style.spec.format = true;
 	new_criteria->raw_string = strdup("(default grouped)");
@@ -42,8 +42,8 @@ void init_default_config(struct mako_config *config) {
 	init_empty_style(&new_criteria->style);
 	new_criteria->group_index = 0;
 	new_criteria->spec.group_index = true;
-	new_criteria->style.hidden = false;
-	new_criteria->style.spec.hidden = true;
+	new_criteria->style.invisible = false;
+	new_criteria->style.spec.invisible = true;
 	new_criteria->raw_string = strdup("(default group-index=0)");
 
 	init_empty_style(&config->superstyle);
@@ -109,7 +109,7 @@ void init_default_style(struct mako_style *style) {
 	style->colors.progress.operator = CAIRO_OPERATOR_OVER;
 
 	style->group_criteria_spec.none = true;
-	style->hidden = false;
+	style->invisible = false;
 
 	// Everything in the default config is explicitly specified.
 	memset(&style->spec, true, sizeof(struct mako_style_spec));
@@ -233,9 +233,9 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		target->spec.group_criteria_spec = true;
 	}
 
-	if (style->spec.hidden) {
-		target->hidden = style->hidden;
-		target->spec.hidden = true;
+	if (style->spec.invisible) {
+		target->invisible = style->invisible;
+		target->spec.invisible = true;
 	}
 
 	return true;
@@ -428,8 +428,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "group-by") == 0) {
 		return spec->group_criteria_spec =
 			parse_criteria_spec(value, &style->group_criteria_spec);
-	} else if (strcmp(name, "hidden") == 0) {
-		return spec->hidden = parse_boolean(value, &style->hidden);
+	} else if (strcmp(name, "invisible") == 0) {
+		return spec->invisible = parse_boolean(value, &style->invisible);
 	}
 
 	return false;

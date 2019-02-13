@@ -228,7 +228,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 		++i; // We count how many we've seen even if we're not rendering them.
 
-		if (style->hidden) {
+		if (style->invisible) {
 			continue;
 		}
 
