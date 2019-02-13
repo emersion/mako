@@ -131,9 +131,11 @@ dismissed with a click or via *makoctl*(1).
 
 *--format* _format_
 	Set notification format string to _format_. See *FORMAT SPECIFIERS* for
-	more information.
+	more information. To change this for grouped notifications, set it within
+	a _grouped_ criteria.
 
 	Default: <b>%s</b>\\n%b
+	Default when grouped: (%g) <b>%s</b>\\n%b
 
 *--default-timeout* _timeout_
 	Set the default timeout to _timeout_ in milliseconds. To disable the
@@ -141,9 +143,30 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: 0
 
-*--ignore-timeout*
+*--ignore-timeout* 0|1
 	If set, mako will ignore the expire timeout sent by notifications and use
 	the one provided by _default-timeout_ instead.
+
+	Default: 0
+
+*--group-by* _field[,field,...]_
+	A comma-separated list of criteria fields that will be compared to other
+	visible notifications to determine if this one should form a group with
+	them. All listed criteria must be exactly equal for two notifications to
+	group.
+
+	Default: none
+
+# CRITERIA-ONLY STYLE OPTIONS
+
+Some style options are not useful in the global context and therefore have no
+associated command-line option.
+
+*invisible* 0|1
+	Whether this notification should be invisible even if it is above the
+	_max-visible_ cutoff. This is used primarily for hiding members of groups.
+	If you want to make more than the first group member visible, turn this
+	option off within a _group-index_ criteria.
 
 	Default: 0
 
@@ -184,9 +207,14 @@ The following fields are available in critiera:
 - _desktop-entry_ (string)
 - _actionable_ (boolean)
 - _expiring_ (boolean)
+- _grouped_ (boolean)
+	- Whether the notification is grouped with any others (its group-index is
+	  not -1).
+- _group-index_ (int)
+	- The notification's index within its group, or -1 if it is not grouped.
 - _hidden_ (boolean)
 	- _hidden_ is special, it defines the style for the placeholder shown when
-	  the number of notifications exceeds _max-visible_.
+	  the number of notifications or groups exceeds _max-visible_.
 
 If a field's value contains special characters, they may be escaped with a
 backslash, or quoted:
@@ -205,6 +233,16 @@ as bare words:
 	\[actionable=true\] \[actionable=1\] \[actionable\]
 
 	\[actionable=false\] \[actionable=0\] \[!actionable\]
+
+There are three criteria always present at the front of the list:
+- An empty criteria which matches all notifications and contains the defaults
+  for all style options, overwritten with any configured in the global section.
+- \[grouped\], which sets the default *format* for grouped notifications and
+  sets them *invisible*.
+- \[group-index=0\], which makes the first member of each group visible again.
+
+These options can be overridden by simply defining the criteria yourself and
+overriding them.
 
 # COLORS
 
