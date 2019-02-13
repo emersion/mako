@@ -416,7 +416,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "ignore-timeout") == 0) {
 		return spec->ignore_timeout =
 			parse_boolean(value, &style->ignore_timeout);
-	} else if (strcmp(name, "group") == 0) {
+	} else if (strcmp(name, "group-by") == 0) {
 		return spec->group_criteria_spec =
 			parse_criteria_spec(value, &style->group_criteria_spec);
 	} else if (strcmp(name, "hidden") == 0) {
@@ -579,6 +579,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"layer", required_argument, 0, 0},
 		{"anchor", required_argument, 0, 0},
 		{"sort", required_argument, 0, 0},
+		{"group-by", required_argument, 0, 0},
 		{0},
 	};
 
