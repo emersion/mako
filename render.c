@@ -123,7 +123,12 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	pango_attr_list_unref(attrs);
 
 	int buffer_text_height = 0;
-	pango_layout_get_pixel_size(layout, NULL, &buffer_text_height);
+
+	// If there's no text to be rendered, the notification can shrink down
+	// smaller than the line height.
+	if (pango_layout_get_character_count(layout) > 0) {
+		pango_layout_get_pixel_size(layout, NULL, &buffer_text_height);
+	}
 	int text_height = buffer_text_height / scale;
 
 	int notif_height = border_size + padding_height + text_height;
@@ -189,6 +194,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	cairo_restore(cairo);
 
 	size_t i = 0;
+	size_t visible_count = 0;
 	int total_height = 0;
 	int pending_bottom_margin = 0;
 	struct mako_notification *notif;
@@ -197,10 +203,18 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		// be specified, so we don't need to check.
 		struct mako_style *style = &notif->style;
 
+		++i; // We count how many we've seen even if we're not rendering them.
+
+		if (style->hidden) {
+			continue;
+		}
+
 		size_t text_len =
 			format_text(style->format, NULL, format_notif_text, notif);
+
 		char *text = malloc(text_len + 1);
 		if (text == NULL) {
+			fprintf(stderr, "Unable to allocate memory to render notification\n");
 			break;
 		}
 		format_text(style->format, text, format_notif_text, notif);
@@ -218,14 +232,22 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		total_height += notif_height;
 		pending_bottom_margin = style->margin.bottom;
 
-		++i;
+		if (notif->group_index < 1) {
+			// If the notification is ungrouped, or is the first in a group, it
+			// counts against max_visible. Even if other notifications in the
+			// group are rendered based on criteria, a group is considered a
+			// single entity for this purpose.
+			++visible_count;
+		}
+
 		if (config->max_visible >= 0 &&
-				i >= (size_t)config->max_visible) {
+				visible_count >= (size_t)config->max_visible) {
 			break;
 		}
 	}
 
-	if (wl_list_length(&state->notifications) > config->max_visible) {
+	size_t count = wl_list_length(&state->notifications);
+	if (count > i) {
 		// Apply the hidden_style on top of the global style. This has to be
 		// done here since this notification isn't "real" and wasn't processed
 		// by apply_each_criteria.
@@ -240,14 +262,20 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 			total_height += pending_bottom_margin;
 		}
 
+		struct mako_hidden_format_data data = {
+			.hidden = count - i,
+			.count = count,
+		};
+
 		size_t text_ln =
-			format_text(style.format, NULL, format_state_text, state);
+			format_text(style.format, NULL, format_hidden_text, &data);
 		char *text = malloc(text_ln + 1);
 		if (text == NULL) {
 			fprintf(stderr, "allocation failed");
 			return 0;
 		}
-		format_text(style.format, text, format_state_text, state);
+
+		format_text(style.format, text, format_hidden_text, &data);
 
 		int hidden_height = render_notification(
 				cairo, state, &style, text, total_height, scale, NULL);

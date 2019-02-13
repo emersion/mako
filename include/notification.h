@@ -56,6 +56,12 @@ enum mako_notification_close_reason {
 	MAKO_NOTIFICATION_CLOSE_UNKNOWN = 4,
 };
 
+// Tiny struct to be the data type for format_hidden_text.
+struct mako_hidden_format_data {
+	size_t hidden;
+	size_t count;
+};
+
 #define DEFAULT_ACTION_KEY "default"
 
 typedef char *(*mako_format_func_t)(char variable, bool *markup, void *data);
@@ -68,7 +74,7 @@ void close_notification(struct mako_notification *notif,
 	enum mako_notification_close_reason reason);
 void close_all_notifications(struct mako_state *state,
 	enum mako_notification_close_reason reason);
-char *format_state_text(char variable, bool *markup, void *data);
+char *format_hidden_text(char variable, bool *markup, void *data);
 char *format_notif_text(char variable, bool *markup, void *data);
 size_t format_text(const char *format, char *buf, mako_format_func_t func, void *data);
 struct mako_notification *get_notification(struct mako_state *state, uint32_t id);

@@ -190,15 +190,13 @@ static char *mako_asprintf(const char *fmt, ...) {
 
 // Any new format specifiers must also be added to VALID_FORMAT_SPECIFIERS.
 
-char *format_state_text(char variable, bool *markup, void *data) {
-	struct mako_state *state = data;
+char *format_hidden_text(char variable, bool *markup, void *data) {
+	struct mako_hidden_format_data *format_data = data;
 	switch (variable) {
-	case 'h':;
-		int hidden = wl_list_length(&state->notifications) - state->config.max_visible;
-		return mako_asprintf("%d", hidden);
-	case 't':;
-		int count = wl_list_length(&state->notifications);
-		return mako_asprintf("%d", count);
+	case 'h':
+		return mako_asprintf("%d", format_data->hidden);
+	case 't':
+		return mako_asprintf("%d", format_data->count);
 	}
 	return NULL;
 }
