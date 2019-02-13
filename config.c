@@ -23,6 +23,7 @@ void init_default_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
 	struct mako_criteria *new_criteria = create_criteria(config);
 	init_default_style(&new_criteria->style);
+	new_criteria->raw_string = strdup("(root)");
 
 	// Hide grouped notifications by default, and put the group count in
 	// their format...
@@ -34,6 +35,7 @@ void init_default_config(struct mako_config *config) {
 	new_criteria->style.spec.hidden = true;
 	new_criteria->style.format = strdup("(%g) <b>%s</b>\n%b");
 	new_criteria->style.spec.format = true;
+	new_criteria->raw_string = strdup("(default grouped)");
 
 	// ...but make the first one in the group visible.
 	new_criteria = create_criteria(config);
@@ -42,6 +44,7 @@ void init_default_config(struct mako_config *config) {
 	new_criteria->spec.group_index = true;
 	new_criteria->style.hidden = false;
 	new_criteria->style.spec.hidden = true;
+	new_criteria->raw_string = strdup("(default group-index=0)");
 
 	init_empty_style(&config->superstyle);
 
