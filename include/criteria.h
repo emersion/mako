@@ -14,6 +14,8 @@ struct mako_criteria {
 	struct mako_criteria_spec spec;
 	struct wl_list link; // mako_config::criteria
 
+	char * raw_string; // For debugging
+
 	// Style to apply to matches:
 	struct mako_style style;
 

@@ -33,6 +33,7 @@ void destroy_criteria(struct mako_criteria *criteria) {
 	free(criteria->desktop_entry);
 	free(criteria->summary);
 	free(criteria->body);
+	free(criteria->raw_string);
 	free(criteria);
 }
 
@@ -189,6 +190,7 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 		return false;
 	}
 
+	criteria->raw_string = strdup(string);
 	return true;
 }
 
