@@ -87,6 +87,7 @@ void init_default_style(struct mako_style *style) {
 	style->colors.progress.operator = CAIRO_OPERATOR_OVER;
 
 	style->group_criteria_spec.none = true;
+	style->hidden = false;
 
 	// Everything in the default config is explicitly specified.
 	memset(&style->spec, true, sizeof(struct mako_style_spec));
@@ -208,6 +209,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.group_criteria_spec) {
 		target->group_criteria_spec = style->group_criteria_spec;
 		target->spec.group_criteria_spec = true;
+	}
+
+	if (style->spec.hidden) {
+		target->hidden = style->hidden;
+		target->spec.hidden = true;
 	}
 
 	return true;
@@ -400,6 +406,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "group") == 0) {
 		return spec->group_criteria_spec =
 			parse_criteria_spec(value, &style->group_criteria_spec);
+	} else if (strcmp(name, "hidden") == 0) {
+		return spec->hidden = parse_boolean(value, &style->hidden);
 	}
 
 	return false;
