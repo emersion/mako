@@ -7,7 +7,7 @@ packages:
   - pango
   - systemd
 sources:
-  - https://github.com/emerison/mako
+  - https://github.com/emersion/mako
 tasks:
   - setup: |
       cd mako
