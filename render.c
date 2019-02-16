@@ -4,7 +4,9 @@
 #include <pango/pangocairo.h>
 #include <assert.h>
 
+#ifdef SHOW_ICONS
 #include "icon.h"
+#endif
 
 #include "config.h"
 #include "criteria.h"
@@ -91,14 +93,17 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 		offset_x = style->margin.left;
 	}
 
-	struct mako_icon icon = get_icon(icon_path, style->max_icon_size);
-
 	double text_x;
+#ifdef SHOW_ICONS
+	struct mako_icon icon = get_icon(icon_path, style->max_icon_size);
 	if (icon.image == NULL) {
 		text_x = style->padding.left;
 	} else {
 		text_x = icon.width + 2*style->padding.left;
 	}
+#else
+	text_x = style->padding.left;
+#endif
 
 	set_font_options(cairo, state);
 
@@ -144,11 +149,15 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	int text_height = buffer_text_height / scale;
 
 	int notif_height;
+#ifdef SHOW_ICONS
 	if (icon.image != NULL && icon.height > text_height) {
 		notif_height = icon.height + border_size + padding_height;
 	} else {
 		notif_height = text_height + border_size + padding_height;
 	}
+#else
+	notif_height = text_height + border_size + padding_height;
+#endif
 
 	// Render border
 	set_source_u32(cairo, style->colors.border);
@@ -195,6 +204,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	cairo_fill(cairo);
 	cairo_restore(cairo);
 
+#ifdef SHOW_ICONS
 	// Render icon
 	if (icon.image != NULL) {
 		double xpos = offset_x + style->border_size +
@@ -204,6 +214,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 		draw_icon(cairo, icon, xpos, ypos, scale);
 		destroy_icon(icon);
 	}
+#endif
 
 	// Render text
 	set_source_u32(cairo, style->colors.text);
