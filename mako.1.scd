@@ -116,6 +116,11 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: over #5588AAFF
 
+*--max-icon-size* _px_
+	Set maximum icon size to _px_ pixels.
+
+	Default: 64
+
 *--markup* 0|1
 	If 1, enable Pango markup. If 0, disable Pango markup. If enabled, Pango
 	markup will be interpreted in your format specifier and in the body of
