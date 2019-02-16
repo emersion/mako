@@ -77,12 +77,6 @@ static void handle_notification_timer(void *data) {
 static int handle_notify(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
-
-	struct mako_notification *notif = create_notification(state);
-	if (notif == NULL) {
-		return -1;
-	}
-
 	int ret = 0;
 
 	const char *app_name, *app_icon, *summary, *body;
@@ -93,23 +87,32 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	free(notif->app_name);
-	free(notif->app_icon);
-	free(notif->summary);
-	free(notif->body);
+	struct mako_notification *notif = NULL;
+	if (replaces_id > 0) {
+		notif = get_notification(state, replaces_id);
+	}
+
+	if (notif) {
+		reset_notification(notif);
+	} else {
+		// Either we had no replaces_id, or the id given was invalid. Either
+		// way, make a new notification.
+		replaces_id = 0; // In case they got lucky and passed the next id.
+		notif = create_notification(state);
+	}
+
+	if (notif == NULL) {
+		return -1;
+	}
 
 	notif->app_name = strdup(app_name);
 	notif->app_icon = strdup(app_icon);
 	notif->summary = strdup(summary);
 	notif->body = strdup(body);
 
-	if (replaces_id > 0) {
-		struct mako_notification *replaces =
-			get_notification(state, replaces_id);
-		if (replaces) {
-			close_notification(replaces, MAKO_NOTIFICATION_CLOSE_REQUEST);
-		}
-	}
+	// These fields may not be filled, so make sure they're valid strings.
+	notif->category = strdup("");
+	notif->desktop_entry = strdup("");
 
 	ret = sd_bus_message_enter_container(msg, 'a', "s");
 	if (ret < 0) {
@@ -236,7 +239,11 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	// position relative to any of its potential group mates even before
 	// knowing what criteria we will be grouping them by (proof left as an
 	// exercise to the reader).
-	insert_notification(state, notif);
+	if (replaces_id != notif->id) {
+		// Only insert notifcations if they're actually new, to avoid creating
+		// duplicates in the list.
+		insert_notification(state, notif);
+	}
 
 	int match_count = apply_each_criteria(&state->config.criteria, notif);
 	if (match_count == -1) {

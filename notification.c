@@ -25,6 +25,26 @@ bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y) {
 		y < hotspot->y + hotspot->height;
 }
 
+void reset_notification(struct mako_notification *notif) {
+	struct mako_action *action, *tmp;
+	wl_list_for_each_safe(action, tmp, &notif->actions, link) {
+		wl_list_remove(&action->link);
+		free(action->key);
+		free(action->title);
+		free(action);
+	}
+
+	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNOWN;
+	notif->progress = -1;
+	destroy_timer(notif->timer);
+
+	free(notif->app_name);
+	free(notif->app_icon);
+	free(notif->summary);
+	free(notif->body);
+	free(notif->category);
+	free(notif->desktop_entry);
+}
 
 struct mako_notification *create_notification(struct mako_state *state) {
 	struct mako_notification *notif =
@@ -38,38 +58,16 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	++state->last_id;
 	notif->id = state->last_id;
 	wl_list_init(&notif->actions);
-	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNOWN;
-	notif->progress = -1;
-
-	// Make sure everything is a valid string so we can always compare
-	// notifications, even if they don't have a certain field.
-	notif->app_name = strdup("");
-	notif->app_icon = strdup("");
-	notif->summary = strdup("");
-	notif->body = strdup("");
-	notif->category = strdup("");
-	notif->desktop_entry = strdup("");
+	reset_notification(notif);
 
 	return notif;
 }
 
 void destroy_notification(struct mako_notification *notif) {
 	wl_list_remove(&notif->link);
-	struct mako_action *action, *tmp;
-	wl_list_for_each_safe(action, tmp, &notif->actions, link) {
-		wl_list_remove(&action->link);
-		free(action->key);
-		free(action->title);
-		free(action);
-	}
-	destroy_timer(notif->timer);
+
+	reset_notification(notif);
 	finish_style(&notif->style);
-	free(notif->app_name);
-	free(notif->app_icon);
-	free(notif->summary);
-	free(notif->body);
-	free(notif->category);
-	free(notif->desktop_entry);
 	free(notif);
 }
 
