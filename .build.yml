@@ -5,6 +5,7 @@ packages:
   - wayland-protocols
   - cairo
   - pango
+  - gdk-pixbuf2
   - systemd
 sources:
   - https://github.com/emersion/mako
