@@ -201,12 +201,8 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 			(text_x - icon.width) / 2;
 		double ypos = offset_y + style->border_size +
 			(notif_height - icon.height - border_size) / 2;
-		cairo_save(cairo);
-		cairo_scale(cairo, icon.scale * scale, icon.scale * scale);
-		cairo_set_source_surface(cairo, icon.image, xpos / icon.scale, ypos / icon.scale);
-		cairo_paint(cairo);
-		cairo_restore(cairo);
-		cairo_surface_destroy(icon.image);
+		draw_icon(cairo, icon, xpos, ypos, scale);
+		destroy_icon(icon);
 	}
 
 	// Render text

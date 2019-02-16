@@ -3,7 +3,7 @@ project(
 	'c',
 	version: '1.2.0',
 	license: 'MIT',
-	meson_version: '>=0.43.0',
+	meson_version: '>=0.47.0',
 	default_options: [
 		'c_std=c11',
 		'warning_level=2',
@@ -21,7 +21,6 @@ cc = meson.get_compiler('c')
 cairo = dependency('cairo')
 pango = dependency('pango')
 pangocairo = dependency('pangocairo')
-gdk_pixbuf = dependency('gdk-pixbuf-2.0')
 realtime = cc.find_library('rt')
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
@@ -32,6 +31,13 @@ if logind.found()
 else
 	logind = dependency('libelogind')
 	add_project_arguments('-DHAVE_ELOGIND=1', language : 'c')
+endif
+
+gdk = dependency('gdk-3.0', required: get_option('icon'))
+gdk_pixbuf = dependency('gdk-pixbuf-2.0', required: get_option('icon'))
+if not get_option('icon').disabled() and gdk.found() and gdk_pixbuf.found()
+	warning('ICON ENABLED')
+	add_global_arguments('-DSHOW_ICONS=1', language : 'c')
 endif
 
 subdir('protocol')
@@ -56,6 +62,7 @@ executable(
 	dependencies: [
 		cairo,
 		client_protos,
+		gdk,
 		gdk_pixbuf,
 		logind,
 		pango,
