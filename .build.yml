@@ -6,6 +6,7 @@ packages:
   - cairo
   - pango
   - gdk-pixbuf2
+  - gtk3
   - systemd
 sources:
   - https://github.com/emersion/mako
