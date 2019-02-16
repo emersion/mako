@@ -94,6 +94,8 @@ void init_default_style(struct mako_style *style) {
 
 	style->border_size = 2;
 
+	style->max_icon_size = 64;
+
 	style->font = strdup("monospace 10");
 	style->markup = true;
 	style->format = strdup("<b>%s</b>\n%b");
@@ -176,6 +178,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		target->spec.border_size = true;
 	}
 
+	if (style->spec.max_icon_size) {
+		target->max_icon_size = style->max_icon_size;
+		target->spec.max_icon_size = true;
+	}
+
 	if (style->spec.font) {
 		free(target->font);
 		target->font = new_font;
@@ -254,6 +261,7 @@ bool apply_superset_style(
 	target->spec.margin = true;
 	target->spec.padding = true;
 	target->spec.border_size = true;
+	target->spec.max_icon_size = true;
 	target->spec.default_timeout = true;
 	target->spec.markup = true;
 	target->spec.actions = true;
@@ -287,6 +295,7 @@ bool apply_superset_style(
 			max(style->padding.bottom, target->padding.bottom);
 		target->padding.left = max(style->padding.left, target->padding.left);
 		target->border_size = max(style->border_size, target->border_size);
+		target->max_icon_size = max(style->max_icon_size, target->max_icon_size);
 		target->default_timeout =
 			max(style->default_timeout, target->default_timeout);
 
@@ -412,6 +421,9 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		return spec->colors.border = parse_color(value, &style->colors.border);
 	} else if (strcmp(name, "progress-color") == 0) {
 		return spec->colors.progress = parse_mako_color(value, &style->colors.progress);
+	} else if (strcmp(name, "max-icon-size") == 0) {
+		return spec->max_icon_size =
+			parse_int(value, &style->max_icon_size);
 	} else if (strcmp(name, "markup") == 0) {
 		return spec->markup = parse_boolean(value, &style->markup);
 	} else if (strcmp(name, "actions") == 0) {
@@ -579,6 +591,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"border-size", required_argument, 0, 0},
 		{"border-color", required_argument, 0, 0},
 		{"progress-color", required_argument, 0, 0},
+		{"max-icon-size", required_argument, 0, 0},
 		{"markup", required_argument, 0, 0},
 		{"actions", required_argument, 0, 0},
 		{"format", required_argument, 0, 0},

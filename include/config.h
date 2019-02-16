@@ -24,8 +24,8 @@ enum mako_sort_criteria {
 // structs are also mirrored.
 struct mako_style_spec {
 	bool width, height, margin, padding, border_size, font, markup, format,
-		 actions, default_timeout, ignore_timeout, group_criteria_spec,
-		 invisible;
+		 actions, default_timeout, ignore_timeout, max_icon_size,
+		 group_criteria_spec, invisible;
 
 	struct {
 		bool background, text, border, progress;
@@ -41,6 +41,7 @@ struct mako_style {
 	struct mako_directional margin;
 	struct mako_directional padding;
 	int32_t border_size;
+	int32_t max_icon_size;
 
 	char *font;
 	bool markup;

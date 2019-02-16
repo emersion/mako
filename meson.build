@@ -21,6 +21,7 @@ cc = meson.get_compiler('c')
 cairo = dependency('cairo')
 pango = dependency('pango')
 pangocairo = dependency('pangocairo')
+gdk_pixbuf = dependency('gdk-pixbuf-2.0')
 realtime = cc.find_library('rt')
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
@@ -43,6 +44,7 @@ executable(
 		'dbus/dbus.c',
 		'dbus/mako.c',
 		'dbus/xdg.c',
+		'icon.c',
 		'main.c',
 		'notification.c',
 		'pool-buffer.c',
@@ -54,6 +56,7 @@ executable(
 	dependencies: [
 		cairo,
 		client_protos,
+		gdk_pixbuf,
 		logind,
 		pango,
 		pangocairo,
