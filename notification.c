@@ -36,7 +36,9 @@ void reset_notification(struct mako_notification *notif) {
 
 	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNOWN;
 	notif->progress = -1;
+
 	destroy_timer(notif->timer);
+	notif->timer = NULL;
 
 	free(notif->app_name);
 	free(notif->app_icon);
@@ -44,6 +46,13 @@ void reset_notification(struct mako_notification *notif) {
 	free(notif->body);
 	free(notif->category);
 	free(notif->desktop_entry);
+
+	notif->app_name = NULL;
+	notif->app_icon = NULL;
+	notif->summary = NULL;
+	notif->body = NULL;
+	notif->category = NULL;
+	notif->desktop_entry = NULL;
 }
 
 struct mako_notification *create_notification(struct mako_state *state) {
