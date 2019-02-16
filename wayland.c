@@ -165,7 +165,9 @@ static void create_seat(struct mako_state *state, struct wl_seat *wl_seat) {
 static void destroy_seat(struct mako_seat *seat) {
 	wl_list_remove(&seat->link);
 	wl_seat_release(seat->wl_seat);
-	wl_pointer_release(seat->pointer.wl_pointer);
+	if (seat->pointer.wl_pointer) {
+		wl_pointer_release(seat->pointer.wl_pointer);
+	}
 	free(seat);
 }
 
