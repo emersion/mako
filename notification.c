@@ -383,7 +383,7 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 	// it makes the rest of this logic nicer.
 	struct wl_list *location = NULL;  // The place we're going to reinsert them.
 	struct mako_notification *notif = NULL, *tmp = NULL;
-	int count = 0;
+	size_t count = 0;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
 		if (!match_criteria(criteria, notif)) {
 			continue;
