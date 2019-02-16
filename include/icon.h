@@ -2,12 +2,7 @@
 #define MAKO_ICON_H
 
 #include <cairo/cairo.h>
-
-#ifdef SHOW_ICONS
 #include <gdk-pixbuf/gdk-pixbuf.h>
-#else
-typedef void GdkPixbuf;
-#endif
 
 struct mako_icon {
 	double width;

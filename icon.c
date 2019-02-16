@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <assert.h>
 #include <cairo/cairo.h>
-
-#include "icon.h"
-
-#ifdef SHOW_ICONS
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk/gdk.h>
+
+#include "icon.h"
 
 GdkPixbuf *load_image(const char *path) {
 	if (strlen(path) == 0) {
@@ -69,18 +67,3 @@ void destroy_icon(struct mako_icon icon) {
 		g_object_unref(icon.image);
 	}
 }
-
-#else
-
-struct mako_icon get_icon(const char *path, double max_size) {
-	struct mako_icon icon;
-	icon.image = NULL;
-	return icon;
-}
-
-void draw_icon(cairo_t *cairo, struct mako_icon icon,
-		double xpos, double ypos, double scale) {}
-
-void destroy_icon(struct mako_icon icon) {}
-#endif
-

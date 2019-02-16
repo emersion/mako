@@ -35,30 +35,35 @@ endif
 
 gdk = dependency('gdk-3.0', required: get_option('icon'))
 gdk_pixbuf = dependency('gdk-pixbuf-2.0', required: get_option('icon'))
-if not get_option('icon').disabled() and gdk.found() and gdk_pixbuf.found()
-	warning('ICON ENABLED')
+icon_feature = not get_option('icon').disabled() and gdk.found() and gdk_pixbuf.found()
+if icon_feature
 	add_global_arguments('-DSHOW_ICONS=1', language : 'c')
 endif
 
 subdir('protocol')
 
+src_files = [
+	'config.c',
+	'event-loop.c',
+	'dbus/dbus.c',
+	'dbus/mako.c',
+	'dbus/xdg.c',
+	'main.c',
+	'notification.c',
+	'pool-buffer.c',
+	'render.c',
+	'wayland.c',
+	'criteria.c',
+	'types.c',
+]
+
+if icon_feature
+	src_files += 'icon.c'
+endif
+
 executable(
 	'mako',
-	files([
-		'config.c',
-		'event-loop.c',
-		'dbus/dbus.c',
-		'dbus/mako.c',
-		'dbus/xdg.c',
-		'icon.c',
-		'main.c',
-		'notification.c',
-		'pool-buffer.c',
-		'render.c',
-		'wayland.c',
-		'criteria.c',
-		'types.c',
-	]),
+	files(src_files),
 	dependencies: [
 		cairo,
 		client_protos,
