@@ -116,7 +116,7 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: over #5588AAFF
 
-*--show-icons* 0|1
+*--icons* 0|1
 	Show icons in notifications.
 
 	Default: 1

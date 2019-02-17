@@ -96,7 +96,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	double text_x = style->padding.left;
 #ifdef SHOW_ICONS
 	struct mako_icon icon;
-	if (style->show_icons) {
+	if (style->icons) {
 		icon = create_icon(icon_path, style->max_icon_size);
 		if (icon.image != NULL) {
 			text_x = icon.width + 2*style->padding.left;
@@ -149,7 +149,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 	int notif_height;
 #ifdef SHOW_ICONS
-	if (style->show_icons && icon.image != NULL && icon.height > text_height) {
+	if (style->icons && icon.image != NULL && icon.height > text_height) {
 		notif_height = icon.height + border_size + padding_height;
 	} else {
 		notif_height = text_height + border_size + padding_height;
@@ -205,7 +205,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 #ifdef SHOW_ICONS
 	// Render icon
-	if (style->show_icons && icon.image != NULL) {
+	if (style->icons && icon.image != NULL) {
 		double xpos = offset_x + style->border_size +
 			(text_x - icon.width) / 2;
 		double ypos = offset_y + style->border_size +
