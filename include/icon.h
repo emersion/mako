@@ -10,7 +10,7 @@ struct mako_icon {
 	double image_width;
 	double image_height;
 	double scale;
-	GdkPixbuf* image;
+	GdkPixbuf *image;
 };
 
 struct mako_icon create_icon(const char *path, double max_size);

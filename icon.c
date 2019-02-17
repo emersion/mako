@@ -22,8 +22,9 @@ GdkPixbuf *load_image(const char *path) {
 struct mako_icon create_icon(const char *path, double max_size) {
 	struct mako_icon icon;
 	icon.image = load_image(path);
-	if (icon.image == NULL)
+	if (icon.image == NULL) {
 		return icon;
+	}
 
 	icon.image_width = gdk_pixbuf_get_width(icon.image);
 	icon.image_height = gdk_pixbuf_get_height(icon.image);
@@ -63,7 +64,7 @@ void draw_icon(cairo_t *cairo, struct mako_icon icon,
 }
 
 void destroy_icon(struct mako_icon icon) {
-	if (icon.image !=  NULL) {
+	if (icon.image != NULL) {
 		g_object_unref(icon.image);
 	}
 }
