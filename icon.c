@@ -19,7 +19,7 @@ GdkPixbuf *load_image(const char *path) {
 	return pixbuf;
 }
 
-struct mako_icon get_icon(const char *path, double max_size) {
+struct mako_icon create_icon(const char *path, double max_size) {
 	struct mako_icon icon;
 	icon.image = load_image(path);
 	if (icon.image == NULL)
