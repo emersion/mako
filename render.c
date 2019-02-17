@@ -4,10 +4,6 @@
 #include <pango/pangocairo.h>
 #include <assert.h>
 
-#ifdef SHOW_ICONS
-#include "icon.h"
-#endif
-
 #include "config.h"
 #include "criteria.h"
 #include "mako.h"
@@ -15,6 +11,7 @@
 #include "render.h"
 #include "wayland.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
+#include "icon.h"
 
 
 // HiDPI conventions: local variables are in surface-local coordinates, unless
@@ -76,7 +73,7 @@ static void set_font_options(cairo_t *cairo, struct mako_state *state) {
 }
 
 static int render_notification(cairo_t *cairo, struct mako_state *state,
-		struct mako_style *style, const char *text, const char *icon_path, int offset_y, int scale,
+		struct mako_style *style, const char *text, struct mako_icon *icon, int offset_y, int scale,
 		struct mako_hotspot *hotspot, int progress) {
 	int border_size = 2 * style->border_size;
 	int padding_height = style->padding.top + style->padding.bottom;
@@ -94,15 +91,9 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	}
 
 	double text_x = style->padding.left;
-#ifdef SHOW_ICONS
-	struct mako_icon icon;
-	if (style->icons) {
-		icon = create_icon(icon_path, style->max_icon_size);
-		if (icon.image != NULL) {
-			text_x = icon.width + 2*style->padding.left;
-		}
+	if (style->icons && icon != NULL) {
+		text_x = icon->width + 2*style->padding.left;
 	}
-#endif
 
 	set_font_options(cairo, state);
 
@@ -147,16 +138,10 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	}
 	int text_height = buffer_text_height / scale;
 
-	int notif_height;
-#ifdef SHOW_ICONS
-	if (style->icons && icon.image != NULL && icon.height > text_height) {
-		notif_height = icon.height + border_size + padding_height;
-	} else {
-		notif_height = text_height + border_size + padding_height;
+	int notif_height = text_height + border_size + padding_height;
+	if (style->icons && icon != NULL && icon->height > text_height) {
+		notif_height = icon->height + border_size + padding_height;
 	}
-#else
-	notif_height = text_height + border_size + padding_height;
-#endif
 
 	// Render border
 	set_source_u32(cairo, style->colors.border);
@@ -203,17 +188,14 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	cairo_fill(cairo);
 	cairo_restore(cairo);
 
-#ifdef SHOW_ICONS
-	// Render icon
-	if (style->icons && icon.image != NULL) {
+	if (style->icons && icon != NULL) {
+		// Render icon
 		double xpos = offset_x + style->border_size +
-			(text_x - icon.width) / 2;
+			(text_x - icon->width) / 2;
 		double ypos = offset_y + style->border_size +
-			(notif_height - icon.height - border_size) / 2;
+			(notif_height - icon->height - border_size) / 2;
 		draw_icon(cairo, icon, xpos, ypos, scale);
-		destroy_icon(icon);
 	}
-#endif
 
 	// Render text
 	set_source_u32(cairo, style->colors.text);
@@ -286,7 +268,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		}
 
 		int notif_height = render_notification(
-			cairo, state, style, text, notif->app_icon, total_height, scale,
+			cairo, state, style, text, notif->icon, total_height, scale,
 			&notif->hotspot, notif->progress);
 		free(text);
 
@@ -339,7 +321,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		format_text(style.format, text, format_hidden_text, &data);
 
 		int hidden_height = render_notification(
-			cairo, state, &style, text, "", total_height, scale, NULL, 0);
+			cairo, state, &style, text, notif->icon, total_height, scale, NULL, 0);
 		free(text);
 		finish_style(&style);
 

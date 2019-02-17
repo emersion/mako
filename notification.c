@@ -17,6 +17,7 @@
 #include "event-loop.h"
 #include "mako.h"
 #include "notification.h"
+#include "icon.h"
 
 bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y) {
 	return x >= hotspot->x &&
@@ -53,6 +54,9 @@ void reset_notification(struct mako_notification *notif) {
 	notif->body = NULL;
 	notif->category = NULL;
 	notif->desktop_entry = NULL;
+
+	destroy_icon(notif->icon);
+	notif->icon = NULL;
 }
 
 struct mako_notification *create_notification(struct mako_state *state) {

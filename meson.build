@@ -55,11 +55,8 @@ src_files = [
 	'wayland.c',
 	'criteria.c',
 	'types.c',
+	'icon.c'
 ]
-
-if icon_feature
-	src_files += 'icon.c'
-endif
 
 executable(
 	'mako',

@@ -11,6 +11,7 @@
 struct mako_state;
 struct mako_timer;
 struct mako_criteria;
+struct mako_icon;
 
 struct mako_hotspot {
 	int32_t x, y;
@@ -22,6 +23,7 @@ struct mako_notification {
 	struct wl_list link; // mako_state::notifications
 
 	struct mako_style style;
+	struct mako_icon *icon;
 
 	uint32_t id;
 	int group_index;
