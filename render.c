@@ -97,7 +97,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 #ifdef SHOW_ICONS
 	struct mako_icon icon;
 	if (style->show_icons) {
-		icon = get_icon(icon_path, style->max_icon_size);
+		icon = create_icon(icon_path, style->max_icon_size);
 		if (icon.image != NULL) {
 			text_x = icon.width + 2*style->padding.left;
 		}
