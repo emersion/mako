@@ -321,7 +321,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		format_text(style.format, text, format_hidden_text, &data);
 
 		int hidden_height = render_notification(
-			cairo, state, &style, text, notif->icon, total_height, scale, NULL, 0);
+			cairo, state, &style, text, NULL, total_height, scale, NULL, 0);
 		free(text);
 		finish_style(&style);
 
