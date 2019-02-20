@@ -29,7 +29,7 @@ static const char usage[] =
 	"      --border-size <px>          Border size.\n"
 	"      --border-color <color>      Border color.\n"
 	"      --progress-color <color>    Progress indicator color.\n"
-	"      --icons <0|1>          Show icons in notifications.\n"
+	"      --icons <0|1>               Show icons in notifications.\n"
 	"      --max-icon-size <px>        Set max size of icons.\n"
 	"      --markup <0|1>              Enable/disable markup.\n"
 	"      --format <format>           Format string.\n"

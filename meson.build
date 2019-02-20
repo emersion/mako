@@ -33,11 +33,10 @@ else
 	add_project_arguments('-DHAVE_ELOGIND=1', language : 'c')
 endif
 
-gdk = dependency('gdk-3.0', required: get_option('icon'))
-gdk_pixbuf = dependency('gdk-pixbuf-2.0', required: get_option('icon'))
-icon_feature = not get_option('icon').disabled()
-if icon_feature
-	add_global_arguments('-DSHOW_ICONS=1', language : 'c')
+gdk = dependency('gdk-3.0', required: get_option('icons'))
+gdk_pixbuf = dependency('gdk-pixbuf-2.0', required: get_option('icons'))
+if gdk.found() and gdk_pixbuf.found()
+	add_global_arguments('-DHAVE_ICONS=1', language : 'c')
 endif
 
 subdir('protocol')
