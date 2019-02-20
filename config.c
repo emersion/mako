@@ -94,8 +94,13 @@ void init_default_style(struct mako_style *style) {
 
 	style->border_size = 2;
 
+#ifdef HAVE_ICONS
 	style->icons = true;
+#else
+	style->icons = false;
+#endif
 	style->max_icon_size = 64;
+
 
 	style->font = strdup("monospace 10");
 	style->markup = true;
@@ -302,7 +307,7 @@ bool apply_superset_style(
 			max(style->padding.bottom, target->padding.bottom);
 		target->padding.left = max(style->padding.left, target->padding.left);
 		target->border_size = max(style->border_size, target->border_size);
-		target->icons = style->max_icon_size || target->max_icon_size;
+		target->icons = style->icons || target->icons;
 		target->max_icon_size = max(style->max_icon_size, target->max_icon_size);
 		target->default_timeout =
 			max(style->default_timeout, target->default_timeout);
@@ -430,8 +435,13 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "progress-color") == 0) {
 		return spec->colors.progress = parse_mako_color(value, &style->colors.progress);
 	} else if (strcmp(name, "icons") == 0) {
+#ifdef HAVE_ICONS
 		return spec->icons =
 			parse_boolean(value, &style->icons);
+#else
+		fprintf(stderr, "Icon support not built in, ignoring icons setting.\n");
+		return true;
+#endif
 	} else if (strcmp(name, "max-icon-size") == 0) {
 		return spec->max_icon_size =
 			parse_int(value, &style->max_icon_size);

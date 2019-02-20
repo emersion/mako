@@ -52,6 +52,13 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		}
 	}
 
+	if (state->config.superstyle.icons) {
+		ret = sd_bus_message_append(reply, "s", "icon-static");
+		if (ret < 0) {
+			return ret;
+		}
+	}
+
 	ret = sd_bus_message_close_container(reply);
 	if (ret < 0) {
 		return ret;
