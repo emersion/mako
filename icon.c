@@ -27,16 +27,6 @@ double fit_to_square(int width, int height, int square_size) {
 	return longest > square_size ? square_size/longest : 1.0;
 }
 
-void set_icon_image(struct mako_icon *icon, GdkPixbuf *image) {
-	icon->image =
-		cairo_image_surface_create(CAIRO_FORMAT_ARGB32, icon->width, icon->height);
-	cairo_t *cairo = cairo_create(icon->image);
-	cairo_scale(cairo, icon->scale, icon->scale);
-	gdk_cairo_set_source_pixbuf(cairo, image, 0, 0);
-	cairo_paint(cairo);
-	cairo_destroy(cairo);
-}
-
 struct mako_icon *create_icon(const char *path, double max_size) {
 	GdkPixbuf *image = load_image(path);
 	if (image == NULL) {
@@ -49,7 +39,13 @@ struct mako_icon *create_icon(const char *path, double max_size) {
 	icon->scale = fit_to_square(image_width, image_height, max_size);
 	icon->width = image_width * icon->scale;
 	icon->height = image_height * icon->scale;
-	set_icon_image(icon, image);
+
+	icon->image =
+		cairo_image_surface_create(CAIRO_FORMAT_ARGB32, image_width, image_height);
+	cairo_t *cairo = cairo_create(icon->image);
+	gdk_cairo_set_source_pixbuf(cairo, image, 0, 0);
+	cairo_paint(cairo);
+	cairo_destroy(cairo);
 
 	g_object_unref(image);
 
@@ -64,8 +60,8 @@ struct mako_icon *create_icon(const char *path, double max_size) {
 void draw_icon(cairo_t *cairo, struct mako_icon *icon,
 		double xpos, double ypos, double scale) {
 	cairo_save(cairo);
-	cairo_scale(cairo, scale, scale);
-	cairo_set_source_surface(cairo, icon->image, xpos, ypos);
+	cairo_scale(cairo, scale*icon->scale, scale*icon->scale);
+	cairo_set_source_surface(cairo, icon->image, xpos/icon->scale, ypos/icon->scale);
 	cairo_paint(cairo);
 	cairo_restore(cairo);
 }
