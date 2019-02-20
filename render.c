@@ -30,11 +30,11 @@ static void set_layout_size(PangoLayout *layout, int width, int height,
 	pango_layout_set_height(layout, height * scale * PANGO_SCALE);
 }
 
-static void move_to(cairo_t *cairo, int x, int y, int scale) {
+static void move_to(cairo_t *cairo, double x, double y, int scale) {
 	cairo_move_to(cairo, x * scale, y * scale);
 }
 
-static void set_rectangle(cairo_t *cairo, int x, int y, int width, int height,
+static void set_rectangle(cairo_t *cairo, double x, double y, double width, double height,
 		int scale) {
 	cairo_rectangle(cairo, x * scale, y * scale, width * scale, height * scale);
 }
