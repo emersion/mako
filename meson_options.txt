@@ -1,1 +1,1 @@
-option('icon', type: 'feature', value: 'enabled', description: 'Enable icon support')
+option('icons', type: 'feature', value: 'auto', description: 'Enable icon support')

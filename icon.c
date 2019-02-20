@@ -5,11 +5,11 @@
 
 #include "icon.h"
 
-#ifdef SHOW_ICONS
+#ifdef HAVE_ICONS
 #include <gdk/gdk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-GdkPixbuf *load_image(const char *path) {
+static GdkPixbuf *load_image(const char *path) {
 	if (strlen(path) == 0) {
 		return NULL;
 	}
@@ -17,12 +17,13 @@ GdkPixbuf *load_image(const char *path) {
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(path, &err);
 	if (!pixbuf) {
 		fprintf(stderr, "Failed to load icon (%s)\n", err->message);
+		g_error_free(err);
 		return NULL;
 	}
 	return pixbuf;
 }
 
-double fit_to_square(int width, int height, int square_size) {
+static double fit_to_square(int width, int height, int square_size) {
 	double longest = width > height ? width : height;
 	return longest > square_size ? square_size/longest : 1.0;
 }
