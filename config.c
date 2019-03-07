@@ -386,6 +386,11 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 		if (strcmp(value, "top-right") == 0) {
 			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
 				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+		} else if (strcmp(value, "top-center") == 0) {
+			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP;
+		} else if (strcmp(value, "top-left") == 0) {
+			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
+				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
 		} else if (strcmp(value, "bottom-right") == 0) {
 			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
 				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
@@ -394,11 +399,8 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 		} else if (strcmp(value, "bottom-left") == 0) {
 			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
 				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
-		} else if (strcmp(value, "top-left") == 0) {
-			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
-				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
-		} else if (strcmp(value, "top-center") == 0) {
-			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP;
+		} else if (strcmp(value, "center") == 0) {
+			config->anchor = 0;
 		} else {
 			return false;
 		}
