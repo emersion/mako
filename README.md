@@ -1,17 +1,21 @@
 # mako
 
-A lightweight notification daemon for Wayland.
-
-It currently works on Sway 1.0.
+A lightweight notification daemon for Wayland. Works on Sway.
 
 <p align="center">
   <img src="https://sr.ht/meoc.png" alt="mako screenshot">
 </p>
 
+## Running
+
+If you're using Sway you can start mako on launch by putting `exec mako` in
+your configuration file.
+
 ## Building
 
 Install dependencies:
-* meson
+
+* meson (build-time dependency)
 * wayland
 * pango
 * cairo
