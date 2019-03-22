@@ -11,6 +11,10 @@
 #include "render.h"
 #include "wayland.h"
 
+#ifdef HAVE_ICONS
+#include <gtk/gtk.h>
+#endif
+
 static const char usage[] =
 	"Usage: mako [options...]\n"
 	"\n"
@@ -76,6 +80,10 @@ int main(int argc, char *argv[]) {
 
 	state.argc = argc;
 	state.argv = argv;
+
+#ifdef HAVE_ICONS
+	gtk_init(&argc, &argv);
+#endif
 
 	// This is a bit wasteful, but easier than special-casing the reload.
 	init_default_config(&state.config);

@@ -33,9 +33,10 @@ else
 	add_project_arguments('-DHAVE_ELOGIND=1', language : 'c')
 endif
 
+gtk = dependency('gtk+-3.0', required: get_option('icons'))
 gdk = dependency('gdk-3.0', required: get_option('icons'))
 gdk_pixbuf = dependency('gdk-pixbuf-2.0', required: get_option('icons'))
-if gdk.found() and gdk_pixbuf.found()
+if gdk.found() and gdk_pixbuf.found() and gtk.found()
 	add_global_arguments('-DHAVE_ICONS=1', language : 'c')
 endif
 
@@ -64,6 +65,7 @@ executable(
 		cairo,
 		client_protos,
 		gdk,
+		gtk,
 		gdk_pixbuf,
 		logind,
 		pango,

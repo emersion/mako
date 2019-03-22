@@ -8,6 +8,7 @@
 #ifdef HAVE_ICONS
 #include <gdk/gdk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gtk/gtk.h>
 
 static GdkPixbuf *load_image(const char *path) {
 	if (strlen(path) == 0) {
@@ -23,6 +24,30 @@ static GdkPixbuf *load_image(const char *path) {
 	return pixbuf;
 }
 
+static GdkPixbuf *load_image_from_icon_name(const char *icon_name, int icon_size) {
+	if (strlen(icon_name) == 0) {
+		return NULL;
+	}
+	GError *err = NULL;
+	GdkScreen *screen = gdk_screen_get_default();
+	if (!screen) {
+		fprintf(stderr, "Failed to get default screen\n");
+		return NULL;
+	}
+	GtkIconTheme *icon_theme = gtk_icon_theme_get_for_screen(screen);
+	if (!icon_theme) {
+		fprintf(stderr, "Failed to get icon theme\n");
+		return NULL;
+	}
+	GdkPixbuf *pixbuf = gtk_icon_theme_load_icon(icon_theme, icon_name, icon_size, 0, &err);
+	if (!pixbuf) {
+		fprintf(stderr, "Failed to load icon (%s)\n", err->message);
+		g_error_free(err);
+		return NULL;
+	}
+	return pixbuf;
+}
+
 static double fit_to_square(int width, int height, int square_size) {
 	double longest = width > height ? width : height;
 	return longest > square_size ? square_size/longest : 1.0;
@@ -30,6 +55,9 @@ static double fit_to_square(int width, int height, int square_size) {
 
 struct mako_icon *create_icon(const char *path, double max_size) {
 	GdkPixbuf *image = load_image(path);
+	if (image == NULL) {
+		image = load_image_from_icon_name(path, max_size);
+	}
 	if (image == NULL) {
 		return NULL;
 	}
