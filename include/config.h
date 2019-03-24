@@ -25,7 +25,7 @@ enum mako_sort_criteria {
 struct mako_style_spec {
 	bool width, height, margin, padding, border_size, border_radius, font,
 		markup, format, actions, default_timeout, ignore_timeout, icons,
-		max_icon_size, group_criteria_spec, invisible;
+		max_icon_size, icon_path, group_criteria_spec, invisible;
 
 	struct {
 		bool background, text, border, progress;
@@ -45,6 +45,7 @@ struct mako_style {
 
 	bool icons;
 	int32_t max_icon_size;
+	char *icon_path;
 
 	char *font;
 	bool markup;

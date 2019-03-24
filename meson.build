@@ -54,7 +54,8 @@ src_files = [
 	'wayland.c',
 	'criteria.c',
 	'types.c',
-	'icon.c'
+	'icon.c',
+	'string-util.c',
 ]
 
 executable(

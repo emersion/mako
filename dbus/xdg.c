@@ -118,9 +118,6 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	notif->app_icon = strdup(app_icon);
 	notif->summary = strdup(summary);
 	notif->body = strdup(body);
-	if (state->config.superstyle.icons) {
-		notif->icon = create_icon(notif->app_icon, state->config.superstyle.max_icon_size);
-	}
 
 	// These fields may not be filled, so make sure they're valid strings.
 	notif->category = strdup("");
@@ -281,6 +278,10 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	if (expire_timeout > 0) {
 		notif->timer = add_event_loop_timer(&state->event_loop, expire_timeout,
 			handle_notification_timer, notif);
+	}
+
+	if (notif->style.icons) {
+		notif->icon = create_icon(notif);
 	}
 
 	// Now we need to perform the grouping based on the new notification's
