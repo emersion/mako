@@ -18,6 +18,7 @@
 #include "mako.h"
 #include "notification.h"
 #include "icon.h"
+#include "string-util.h"
 
 bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y) {
 	return x >= hotspot->x &&
@@ -174,30 +175,6 @@ static size_t escape_markup(const char *s, char *buf) {
 		buf[len] = '\0';
 	}
 	return len;
-}
-
-static char *mako_asprintf(const char *fmt, ...) {
-	char *text;
-	va_list args;
-
-	va_start(args, fmt);
-	int size = vsnprintf(NULL, 0, fmt, args);
-	va_end(args);
-
-	if (size < 0) {
-		return NULL;
-	}
-
-	text = malloc(size + 1);
-	if (text == NULL) {
-		return NULL;
-	}
-
-	va_start(args, fmt);
-	vsnprintf(text, size + 1, fmt, args);
-	va_end(args);
-
-	return text;
 }
 
 // Any new format specifiers must also be added to VALID_FORMAT_SPECIFIERS.
