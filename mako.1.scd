@@ -131,6 +131,17 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: 64
 
+*--icon-path* _path_\[:_path_...\]
+	Paths to search for icons when a notification specifies a name instead
+	of a full path. Colon-delimited. This approximates the search algorithm
+	used by the XDG Icon Theme Specification, but does not support any of
+	the theme metadata. Therefore, if you want to search parent themes,
+	you'll need to add them to the path manually.
+
+	/usr/share/icons/hicolor and /usr/share/pixmaps are always searched.
+
+	Default: ""
+
 *--markup* 0|1
 	If 1, enable Pango markup. If 0, disable Pango markup. If enabled, Pango
 	markup will be interpreted in your format specifier and in the body of
