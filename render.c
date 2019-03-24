@@ -284,8 +284,9 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 			total_height += pending_bottom_margin;
 		}
 
+		struct mako_icon *icon = (style->icons) ? notif->icon : NULL;
 		int notif_height = render_notification(
-			cairo, state, style, text, notif->icon, total_height, scale,
+			cairo, state, style, text, icon, total_height, scale,
 			&notif->hotspot, notif->progress);
 		free(text);
 
