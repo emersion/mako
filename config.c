@@ -662,16 +662,18 @@ int reload_config(struct mako_config *config, int argc, char **argv) {
 	struct mako_config new_config = {0};
 	init_default_config(&new_config);
 
-	if (load_config_file(&new_config) != 0) {
-		fprintf(stderr, "Failed to reload config\n");
+	int config_status = load_config_file(&new_config);
+	int args_status = parse_config_arguments(&new_config, argc, argv);
+
+	if (args_status > 0) {
+		finish_config(&new_config);
+		return args_status;
+	} else if (config_status < 0 || args_status < 0) {
+		fprintf(stderr, "Failed to parse config\n");
 		finish_config(&new_config);
 		return -1;
 	}
 
-	int ret = parse_config_arguments(&new_config, argc, argv);
-	if (ret != 0) {
-		return ret;
-	}
 	apply_superset_style(&new_config.superstyle, &new_config);
 
 	finish_config(config);
