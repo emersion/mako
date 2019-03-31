@@ -1,1 +1,2 @@
 option('icons', type: 'feature', value: 'auto', description: 'Enable icon support')
+option('zsh-completions', type: 'boolean', value: true, description: 'Install zsh completions.')

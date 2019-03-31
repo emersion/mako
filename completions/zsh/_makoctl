@@ -1,0 +1,30 @@
+#compdef makoctl
+
+local -a makoctl_cmds
+
+makoctl_cmds=(
+    'dismiss:Dismisses notification (first by default)'
+    'invoke:Invokes an action on the first notification. If action is not specified, invokes the default action'
+    'reload:Reloads the configuration file'
+    'help:Show help message and quit'
+)
+
+if (( CURRENT == 2 )); then
+    _describe 'makoctl command' makoctl_cmds
+else
+    shift words
+    (( CURRENT-- ))
+    opt="${words[1]}"
+
+    if (( CURRENT == 2 )); then
+        case "${opt}" in
+            dismiss)
+                _arguments -s \
+                           '(-a --all)'{-a,--all}'[Dimiss all notification]'
+                ;;
+            invoke)
+                _message -e action 'action'
+                ;;
+        esac
+    fi
+fi

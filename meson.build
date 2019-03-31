@@ -14,6 +14,8 @@ project(
 add_project_arguments('-Wno-unused-parameter', language: 'c')
 add_project_arguments('-Wno-missing-braces', language: 'c')
 
+datadir = get_option('datadir')
+
 mako_inc = include_directories('include')
 
 cc = meson.get_compiler('c')
@@ -107,4 +109,18 @@ if scdoc.found()
 			install_dir: '@0@/man@1@'.format(mandir, section)
 		)
 	endforeach
+endif
+
+if get_option('zsh-completions')
+	zsh_files = files(
+		'completions/zsh/_makoctl',
+		'completions/zsh/_mako'
+	)
+	zsh_install_dir = datadir + '/zsh/site-functions'
+
+	install_data(
+		zsh_files,
+		install_dir: zsh_install_dir,
+		install_mode: 'rw-r--r--'
+	)
 endif
