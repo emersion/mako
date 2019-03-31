@@ -1,0 +1,29 @@
+#compdef mako
+
+# Usage: mako [options...]
+
+
+# Colors can be specified with the format #RRGGBB or #RRGGBBAA.
+
+_arguments \
+    '-h[Show help message and quit.]' '--help[Show help message and quit.]' \
+    '--font[Font family and size.]:font:' \
+    '--background-color[Background color.]:color:' \
+    '--text-color[Text color.]:color:' \
+    '--width[Notification width.]:width:' \
+    '--height[Max notification height.]:height:' \
+    '--margin[Margin values, comma separated. Up to four values, with the same meaning as in CSS.]:margin:' \
+    '--padding[Padding values, comma separated. Up to four values, with the same meaning as in CSS.]:padding:' \
+    '--border-size[Border size.]:size:' \
+    '--border-color[Border color.]:color:' \
+    '--markup[Enable/disable markup.]:markup enabled:(0 1)' \
+    '--actions[Applications may request an action to be associated with activating a notification. Disabling this will cause mako to ignore these requests.]:action enabled:(0 1)' \
+    '--format[Format string.]:format:' \
+    '--hidden-format[Format string.]:format:' \
+    '--max-visible[Max number of visible notifications.]:visible notification:' \
+    '--default-timeout[Default timeout in milliseconds.]:timeout (ms):' \
+    '--ignore-timeout[If set, mako will ignore the expire timeout sent by notifications and use the one provided by default-timeout instead.]:Use default timeout:(0 1)' \
+    '--output[Show notifications on this output.]:name:' \
+    '--layer[Arrange notifications at this layer.]:layer:(background bottom top overlay)' \
+    '--anchor[Position on output to put notifications.]:position:(top-right bottom-right bottom-center bottom-left top-left top-center)' \
+    '--sort[Sorts incoming notifications by time and/or priority in ascending(+) or descending(-) order.]:sort pattern:'
