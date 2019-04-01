@@ -11,6 +11,9 @@ A lightweight notification daemon for Wayland. Works on Sway.
 If you're using Sway you can start mako on launch by putting `exec mako` in
 your configuration file.
 
+If you are using elogind, you might need to manually start a dbus user session:
+`dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus`
+
 ## Building
 
 Install dependencies:
@@ -20,6 +23,7 @@ Install dependencies:
 * pango
 * cairo
 * systemd or elogind (for the sd-bus library)
+* dbus (with user-session support)
 
 Then run:
 
