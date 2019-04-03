@@ -43,6 +43,7 @@ if gdk.found() and gdk_pixbuf.found()
 	add_global_arguments('-DHAVE_ICONS=1', language : 'c')
 endif
 
+subdir('apparmor')
 subdir('protocol')
 
 src_files = [
