@@ -107,6 +107,11 @@ dismissed with a click or via *makoctl*(1).
 
 	Default: #4C7899FF
 
+*--border-radius* _px_
+	Set popup corner radius to _px_ pixels.
+
+	Default: 0
+
 *--progress-color* [over|source] _color_
 	Set popup progress indicator color to _color_. See *COLOR* for more
 	information. To draw the progess indicator on top of the background
