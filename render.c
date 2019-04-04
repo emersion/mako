@@ -1,8 +1,9 @@
-#define _POSIX_C_SOURCE 200809L
+#define _XOPEN_SOURCE 700
 #include <stdlib.h>
 #include <cairo/cairo.h>
 #include <pango/pangocairo.h>
 #include <assert.h>
+#include <math.h>
 
 #include "config.h"
 #include "criteria.h"
@@ -12,7 +13,6 @@
 #include "wayland.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "icon.h"
-
 
 // HiDPI conventions: local variables are in surface-local coordinates, unless
 // they have a "buffer_" prefix, in which case they are in buffer-local
@@ -36,9 +36,31 @@ static void move_to(cairo_t *cairo, double x, double y, int scale) {
 	cairo_move_to(cairo, x * scale, y * scale);
 }
 
-static void set_rectangle(cairo_t *cairo, double x, double y, double width, double height,
-		int scale) {
-	cairo_rectangle(cairo, x * scale, y * scale, width * scale, height * scale);
+static void set_rounded_rectangle(cairo_t *cairo, double x, double y, double width, double height,
+		int scale, int radius) {
+	if (width == 0 || height == 0) {
+		return;
+	}
+	x *= scale;
+	y *= scale;
+	width *= scale;
+	height *= scale;
+	double degrees = M_PI / 180.0;
+
+	if (width < radius * 2) {
+		width = radius * 2;
+	}
+
+	if (height < radius * 2) {
+		height = radius * 2;
+	}
+
+	cairo_new_sub_path(cairo);
+	cairo_arc(cairo, x + width - radius, y + radius, radius, -90 * degrees, 0 * degrees);
+	cairo_arc(cairo, x + width - radius, y + height - radius, radius, 0 * degrees, 90 * degrees);
+	cairo_arc(cairo, x + radius, y + height - radius, radius, 90 * degrees, 180 * degrees);
+	cairo_arc(cairo, x + radius, y + radius, radius, 180 * degrees, 270 * degrees);
+	cairo_close_path(cairo);
 }
 
 static cairo_subpixel_order_t get_cairo_subpixel_order(
@@ -78,6 +100,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	int border_size = 2 * style->border_size;
 	int padding_height = style->padding.top + style->padding.bottom;
 	int padding_width = style->padding.left + style->padding.right;
+	int radius = style->border_radius;
 
 	// If the compositor has forced us to shrink down, do so.
 	int notif_width =
@@ -145,15 +168,15 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 	// Render border
 	set_source_u32(cairo, style->colors.border);
-	set_rectangle(cairo,
+	set_rounded_rectangle(cairo,
 		offset_x + style->border_size / 2.0,
 		offset_y + style->border_size / 2.0,
 		notif_width - style->border_size,
 		notif_height - style->border_size,
-		scale);
+		scale, radius);
 	cairo_save(cairo);
 	cairo_set_line_width(cairo, style->border_size * scale);
-	cairo_stroke(cairo);
+	cairo_stroke_preserve(cairo);
 	cairo_restore(cairo);
 
 
@@ -167,24 +190,18 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 	// Render background
 	set_source_u32(cairo, style->colors.background);
-	set_rectangle(cairo,
-		offset_x + style->border_size,
-		offset_y + style->border_size,
-		notif_background_width,
-		notif_height - border_size,
-		scale);
 	cairo_fill(cairo);
 
 	// Render progress
 	cairo_save(cairo);
 	cairo_set_operator(cairo, style->colors.progress.operator);
 	set_source_u32(cairo, style->colors.progress.value);
-	set_rectangle(cairo,
+	set_rounded_rectangle(cairo,
 		offset_x + style->border_size,
 		offset_y + style->border_size,
 		progress_width,
 		notif_height - border_size,
-		scale);
+		scale, radius);
 	cairo_fill(cairo);
 	cairo_restore(cairo);
 

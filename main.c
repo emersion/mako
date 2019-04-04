@@ -28,6 +28,7 @@ static const char usage[] =
 	"                                  meaning as in CSS.\n"
 	"      --border-size <px>          Border size.\n"
 	"      --border-color <color>      Border color.\n"
+	"      --border-radius <px>        Corner radius\n"
 	"      --progress-color <color>    Progress indicator color.\n"
 	"      --icons <0|1>               Show icons in notifications.\n"
 	"      --max-icon-size <px>        Set max size of icons.\n"

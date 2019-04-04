@@ -18,7 +18,6 @@ static int32_t max(int32_t a, int32_t b) {
 	return (a > b) ? a : b;
 }
 
-
 void init_default_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
 	struct mako_criteria *new_criteria = create_criteria(config);
@@ -93,6 +92,7 @@ void init_default_style(struct mako_style *style) {
 	style->padding.left = 5;
 
 	style->border_size = 2;
+	style->border_radius = 0;
 
 #ifdef HAVE_ICONS
 	style->icons = true;
@@ -254,6 +254,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.invisible) {
 		target->invisible = style->invisible;
 		target->spec.invisible = true;
+	}
+
+	if (style->border_radius) {
+		target->border_radius = style->border_radius;
+		target->spec.border_radius = true;
 	}
 
 	return true;
@@ -429,7 +434,12 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "margin") == 0) {
 		return spec->margin = parse_directional(value, &style->margin);
 	} else if (strcmp(name, "padding") == 0) {
-		return spec->padding = parse_directional(value, &style->padding);
+		spec->padding = parse_directional(value, &style->padding);
+		if (spec->border_radius && spec->padding) {
+			style->padding.left = max(style->border_radius, style->padding.left);
+			style->padding.right = max(style->border_radius, style->padding.right);
+		}
+		return spec->padding;
 	} else if (strcmp(name, "border-size") == 0) {
 		return spec->border_size = parse_int(value, &style->border_size);
 	} else if (strcmp(name, "border-color") == 0) {
@@ -465,6 +475,13 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 			parse_criteria_spec(value, &style->group_criteria_spec);
 	} else if (strcmp(name, "invisible") == 0) {
 		return spec->invisible = parse_boolean(value, &style->invisible);
+	} else if (strcmp(name, "border-radius") == 0) {
+		spec->border_radius = parse_int(value, &style->border_radius);
+		if (spec->border_radius && spec->padding) {
+			style->padding.left = max(style->border_radius, style->padding.left);
+			style->padding.right = max(style->border_radius, style->padding.right);
+		}
+		return spec->border_radius;
 	}
 
 	return false;
