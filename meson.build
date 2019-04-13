@@ -23,6 +23,7 @@ cc = meson.get_compiler('c')
 cairo = dependency('cairo')
 pango = dependency('pango')
 pangocairo = dependency('pangocairo')
+glib = dependency('glib-2.0')
 gobject = dependency('gobject-2.0')
 realtime = cc.find_library('rt')
 wayland_client = dependency('wayland-client')
@@ -72,6 +73,7 @@ executable(
 		logind,
 		pango,
 		pangocairo,
+		glib,
 		gobject,
 		realtime,
 		wayland_client,
