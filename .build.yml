@@ -13,7 +13,11 @@ sources:
 tasks:
   - setup: |
       cd mako
-      meson build
+      meson build -Dicons=enabled
   - build: |
       cd mako
+      ninja -C build
+  - build-no-icons: |
+      cd mako
+      meson configure build -Dicons=disabled
       ninja -C build
