@@ -204,7 +204,7 @@ struct mako_icon *create_icon(struct mako_notification *notif) {
 	return icon;
 }
 #else
-struct mako_icon *create_icon(const char *path, double max_size) {
+struct mako_icon *create_icon(struct mako_notification *notif) {
 	return NULL;
 }
 #endif
