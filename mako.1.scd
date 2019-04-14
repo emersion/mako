@@ -4,11 +4,11 @@ mako(1)
 
 mako - notification daemon for Wayland
 
-# DESCRIPTION
+# SYNOPSIS
 
 *mako* [options...]
 
-# SYNOPSIS
+# DESCRIPTION
 
 mako is a graphical notification daemon for Wayland compositors which support
 the layer-shell protocol. Notifications received over dbus are displayed until

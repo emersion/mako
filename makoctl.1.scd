@@ -4,11 +4,11 @@ makoctl(1)
 
 makoctl - controls the *mako*(1) daemon
 
-# DESCRIPTION
+# SYNOPSIS
 
 makoctl [cmd] [options...]
 
-# SYNOPSIS
+# DESCRIPTION
 
 Sends IPC commands to the running mako daemon via dbus.
 
