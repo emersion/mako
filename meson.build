@@ -44,6 +44,7 @@ if gdk.found() and gdk_pixbuf.found()
 endif
 
 subdir('contrib/apparmor')
+subdir('contrib/completions')
 subdir('protocol')
 
 src_files = [
@@ -114,15 +115,4 @@ if scdoc.found()
 			install_dir: '@0@/man@1@'.format(mandir, section)
 		)
 	endforeach
-endif
-
-if get_option('zsh-completions')
-	install_data(
-		files(
-			'contrib/completions/zsh/_makoctl',
-			'contrib/completions/zsh/_mako',
-		),
-		install_dir: datadir + '/zsh/site-functions',
-		install_mode: 'rw-r--r--',
-	)
 endif
