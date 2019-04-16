@@ -7,13 +7,14 @@ packages:
   - pango
   - gdk-pixbuf2
   - gtk3
+  - scdoc
   - systemd
 sources:
   - https://github.com/emersion/mako
 tasks:
   - setup: |
       cd mako
-      meson build -Dicons=enabled
+      meson build -Dicons=enabled -Dman-pages=enabled
   - build: |
       cd mako
       ninja -C build
