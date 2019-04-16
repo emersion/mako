@@ -116,15 +116,12 @@ if scdoc.found()
 endif
 
 if get_option('zsh-completions')
-	zsh_files = files(
-		'completions/zsh/_makoctl',
-		'completions/zsh/_mako'
-	)
-	zsh_install_dir = datadir + '/zsh/site-functions'
-
 	install_data(
-		zsh_files,
-		install_dir: zsh_install_dir,
-		install_mode: 'rw-r--r--'
+		files(
+			'contrib/completions/zsh/_makoctl',
+			'contrib/completions/zsh/_mako',
+		),
+		install_dir: datadir + '/zsh/site-functions',
+		install_mode: 'rw-r--r--',
 	)
 endif
