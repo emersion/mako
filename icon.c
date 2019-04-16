@@ -15,8 +15,9 @@
 #include "wayland.h"
 
 #ifdef HAVE_ICONS
-#include <gdk/gdk.h>
+
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include "cairo-pixbuf.h"
 
 static GdkPixbuf *load_image(const char *path) {
 	if (strlen(path) == 0) {
@@ -180,6 +181,7 @@ struct mako_icon *create_icon(struct mako_notification *notif) {
 	}
 
 	GdkPixbuf *image = load_image(path);
+	free(path);
 	if (image == NULL) {
 		return NULL;
 	}
@@ -192,12 +194,11 @@ struct mako_icon *create_icon(struct mako_notification *notif) {
 	icon->width = image_width * icon->scale;
 	icon->height = image_height * icon->scale;
 
-	icon->image =
-		cairo_image_surface_create(CAIRO_FORMAT_ARGB32, image_width, image_height);
-	cairo_t *cairo = cairo_create(icon->image);
-	gdk_cairo_set_source_pixbuf(cairo, image, 0, 0);
-	cairo_paint(cairo);
-	cairo_destroy(cairo);
+	icon->image = create_cairo_surface_from_gdk_pixbuf(image);
+	if (icon->image == NULL) {
+		free(icon);
+		return NULL;
+	}
 
 	g_object_unref(image);
 
