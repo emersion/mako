@@ -14,7 +14,7 @@ sources:
 tasks:
   - setup: |
       cd mako
-      meson build -Dicons=enabled -Dman-pages=enabled
+      meson build -Dauto_features=enabled
   - build: |
       cd mako
       ninja -C build
