@@ -90,7 +90,7 @@ install_data(
 	install_mode: 'rwxr-xr-x',
 )
 
-scdoc = find_program('scdoc', required: false)
+scdoc = find_program('scdoc', required: get_option('man-pages'))
 
 if scdoc.found()
 	sh = find_program('sh')
