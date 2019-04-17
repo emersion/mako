@@ -653,6 +653,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"border-radius", required_argument, 0, 0},
 		{"progress-color", required_argument, 0, 0},
 		{"icons", required_argument, 0, 0},
+		{"icon-path", required_argument, 0, 0},
 		{"max-icon-size", required_argument, 0, 0},
 		{"markup", required_argument, 0, 0},
 		{"actions", required_argument, 0, 0},
