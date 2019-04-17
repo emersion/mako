@@ -112,7 +112,16 @@ static char *resolve_icon(struct mako_notification *notif) {
 			errno = 0;
 			int32_t icon_size = strtol(relative_path, NULL, 10);
 			if (errno || icon_size == 0) {
-				continue;
+				// Try second level subdirectory if failed.
+				errno = 0;
+				while (relative_path[0] != '/') {
+					++relative_path;
+				}
+				++relative_path;
+				icon_size = strtol(relative_path, NULL, 10);
+				if (errno || icon_size == 0) {
+					continue;
+				}
 			}
 
 			int32_t icon_scale = 1;
