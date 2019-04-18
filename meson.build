@@ -31,16 +31,15 @@ wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 
 logind = dependency('libsystemd', required: false)
 if logind.found()
-	add_project_arguments('-DHAVE_SYSTEMD=1', language : 'c')
+	add_project_arguments('-DHAVE_SYSTEMD=1', language: 'c')
 else
 	logind = dependency('libelogind')
-	add_project_arguments('-DHAVE_ELOGIND=1', language : 'c')
+	add_project_arguments('-DHAVE_ELOGIND=1', language: 'c')
 endif
 
-gdk = dependency('gdk-3.0', required: get_option('icons'))
 gdk_pixbuf = dependency('gdk-pixbuf-2.0', required: get_option('icons'))
-if gdk.found() and gdk_pixbuf.found()
-	add_global_arguments('-DHAVE_ICONS=1', language : 'c')
+if gdk_pixbuf.found()
+	add_global_arguments('-DHAVE_ICONS=1', language: 'c')
 endif
 
 subdir('contrib/apparmor')
@@ -64,13 +63,16 @@ src_files = [
 	'string-util.c',
 ]
 
+if gdk_pixbuf.found()
+	src_files += 'cairo-pixbuf.c'
+endif
+
 executable(
 	'mako',
 	files(src_files),
 	dependencies: [
 		cairo,
 		client_protos,
-		gdk,
 		gdk_pixbuf,
 		logind,
 		pango,
