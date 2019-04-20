@@ -114,7 +114,7 @@ dismissed with a click or via *makoctl*(1).
 
 *--progress-color* [over|source] _color_
 	Set popup progress indicator color to _color_. See *COLOR* for more
-	information. To draw the progess indicator on top of the background
+	information. To draw the progress indicator on top of the background
 	color, use the *over* attribute. To replace the background color, use
 	the *source* attribute (this can be useful when the notification is
 	semi-transparent).
