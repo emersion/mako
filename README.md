@@ -23,7 +23,8 @@ Install dependencies:
 * pango
 * cairo
 * systemd or elogind (for the sd-bus library)
-* dbus (with user-session support)
+* gdk-pixbuf (optional, for icons support)
+* dbus (runtime dependency, user-session support is required)
 
 Then run:
 
