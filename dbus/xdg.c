@@ -217,6 +217,79 @@ static int handle_notify(sd_bus_message *msg, void *data,
 				return ret;
 			}
 			notif->progress = progress;
+		} else if (strcmp(hint, "image-data") == 0) {
+			ret = sd_bus_message_enter_container(msg, 'v', "(iiibiiay)");
+			if (ret < 0) {
+				return ret;
+			}
+
+			ret = sd_bus_message_enter_container(msg, 'r', "iiibiiay");
+			if (ret < 0) {
+				return ret;
+			}
+
+			struct mako_image_data *image_data = calloc(1, sizeof(struct mako_image_data));
+			if (image_data == NULL) {
+				return -1;
+			}
+
+			ret = sd_bus_message_read(msg, "iiibii", &image_data->width,
+					&image_data->height, &image_data->rowstride,
+					&image_data->has_alpha, &image_data->bits_per_sample,
+					&image_data->channels);
+			if (ret < 0) {
+				free(image_data);
+				return ret;
+			}
+
+			// Calculate the expected useful data length without padding in last row
+			// len = size before last row + size of last row
+			//     = (height - 1) * rowstride + width * ceil(channels * bits_pre_sample / 8.0)
+			size_t image_len = (image_data->height - 1) * image_data->rowstride +
+				image_data->width * ((image_data->channels *
+				image_data->bits_per_sample + 7) / 8);
+			uint8_t *data = calloc(image_len, sizeof(uint8_t));
+			if (data == NULL) {
+				free(image_data);
+				return -1;
+			}
+
+			ret = sd_bus_message_enter_container(msg, 'a', "y");
+			if (ret < 0) {
+				free(data);
+				free(image_data);
+				return ret;
+			}
+
+			// Ignore the extra padding bytes in the last row if exist
+			for (size_t index = 0; index < image_len; index++) {
+				uint8_t tmp;
+				ret = sd_bus_message_read(msg, "y", &tmp);
+				if (ret < 0){
+					free(data);
+					free(image_data);
+					return ret;
+				}
+				data[index] = tmp;
+			}
+
+			image_data->data = data;
+			notif->image_data = image_data;
+
+			ret = sd_bus_message_exit_container(msg);
+			if (ret < 0) {
+				return ret;
+			}
+
+			ret = sd_bus_message_exit_container(msg);
+			if (ret < 0) {
+				return ret;
+			}
+
+			ret = sd_bus_message_exit_container(msg);
+			if (ret < 0) {
+				return ret;
+			}
 		} else {
 			ret = sd_bus_message_skip(msg, "v");
 			if (ret < 0) {

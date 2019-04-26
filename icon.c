@@ -33,6 +33,17 @@ static GdkPixbuf *load_image(const char *path) {
 	return pixbuf;
 }
 
+static GdkPixbuf *load_image_data(struct mako_image_data *image_data) {
+	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(image_data->data, GDK_COLORSPACE_RGB,
+			image_data->has_alpha, image_data->bits_per_sample, image_data->width,
+			image_data->height, image_data->rowstride, NULL, NULL);
+	if (!pixbuf) {
+		fprintf(stderr, "Failed to load icon\n");
+		return NULL;
+	}
+	return pixbuf;
+}
+
 static double fit_to_square(int width, int height, int square_size) {
 	double longest = width > height ? width : height;
 	return longest > square_size ? square_size/longest : 1.0;
@@ -184,16 +195,24 @@ static char *resolve_icon(struct mako_notification *notif) {
 }
 
 struct mako_icon *create_icon(struct mako_notification *notif) {
-	char *path = resolve_icon(notif);
-	if (path == NULL) {
-		return NULL;
+	GdkPixbuf *image = NULL;
+	if (notif->image_data != NULL) {
+		image = load_image_data(notif->image_data);
 	}
 
-	GdkPixbuf *image = load_image(path);
-	free(path);
 	if (image == NULL) {
-		return NULL;
+		char *path = resolve_icon(notif);
+		if (path == NULL) {
+			return NULL;
+		}
+
+		image = load_image(path);
+		free(path);
+		if (image == NULL) {
+			return NULL;
+		}
 	}
+
 	int image_width = gdk_pixbuf_get_width(image);
 	int image_height = gdk_pixbuf_get_height(image);
 

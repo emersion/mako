@@ -48,6 +48,10 @@ void reset_notification(struct mako_notification *notif) {
 	free(notif->body);
 	free(notif->category);
 	free(notif->desktop_entry);
+	if (notif->image_data != NULL) {
+		free(notif->image_data->data);
+		free(notif->image_data);
+	}
 
 	notif->app_name = NULL;
 	notif->app_icon = NULL;
@@ -55,6 +59,7 @@ void reset_notification(struct mako_notification *notif) {
 	notif->body = NULL;
 	notif->category = NULL;
 	notif->desktop_entry = NULL;
+	notif->image_data = NULL;
 
 	destroy_icon(notif->icon);
 	notif->icon = NULL;

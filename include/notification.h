@@ -40,6 +40,7 @@ struct mako_notification {
 	char *category;
 	char *desktop_entry;
 	int32_t progress;
+	struct mako_image_data *image_data;
 
 	struct mako_hotspot hotspot;
 	struct mako_timer *timer;
