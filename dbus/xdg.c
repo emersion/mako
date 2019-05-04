@@ -274,6 +274,10 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			}
 
 			image_data->data = data;
+			if (notif->image_data != NULL) {
+				free(notif->image_data->data);
+				free(notif->image_data);
+			}
 			notif->image_data = image_data;
 
 			ret = sd_bus_message_exit_container(msg);
