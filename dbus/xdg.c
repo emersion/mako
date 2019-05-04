@@ -217,7 +217,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 				return ret;
 			}
 			notif->progress = progress;
-		} else if (strcmp(hint, "image-data") == 0) {
+		} else if (strcmp(hint, "image-data") == 0 || strcmp(hint, "icon_data") == 0) {
 			ret = sd_bus_message_enter_container(msg, 'v', "(iiibiiay)");
 			if (ret < 0) {
 				return ret;
