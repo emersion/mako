@@ -69,6 +69,72 @@ done:
 	return sd_bus_reply_method_return(msg, "");
 }
 
+static int handle_list_notifications(sd_bus_message *msg, void *data,
+		sd_bus_error *ret_error) {
+	struct mako_state *state = data;
+
+	sd_bus_message *reply = NULL;
+	int ret = sd_bus_message_new_method_return(msg, &reply);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_open_container(reply, 'a', "a{sv}");
+	if (ret < 0) {
+		return ret;
+	}
+
+	struct mako_notification *notif;
+	wl_list_for_each(notif, &state->notifications, link) {
+		ret = sd_bus_message_open_container(reply, 'a', "{sv}");
+		if (ret < 0) {
+			return ret;
+		}
+
+		ret = sd_bus_message_append(reply, "{sv}", "app-name",
+			"s", notif->app_name);
+		if (ret < 0) {
+			return ret;
+		}
+
+		ret = sd_bus_message_append(reply, "{sv}", "app-icon",
+			"s", notif->app_icon);
+		if (ret < 0) {
+			return ret;
+		}
+
+		ret = sd_bus_message_append(reply, "{sv}", "summary",
+			"s", notif->summary);
+		if (ret < 0) {
+			return ret;
+		}
+
+		ret = sd_bus_message_append(reply, "{sv}", "body",
+			"s", notif->body);
+		if (ret < 0) {
+			return ret;
+		}
+
+		ret = sd_bus_message_close_container(reply);
+		if (ret < 0) {
+			return ret;
+		}
+	}
+
+	ret = sd_bus_message_close_container(reply);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_send(NULL, reply, NULL);
+	if (ret < 0) {
+		return ret;
+	}
+
+	sd_bus_message_unref(reply);
+	return 0;
+}
+
 static int handle_reload(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
@@ -111,6 +177,7 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_METHOD("DismissAllNotifications", "", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("DismissLastNotification", "", "", handle_dismiss_last_notification, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("InvokeAction", "s", "", handle_invoke_action, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("ListNotifications", "", "aa{sv}", handle_list_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("Reload", "", "", handle_reload, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_VTABLE_END
 };
