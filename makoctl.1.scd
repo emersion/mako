@@ -26,6 +26,9 @@ Sends IPC commands to the running mako daemon via dbus.
 	Invokes an action on the first notification. If _action_ is not specified,
 	invokes the default action.
 
+*list*
+	Retrieve a list of current notifications.
+
 *reload*
 	Reloads the configuration file.
 

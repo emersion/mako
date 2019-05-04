@@ -1,6 +1,4 @@
-#!/bin/sh
-
-set -e
+#!/bin/sh -eu
 
 usage() {
 	echo "Usage: makoctl <command> [options...]"
@@ -8,12 +6,13 @@ usage() {
 	echo "Commands:"
 	echo "  dismiss [-a|--all] Dismiss the last or all notifications"
 	echo "  invoke [action]    Invoke an action on the last notification"
+	echo "  list               List notifications"
 	echo "  reload             Reload the configuration file"
 	echo "  help               Show this help"
 }
 
 call() {
-	busctl --user call org.freedesktop.Notifications /fr/emersion/Mako \
+	busctl -j --user call org.freedesktop.Notifications /fr/emersion/Mako \
 		fr.emersion.Mako "$@"
 }
 
@@ -43,6 +42,9 @@ case "$1" in
 		action="default"
 	fi
 	call InvokeAction "s" "$action"
+	;;
+"list")
+	call ListNotifications
 	;;
 "reload")
 	call Reload
