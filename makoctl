@@ -23,7 +23,8 @@ fi
 
 case "$1" in
 "dismiss")
-	case "$2" in
+	[ $# -lt 2 ] && action="" || action="$2"
+	case "$action" in
 	"-a"|"--all")
 		call DismissAllNotifications
 		;;
@@ -37,7 +38,7 @@ case "$1" in
 	esac
 	;;
 "invoke")
-	action="$2"
+	[ $# -lt 2 ] && action="" || action="$2"
 	if [ -z "$action" ] ; then
 		action="default"
 	fi
