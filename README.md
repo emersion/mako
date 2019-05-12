@@ -6,6 +6,8 @@ A lightweight notification daemon for Wayland. Works on Sway.
   <img src="https://sr.ht/meoc.png" alt="mako screenshot">
 </p>
 
+Feel free to join the IRC channel: ##emersion on irc.freenode.net.
+
 ## Running
 
 If you're using Sway you can start mako on launch by putting `exec mako` in
