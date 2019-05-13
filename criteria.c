@@ -262,8 +262,13 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			}
 			criteria->spec.group_index = true;
 			return true;
+		} else if (strcmp(key, "summary") == 0) {
+			// TODO: convert to regex, currently only exact matching
+			criteria->summary = strdup(value);
+			criteria->spec.summary = true;
+			return true;
 		} else {
-			// TODO: summary + body, once we support regex and they're useful.
+			// TODO: body, once we support regex and they're useful.
 			// Anything left must be one of the boolean fields, defined using
 			// standard syntax. Continue on.
 		}
