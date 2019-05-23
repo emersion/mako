@@ -92,6 +92,16 @@ install_data(
 	install_mode: 'rwxr-xr-x',
 )
 
+conf_data = configuration_data()
+conf_data.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
+
+configure_file(
+	configuration: conf_data,
+	input: 'fr.emersion.mako.service.in',
+	output: '@BASENAME@',
+	install_dir: datadir + '/dbus-1/services',
+)
+
 scdoc = find_program('scdoc', required: get_option('man-pages'))
 
 if scdoc.found()
