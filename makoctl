@@ -4,11 +4,13 @@ usage() {
 	echo "Usage: makoctl <command> [options...]"
 	echo ""
 	echo "Commands:"
-	echo "  dismiss [-a|--all] Dismiss the last or all notifications"
-	echo "  invoke [action]    Invoke an action on the last notification"
-	echo "  list               List notifications"
-	echo "  reload             Reload the configuration file"
-	echo "  help               Show this help"
+	echo "  dismiss [-a|--all]    Dismiss the last or all notifications"
+	echo "  invoke [action] [id]  Invoke an action on the notification"
+	echo "                        with the given id, or the last"
+	echo "                        notification if none is given"
+	echo "  list                  List notifications"
+	echo "  reload                Reload the configuration file"
+	echo "  help                  Show this help"
 }
 
 call() {
@@ -16,7 +18,7 @@ call() {
 		fr.emersion.Mako "$@"
 }
 
-if [ $# -eq 0 ] || [ $# -gt 2 ]; then
+if [ $# -eq 0 ] || [ $# -gt 3 ]; then
    usage
    exit 1
 fi
@@ -38,11 +40,9 @@ case "$1" in
 	esac
 	;;
 "invoke")
-	[ $# -lt 2 ] && action="" || action="$2"
-	if [ -z "$action" ] ; then
-		action="default"
-	fi
-	call InvokeAction "s" "$action"
+	[ $# -lt 2 ] && action="default" || action="$2"
+	[ $# -lt 3 ] && id="0" || id="$3"
+	call InvokeAction "us" "$id" "$action"
 	;;
 "list")
 	call ListNotifications
