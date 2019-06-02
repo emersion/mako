@@ -31,7 +31,11 @@ bool init_dbus(struct mako_state *state) {
 
 	ret = sd_bus_request_name(state->bus, service_name, 0);
 	if (ret < 0) {
-		fprintf(stderr, "Failed to acquire service name: %s. Is Mako already running?\n", strerror(-ret));
+                if (ret == -EEXIST) {
+                        fprintf(stderr, "Failed to acquire service name: %s. Is Mako already running?\n", strerror(-ret));
+                } else {
+                        fprintf(stderr, "Failed to acquire service name: %s\n", strerror(-ret));
+                }
 		goto error;
 	}
 
