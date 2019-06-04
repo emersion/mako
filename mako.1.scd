@@ -224,7 +224,7 @@ This matching occurs in the order the criteria are defined in the config file,
 meaning that if multiple criteria match a notification, the last occurrence of
 any given style option will "win".
 
-The following fields are available in critiera:
+The following fields are available in criteria:
 
 - _app-name_ (string)
 - _app-icon_ (string)

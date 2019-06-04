@@ -393,7 +393,7 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 	}
 
 	// If count is zero, we don't need to worry about changing anything. The
-	// notification's style has its grouping critiera set to none.
+	// notification's style has its grouping criteria set to none.
 
 	if (count == 1) {
 		// If we matched a single notification, it means that it has grouping
