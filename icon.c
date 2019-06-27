@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <ctype.h>
 #include <cairo/cairo.h>
 
 #include "mako.h"
@@ -49,6 +50,30 @@ static double fit_to_square(int width, int height, int square_size) {
 	return longest > square_size ? square_size/longest : 1.0;
 }
 
+static char hex_val(char digit) {
+	assert(isxdigit(digit));
+	if (digit >= 'a') {
+		return digit - 'a' + 10;
+	} else if (digit >= 'A') {
+		return digit - 'A' + 10;
+	} else {
+		return digit - '0';
+	}
+}
+
+static void url_decode(char *dst, const char *src) {
+	while (src[0]) {
+		if (src[0] == '%' && isxdigit(src[1]) && isxdigit(src[2])) {
+			dst[0] = 16*hex_val(src[1]) + hex_val(src[2]);
+			dst++; src += 3;
+		} else {
+			dst[0] = src[0];
+			dst++; src++;
+		}
+	}
+	dst[0] = '\0';
+}
+
 // Attempt to find a full path for a notification's icon_name, which may be:
 // - An absolute path, which will simply be returned (as a new string)
 // - A file:// URI, which will be converted to an absolute path
@@ -67,8 +92,14 @@ static char *resolve_icon(struct mako_notification *notif) {
 		return strdup(icon_name);
 	}
 	if (strstr(icon_name, "file://") == icon_name) {
-		// Just chop off the scheme.
-		return strdup(icon_name + strlen("file://"));
+		// Chop off the scheme and URL decode
+		char *icon_path = malloc(strlen(icon_name) + 1 - strlen("file://"));
+		if (icon_path == NULL) {
+			return icon_path;
+		}
+
+		url_decode(icon_path, icon_name + strlen("file://"));
+		return icon_path;
 	}
 
 	// Determine the largest scale factor of any attached output.
