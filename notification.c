@@ -19,6 +19,7 @@
 #include "notification.h"
 #include "icon.h"
 #include "string-util.h"
+#include "set.h"
 
 bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y) {
 	return x >= hotspot->x &&
@@ -65,7 +66,7 @@ void reset_notification(struct mako_notification *notif) {
 	notif->icon = NULL;
 }
 
-struct mako_notification *create_notification(struct mako_state *state) {
+struct mako_notification *create_notification(struct mako_state *state, uint32_t replaces_id) {
 	struct mako_notification *notif =
 		calloc(1, sizeof(struct mako_notification));
 	if (notif == NULL) {
@@ -74,8 +75,18 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	}
 
 	notif->state = state;
-	++state->last_id;
-	notif->id = state->last_id;
+
+	uint32_t new_id;
+	if (replaces_id == 0) {
+		do {
+			new_id = ++state->last_id;
+		} while (mako_set_contains(state->replaced_ids_set, new_id));
+	} else {
+		new_id = replaces_id;
+		mako_set_insert(&(state->replaced_ids_set), replaces_id);
+	}
+	notif->id = new_id;
+
 	wl_list_init(&notif->actions);
 	reset_notification(notif);
 

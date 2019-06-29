@@ -99,15 +99,18 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	struct mako_notification *notif = NULL;
 	if (replaces_id > 0) {
 		notif = get_notification(state, replaces_id);
-	}
-
-	if (notif) {
-		reset_notification(notif);
+		if (notif) {
+			// Notification with replaces_id was found
+			reset_notification(notif);
+		} else {
+			// Notification with replace_id was not found,
+			// so we create a new one and assign the id to it.
+			notif = create_notification(state, replaces_id);
+			replaces_id = 0; // So we don't attempt to replace it since it doesn't exist yet.
+		}
 	} else {
-		// Either we had no replaces_id, or the id given was invalid. Either
-		// way, make a new notification.
 		replaces_id = 0; // In case they got lucky and passed the next id.
-		notif = create_notification(state);
+		notif = create_notification(state, 0);
 	}
 
 	if (notif == NULL) {

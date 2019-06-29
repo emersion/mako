@@ -73,7 +73,7 @@ typedef char *(*mako_format_func_t)(char variable, bool *markup, void *data);
 bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y);
 
 void reset_notification(struct mako_notification *notif);
-struct mako_notification *create_notification(struct mako_state *state);
+struct mako_notification *create_notification(struct mako_state *state, uint32_t replaces_id);
 void destroy_notification(struct mako_notification *notif);
 
 void close_notification(struct mako_notification *notif,

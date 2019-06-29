@@ -14,6 +14,7 @@
 #include "pool-buffer.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "xdg-output-unstable-v1-client-protocol.h"
+#include "set.h"
 
 struct mako_state {
 	struct mako_config config;
@@ -45,6 +46,7 @@ struct mako_state {
 	struct pool_buffer *current_buffer;
 
 	uint32_t last_id;
+	struct mako_set_top *replaced_ids_set;
 	struct wl_list notifications; // mako_notification::link
 
 	int argc;

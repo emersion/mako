@@ -61,6 +61,7 @@ src_files = [
 	'types.c',
 	'icon.c',
 	'string-util.c',
+	'set.c',
 ]
 
 if gdk_pixbuf.found()
