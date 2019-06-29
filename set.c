@@ -3,27 +3,43 @@
 
 #include "set.h"
 
+uint8_t mako_set_top_hash(uint32_t value) {
+	return (value >> 24) & 0xFF;
+}
+
+uint8_t mako_set_second_hash(uint32_t value) {
+	return (value >> 16) & 0xFF;
+}
+
+uint8_t mako_set_third_hash(uint32_t value) {
+	return (value >> 8) & 0xFF;
+}
+
+uint8_t mako_set_last_hash(uint32_t value) {
+	return (value >> 0) & 0xFF;
+}
+
 bool mako_set_contains(struct mako_set_top *top, uint32_t value) {
 	if (top == NULL) {
 		return false;
 	}
 
-	struct mako_set_second *second = top->tables[value & 0xFF];
+	struct mako_set_second *second = top->tables[mako_set_top_hash(value)];
 	if (second == NULL) {
 		return false;
 	}
 
-	struct mako_set_third *third = second->tables[(value >> 8) & 0xFF];
+	struct mako_set_third *third = second->tables[mako_set_second_hash(value)];
 	if (third == NULL) {
 		return false;
 	}
 
-	struct mako_set_last *last = third->tables[(value >> 16) & 0xFF];
+	struct mako_set_last *last = third->tables[mako_set_third_hash(value)];
 	if (last == NULL) {
 		return false;
 	}
 
-	return last->values[(value >> 24) & 0xFF];
+	return last->values[mako_set_last_hash(value)];
 }
 
 void mako_set_insert(struct mako_set_top **top, uint32_t value) {
@@ -31,22 +47,22 @@ void mako_set_insert(struct mako_set_top **top, uint32_t value) {
 		*top = (struct mako_set_top*) calloc(1, sizeof(struct mako_set_top));
 	}
 
-	struct mako_set_second **second = &((*top)->tables[value & 0xFF]);
+	struct mako_set_second **second = &((*top)->tables[mako_set_top_hash(value)]);
 	if (*second == NULL) {
 		*second = (struct mako_set_second*) calloc(1, sizeof(struct mako_set_second));
 	}
 
-	struct mako_set_third **third = &((*second)->tables[(value >> 8) & 0xFF]);
+	struct mako_set_third **third = &((*second)->tables[mako_set_second_hash(value)]);
 	if (*third == NULL) {
 		*third = (struct mako_set_third*) calloc(1, sizeof(struct mako_set_third));
 	}
 
-	struct mako_set_last **last = &((*third)->tables[(value >> 16) & 0xFF]);
+	struct mako_set_last **last = &((*third)->tables[mako_set_third_hash(value)]);
 	if (*last == NULL) {
 		*last = (struct mako_set_last*) calloc(1, sizeof(struct mako_set_last));
 	}
 
-	(*last)->values[(value >> 24) & 0xFF] = true;
+	(*last)->values[mako_set_last_hash(value)] = true;
 }
 
 bool mako_set_remove(struct mako_set_top *top, uint32_t value) {
@@ -54,23 +70,23 @@ bool mako_set_remove(struct mako_set_top *top, uint32_t value) {
 		return false;
 	}
 
-	struct mako_set_second *second = top->tables[value & 0xFF];
+	struct mako_set_second *second = top->tables[mako_set_top_hash(value)];
 	if (second == NULL) {
 		return false;
 	}
 
-	struct mako_set_third *third = second->tables[(value >> 8) & 0xFF];
+	struct mako_set_third *third = second->tables[mako_set_second_hash(value)];
 	if (third == NULL) {
 		return false;
 	}
 
-	struct mako_set_last *last = third->tables[(value >> 16) & 0xFF];
+	struct mako_set_last *last = third->tables[mako_set_third_hash(value)];
 	if (last == NULL) {
 		return false;
 	}
 
-	bool contained = last->values[(value >> 24) & 0xFF];
-	last->values[(value >> 24) & 0xFF] = false;
+	bool contained = last->values[mako_set_last_hash(value)];
+	last->values[mako_set_last_hash(value)] = false;
 
 	return contained;
 }
