@@ -27,6 +27,11 @@ struct mako_seat {
 		struct wl_pointer *wl_pointer;
 		int32_t x, y;
 	} pointer;
+
+	struct {
+		struct wl_touch *wl_touch;
+		int32_t x, y;
+	} touch;
 };
 
 bool init_wayland(struct mako_state *state);

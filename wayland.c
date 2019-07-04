@@ -96,6 +96,37 @@ static void destroy_output(struct mako_output *output) {
 	free(output);
 }
 
+static void touch_handle_motion(void *data, struct wl_touch *wl_touch,
+		uint32_t time, int32_t id,
+		wl_fixed_t surface_x, wl_fixed_t surface_y) {
+	struct mako_seat *seat = data;
+	seat->touch.x = wl_fixed_to_int(surface_x);
+	seat->touch.y = wl_fixed_to_int(surface_y);
+}
+
+static void touch_handle_down(void *data, struct wl_touch *wl_touch,
+		uint32_t serial, uint32_t time, struct wl_surface *sfc, int32_t id,
+		wl_fixed_t surface_x, wl_fixed_t surface_y) {
+	struct mako_seat *seat = data;
+	seat->touch.x = wl_fixed_to_int(surface_x);
+	seat->touch.y = wl_fixed_to_int(surface_y);
+}
+
+static void touch_handle_up(void *data, struct wl_touch *wl_touch,
+		uint32_t serial, uint32_t time, int32_t id) {
+	struct mako_seat *seat = data;
+	struct mako_state *state = seat->state;
+
+	struct mako_notification *notif;
+	wl_list_for_each(notif, &state->notifications, link) {
+		if (hotspot_at(&notif->hotspot, seat->touch.x, seat->touch.y)) {
+			notification_handle_touch(notif);
+			break;
+		}
+	}
+
+	set_dirty(state);
+}
 
 static void pointer_handle_motion(void *data, struct wl_pointer *wl_pointer,
 		uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y) {
@@ -129,6 +160,15 @@ static const struct wl_pointer_listener pointer_listener = {
 	.axis = noop,
 };
 
+static const struct wl_touch_listener touch_listener = {
+	.down = touch_handle_down,
+	.up = touch_handle_up,
+	.motion = touch_handle_motion,
+	.frame = noop,
+	.cancel = noop,
+	.shape = noop,
+	.orientation = noop,
+};
 
 static void seat_handle_capabilities(void *data, struct wl_seat *wl_seat,
 		uint32_t capabilities) {
@@ -142,6 +182,15 @@ static void seat_handle_capabilities(void *data, struct wl_seat *wl_seat,
 		seat->pointer.wl_pointer = wl_seat_get_pointer(wl_seat);
 		wl_pointer_add_listener(seat->pointer.wl_pointer,
 			&pointer_listener, seat);
+	}
+	if (seat->touch.wl_touch != NULL) {
+		wl_touch_release(seat->touch.wl_touch);
+		seat->touch.wl_touch = NULL;
+	}
+	if (capabilities & WL_SEAT_CAPABILITY_TOUCH) {
+		seat->touch.wl_touch = wl_seat_get_touch(wl_seat);
+		wl_touch_add_listener(seat->touch.wl_touch,
+			&touch_listener, seat);
 	}
 }
 

@@ -58,9 +58,10 @@ void init_default_config(struct mako_config *config) {
 	config->sort_criteria = MAKO_SORT_CRITERIA_TIME;
 	config->sort_asc = 0;
 
-	config->button_bindings.left = MAKO_BUTTON_BINDING_INVOKE_DEFAULT_ACTION;
-	config->button_bindings.right = MAKO_BUTTON_BINDING_DISMISS;
-	config->button_bindings.middle = MAKO_BUTTON_BINDING_NONE;
+	config->button_bindings.left = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
+	config->button_bindings.right = MAKO_BINDING_DISMISS;
+	config->button_bindings.middle = MAKO_BINDING_NONE;
+	config->touch = MAKO_BINDING_DISMISS;
 
 	config->anchor =
 		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
