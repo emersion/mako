@@ -188,9 +188,9 @@ char *format_hidden_text(char variable, bool *markup, void *data) {
 	struct mako_hidden_format_data *format_data = data;
 	switch (variable) {
 	case 'h':
-		return mako_asprintf("%d", format_data->hidden);
+		return mako_asprintf("%zu", format_data->hidden);
 	case 't':
-		return mako_asprintf("%d", format_data->count);
+		return mako_asprintf("%zu", format_data->count);
 	}
 	return NULL;
 }
