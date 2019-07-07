@@ -46,19 +46,14 @@ static int handle_invoke_action(sd_bus_message *msg, void *data,
 	struct mako_state *state = data;
 
 	uint32_t id = 0;
-	int ret = sd_bus_message_read(msg, "u", &id);
+	const char *action_key;
+	int ret = sd_bus_message_read(msg, "us", &id, &action_key);
 	if (ret < 0) {
 		return ret;
 	}
 
 	if (id == 0) {
 		id = state->last_id;
-	}
-
-	const char *action_key;
-	ret = sd_bus_message_read(msg, "s", &action_key);
-	if (ret < 0) {
-		return ret;
 	}
 
 	if (wl_list_empty(&state->notifications)) {
