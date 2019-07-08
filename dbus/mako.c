@@ -140,24 +140,24 @@ static int handle_list_notifications(sd_bus_message *msg, void *data,
 			return ret;
 		}
 
-		// Actions are an array of strings.
-		ret = sd_bus_message_open_container(reply, 'v', "as");
+		ret = sd_bus_message_open_container(reply, 'v', "a{ss}");
 		if (ret < 0) {
 			return ret;
 		}
 
-		ret = sd_bus_message_open_container(reply, 'a', "s");
+		ret = sd_bus_message_open_container(reply, 'a', "{ss}");
 		if (ret < 0) {
 			return ret;
 		}
 
 		struct mako_action *action;
 		wl_list_for_each(action, &notif->actions, link) {
-			ret = sd_bus_message_append(reply, "s", action->key);
+			ret = sd_bus_message_append(reply, "{ss}", action->key, action->title);
 			if (ret < 0) {
 				return ret;
 			}
 		}
+
 		ret = sd_bus_message_close_container(reply);
 		if (ret < 0) {
 			return ret;
