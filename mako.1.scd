@@ -203,7 +203,9 @@ The config file is located at *~/.config/mako/config* or at
 
 	key=value
 
-Is equivalent to passing *--key=value* to mako from the command line.
+Is equivalent to passing *--key=value* to mako from the command line. Note that
+any quotes used within your shell are unnecessary and also invalid in the
+config file.
 
 Empty lines and lines that begin with # are ignored.
 
