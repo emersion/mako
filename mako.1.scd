@@ -253,7 +253,7 @@ backslash, or quoted:
 
 	\[app-name=Google\\ Chrome\]
 
-Quotes within quotes may also be escaped, and a literal backslack may be
+Quotes within quotes may also be escaped, and a literal backslash may be
 specified as \\\\. No spaces are allowed around the equal sign. Escaping equal
 signs within values is unnecessary.
 
