@@ -107,7 +107,7 @@ scdoc = find_program('scdoc', required: get_option('man-pages'))
 if scdoc.found()
 	sh = find_program('sh')
 
-	man_pages = ['mako.1.scd', 'makoctl.1.scd']
+	man_pages = ['mako.1.scd', 'mako.5.scd', 'makoctl.1.scd']
 
 	mandir = get_option('mandir')
 
