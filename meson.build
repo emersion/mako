@@ -44,6 +44,7 @@ endif
 
 subdir('contrib/apparmor')
 subdir('contrib/completions')
+subdir('contrib/systemd')
 subdir('protocol')
 
 src_files = [

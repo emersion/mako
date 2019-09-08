@@ -1,0 +1,12 @@
+[Unit]
+Description=A lightweight Wayland notification daemon
+Documentation=man:mako(1)
+PartOf=wayland-session.target
+
+[Service]
+Type=dbus
+ExecStart=/usr/bin/mako
+BusName=org.freedesktop.Notifications
+
+[Install]
+WantedBy=wayland-session.target
