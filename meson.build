@@ -44,7 +44,6 @@ endif
 
 subdir('contrib/apparmor')
 subdir('contrib/completions')
-subdir('contrib/systemd')
 subdir('protocol')
 
 src_files = [
@@ -102,6 +101,8 @@ configure_file(
 	output: '@BASENAME@',
 	install_dir: datadir + '/dbus-1/services',
 )
+
+subdir('contrib/systemd')
 
 scdoc = find_program('scdoc', required: get_option('man-pages'))
 
