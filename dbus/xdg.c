@@ -217,7 +217,22 @@ static int handle_notify(sd_bus_message *msg, void *data,
 				return ret;
 			}
 			notif->progress = progress;
-		} else if (strcmp(hint, "image-data") == 0 || strcmp(hint, "icon_data") == 0) {
+		} else if (strcmp(hint, "image-path") == 0 ||
+				strcmp(hint, "image_path") == 0) {  // Deprecated.
+			const char *image_path = NULL;
+			ret = sd_bus_message_read(msg, "v", "s", &image_path);
+			if (ret < 0) {
+				return ret;
+			}
+			// image-path is higher priority than app_icon, so just overwrite
+			// it. We're guaranteed to be doing this after reading the "real"
+			// app_icon. It's also lower priority than image-data, and that
+			// will win over app_icon if provided.
+			free(notif->app_icon);
+			notif->app_icon = strdup(image_path);
+		} else if (strcmp(hint, "image-data") == 0 ||
+				strcmp(hint, "image_data") == 0 ||  // Deprecated.
+				strcmp(hint, "icon_data") == 0) {  // Even more deprecated.
 			ret = sd_bus_message_enter_container(msg, 'v', "(iiibiiay)");
 			if (ret < 0) {
 				return ret;
