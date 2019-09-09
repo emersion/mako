@@ -6,6 +6,8 @@ A lightweight notification daemon for Wayland. Works on Sway.
   <img src="https://sr.ht/meoc.png" alt="mako screenshot">
 </p>
 
+mako implements the [GNOME Desktop Notifications Specification][gnome-draft].
+
 Feel free to join the IRC channel: ##emersion on irc.freenode.net.
 
 ## Running
@@ -27,6 +29,7 @@ Install dependencies:
 * systemd or elogind (for the sd-bus library)
 * gdk-pixbuf (optional, for icons support)
 * dbus (runtime dependency, user-session support is required)
+* scdoc (optional, for man pages)
 
 Then run:
 
@@ -43,3 +46,5 @@ build/mako
 ## License
 
 MIT
+
+[gnome-draft]: https://developer.gnome.org/notification-spec/
