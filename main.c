@@ -15,6 +15,7 @@ static const char usage[] =
 	"Usage: mako [options...]\n"
 	"\n"
 	"  -h, --help                          Show help message and quit.\n"
+	"  -c, --config <path>                 Path to config file.\n"
 	"      --font <font>                   Font family and size.\n"
 	"      --background-color <color>      Background color.\n"
 	"      --text-color <color>            Text color.\n"
