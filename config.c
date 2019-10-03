@@ -544,10 +544,15 @@ static char *get_config_path(void) {
 	return NULL;
 }
 
-int load_config_file(struct mako_config *config) {
-	char *path = get_config_path();
-	if (!path) {
-		return 0;
+int load_config_file(struct mako_config *config, char *config_arg) {
+	char *path = NULL;
+	if (config_arg == NULL) {
+		path = get_config_path();
+		if (!path) {
+			return 0;
+		}
+	} else {
+		path = config_arg;
 	}
 
 	FILE *f = fopen(path, "r");
@@ -642,6 +647,7 @@ int load_config_file(struct mako_config *config) {
 int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 	static const struct option long_options[] = {
 		{"help", no_argument, 0, 'h'},
+		{"config", required_argument, 0, 'c'},
 		{"font", required_argument, 0, 0},
 		{"background-color", required_argument, 0, 0},
 		{"text-color", required_argument, 0, 0},
@@ -674,13 +680,34 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		wl_container_of(config->criteria.next, root_criteria, link);
 
 	optind = 1;
+	char *config_arg = NULL;
 	while (1) {
 		int option_index = -1;
-		int c = getopt_long(argc, argv, "h", long_options, &option_index);
+		int c = getopt_long(argc, argv, "hc:", long_options, &option_index);
 		if (c < 0) {
 			break;
 		} else if (c == 'h') {
 			return 1;
+		} else if (c == 'c') {
+			config_arg = strdup(optarg);
+		} else if (c != 0) {
+			return -1;
+		}
+	}
+
+	int config_status = load_config_file(config, config_arg);
+	if (config_status < 0) {
+		return -1;
+	}
+
+	optind = 1;
+	while (1) {
+		int option_index = -1;
+		int c = getopt_long(argc, argv, "hc:", long_options, &option_index);
+		if (c < 0) {
+			break;
+		} else if (c == 'h' || c == 'c') {
+			continue;
 		} else if (c != 0) {
 			return -1;
 		}
@@ -702,13 +729,12 @@ int reload_config(struct mako_config *config, int argc, char **argv) {
 	struct mako_config new_config = {0};
 	init_default_config(&new_config);
 
-	int config_status = load_config_file(&new_config);
 	int args_status = parse_config_arguments(&new_config, argc, argv);
 
 	if (args_status > 0) {
 		finish_config(&new_config);
 		return args_status;
-	} else if (config_status < 0 || args_status < 0) {
+	} else if (args_status < 0) {
 		fprintf(stderr, "Failed to parse config\n");
 		finish_config(&new_config);
 		return -1;
