@@ -41,7 +41,7 @@ case "$1" in
 	;;
 "invoke")
 	id=0
-	if [ $# -gt 1 ] && [ $2 == "-n" ]; then
+	if [ $# -gt 1 ] && [ "$2" = "-n" ]; then
 		id="$3"
 		shift 2
 	fi
