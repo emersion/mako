@@ -4,13 +4,16 @@ usage() {
 	echo "Usage: makoctl <command> [options...]"
 	echo ""
 	echo "Commands:"
-	echo "  dismiss [-a|--all]       Dismiss the last or all notifications"
-	echo "  invoke [-n id] [action]  Invoke an action on the notification"
-	echo "                           with the given id, or the last"
-	echo "                           notification if none is given"
-	echo "  list                     List notifications"
-	echo "  reload                   Reload the configuration file"
-	echo "  help                     Show this help"
+	echo "  dismiss [-a|--all]        Dismiss the last or all notifications"
+	echo "  invoke [-n id] [action]   Invoke an action on the notification"
+	echo "                            with the given id, or the last"
+	echo "                            notification if none is given"
+	echo "  menu [prog] [arg ...]"
+	echo "                            Use [prog] [args ...] to select one"
+	echo "                            notification action to be invoked"
+	echo "  list                      List notifications"
+	echo "  reload                    Reload the configuration file"
+	echo "  help                      Show this help"
 }
 
 call() {
@@ -18,7 +21,7 @@ call() {
 		fr.emersion.Mako "$@"
 }
 
-if [ $# -eq 0 ] || [ $# -gt 5 ]; then
+if [ $# -eq 0 ]; then
    usage
    exit 1
 fi
@@ -52,6 +55,60 @@ case "$1" in
 	fi
 
 	call InvokeAction "us" "$id" "$action"
+	;;
+"menu")
+	shift 1
+	busctl_list="$(call ListNotifications)"
+
+	case $busctl_list in
+		*'"actions" a{ss} 0 '*)
+			echo >&2 "$0: No actions found."
+			exit 1 ;;
+		*'"actions" a{ss}'*) :;;
+		*)
+			echo >&2 "$0: No notification found."
+			exit 1 ;;
+	esac
+
+	id="${busctl_list#*' "id" u '}"
+	id="${id%% *}"
+
+	# strip head of busctl_list to actions
+	# ... "actions" a{ss} [count] "key" "value" "key" "value" ...
+	busctl_list="${busctl_list#*'"id" u '"$id"*' "actions" a{ss} '}"
+	action_count="${busctl_list%% *}"
+	# remove action_count from front, escape all '$' and '`'
+	busctl_list="$(printf '%s' "${busctl_list#* }" | sed 's/[\$`]/\\&/g')"
+
+	join_actions(){
+		eval set -- "$1"
+		i=0
+		value_list=
+		while [ $((i += 1)) -le "$action_count" ]; do
+			value_list="$(printf '%s\n%s' "$2" "$value_list")"
+			shift 2
+		done
+	}
+	join_actions "$busctl_list"
+
+	# Call user's program
+	selected_value="$(printf '%s' "$value_list" | "$@")"
+
+	# find selected key
+	eval set -- "$busctl_list"
+	i=0
+	while [ $((i += 1)) -le "$action_count" ]; do
+		if [ "$2" = "$selected_value" ]; then
+			# Preserve trailing newlines, eval C esacpes
+			selected_key="$(printf '%b:' "$1")"
+			call InvokeAction us "$id" "${selected_key%?}"
+			exit 0
+		fi
+		shift 2
+	done
+
+	echo >&2 "$0: No action selected."
+	exit 1
 	;;
 "list")
 	call -j ListNotifications
