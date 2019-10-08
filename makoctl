@@ -8,6 +8,8 @@ usage() {
 	echo "  invoke [-n id] [action]  Invoke an action on the notification"
 	echo "                           with the given id, or the last"
 	echo "                           notification if none is given"
+	echo "  menu [prog] [arg ...]    Use [prog] [args ...] to select one"
+	echo "                           notification action to be invoked"
 	echo "  list                     List notifications"
 	echo "  reload                   Reload the configuration file"
 	echo "  help                     Show this help"
@@ -52,6 +54,22 @@ case "$1" in
 	fi
 
 	call InvokeAction "us" "$id" "$action"
+	;;
+"menu")
+	shift 1
+	if array="$(call ListNotifications | jq -re '.data[0][0].actions.data | if length > 0 then . else false end')"; then
+		sel="$(jq -rn "$array|values[]" | "$@")"
+		sel="$(jq -rn --arg sel "$sel" "$array|to_entries[]|select(.value == \$sel).key")"
+		if [ -z "$sel" ]; then
+			echo >&2 "$0: No action selected"
+			exit 1
+		else
+			call InvokeAction "us" 0 "$sel"
+		fi
+	else
+		echo >&2 "$0: No actions found"
+		exit 1
+	fi
 	;;
 "list")
 	call ListNotifications
