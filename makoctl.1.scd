@@ -26,6 +26,21 @@ Sends IPC commands to the running mako daemon via dbus.
 	Invokes an action on the first notification. If _action_ is not specified,
 	invokes the default action.
 
+*menu* [program] [argument ...]
+	Use a program to select an action on the first notification. The list of
+	actions are joined on newlines and passed to _program_. The program should
+	write the selected action to stdout. If an action is given, this action
+	will be invoked.
+
+	If no action is found, or no action is selected, _makoctl_ will return non-zero.
+
+	Examples:
+
+		```
+		makoctl menu dmenu -p 'Select Action: '
+		makoctl menu wofi -d -p 'Choose Action: '
+		```
+
 *list*
 	Retrieve a list of current notifications.
 
