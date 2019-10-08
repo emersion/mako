@@ -57,6 +57,10 @@ case "$1" in
 	;;
 "menu")
 	shift 1
+	if ! type -p jq > /dev/null; then
+		echo >&2 "$0: jq is required to use 'menu'"
+		exit 1
+	fi
 	if array="$(call ListNotifications | jq -re '.data[0][0].actions.data | if length > 0 then . else false end')"; then
 		sel="$(jq -rn "$array|values[]" | "$@")"
 		sel="$(jq -rn --arg sel "$sel" "$array|to_entries[]|select(.value == \$sel).key")"
