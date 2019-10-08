@@ -14,7 +14,7 @@ usage() {
 }
 
 call() {
-	busctl -j --user call org.freedesktop.Notifications /fr/emersion/Mako \
+	busctl --user call org.freedesktop.Notifications /fr/emersion/Mako \
 		fr.emersion.Mako "$@"
 }
 
@@ -54,7 +54,7 @@ case "$1" in
 	call InvokeAction "us" "$id" "$action"
 	;;
 "list")
-	call ListNotifications
+	call -j ListNotifications
 	;;
 "reload")
 	call Reload
