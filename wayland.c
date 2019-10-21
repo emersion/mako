@@ -100,16 +100,18 @@ static void touch_handle_motion(void *data, struct wl_touch *wl_touch,
 		uint32_t time, int32_t id,
 		wl_fixed_t surface_x, wl_fixed_t surface_y) {
 	struct mako_seat *seat = data;
-	seat->touch.x = wl_fixed_to_int(surface_x);
-	seat->touch.y = wl_fixed_to_int(surface_y);
+	if (id >= MAX_TOUCHPOINTS) return;
+	seat->touch.pts[id].x = wl_fixed_to_int(surface_x);
+	seat->touch.pts[id].y = wl_fixed_to_int(surface_y);
 }
 
 static void touch_handle_down(void *data, struct wl_touch *wl_touch,
 		uint32_t serial, uint32_t time, struct wl_surface *sfc, int32_t id,
 		wl_fixed_t surface_x, wl_fixed_t surface_y) {
 	struct mako_seat *seat = data;
-	seat->touch.x = wl_fixed_to_int(surface_x);
-	seat->touch.y = wl_fixed_to_int(surface_y);
+	if (id >= MAX_TOUCHPOINTS) return;
+	seat->touch.pts[id].x = wl_fixed_to_int(surface_x);
+	seat->touch.pts[id].y = wl_fixed_to_int(surface_y);
 }
 
 static void touch_handle_up(void *data, struct wl_touch *wl_touch,
@@ -118,8 +120,9 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
 	struct mako_state *state = seat->state;
 
 	struct mako_notification *notif;
+	if (id >= MAX_TOUCHPOINTS) return;
 	wl_list_for_each(notif, &state->notifications, link) {
-		if (hotspot_at(&notif->hotspot, seat->touch.x, seat->touch.y)) {
+		if (hotspot_at(&notif->hotspot, seat->touch.pts[id].x, seat->touch.pts[id].y)) {
 			notification_handle_touch(notif);
 			break;
 		}
