@@ -30,6 +30,7 @@ Install dependencies:
 * gdk-pixbuf (optional, for icons support)
 * dbus (runtime dependency, user-session support is required)
 * scdoc (optional, for man pages)
+* jq (optional, runtime dependency)
 
 Then run:
 
