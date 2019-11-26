@@ -186,13 +186,23 @@ static int handle_notify(sd_bus_message *msg, void *data,
 					return ret;
 				}
 				notif->urgency = urgency;
-			} else {
+			} else if (strcmp(contents, "y") == 0) {
 				uint8_t urgency = 0;
 				ret = sd_bus_message_read(msg, "v", "y", &urgency);
 				if (ret < 0) {
 					return ret;
 				}
 				notif->urgency = urgency;
+			} else if (strcmp(contents, "i") == 0) {
+				uint8_t urgency = 0;
+				ret = sd_bus_message_read(msg, "v", "i", &urgency);
+				if (ret < 0) {
+					return ret;
+				}
+				notif->urgency = urgency;
+			} else {
+				fprintf(stderr, "Unsupported variant type: '%s'\n", contents);
+				return -1;
 			}
 		} else if (strcmp(hint, "category") == 0) {
 			const char *category = NULL;
