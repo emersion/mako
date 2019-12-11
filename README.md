@@ -32,6 +32,18 @@ Install dependencies:
 * scdoc (optional, for man pages)
 * jq (optional, runtime dependency)
 
+Required packages for the dependencies on Debian (Unstable):
+
+* `meson`
+* `libwayland-dev`
+* `wayland-protocols`
+* `libcairo2-pango-ocaml-dev`
+* `libcairo2-dev`
+* `libsystemd-dev` or `libelogind-dev`
+* `libgdk-pixbuf2.0-dev`
+* `scdoc` (optional, for man pages)
+* `jq`(optional, runtime dependency)
+
 Then run:
 
 ```shell
