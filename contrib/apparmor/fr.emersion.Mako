@@ -3,6 +3,7 @@
 profile fr.emersion.Mako /usr/bin/mako {
   #include <abstractions/base>
   #include <abstractions/fonts>
+  #include <abstractions/freedesktop.org>
   #include <abstractions/wayland>
 
   #include <abstractions/dbus-strict>
