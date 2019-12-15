@@ -80,7 +80,7 @@ dismissed with a click or via *makoctl*(1).
 	Default: 300
 
 *--height* _px_
-	Set maximium height of notification popups. Notifications whose text takes
+	Set maximum height of notification popups. Notifications whose text takes
 	up less space are shrunk to fit.
 
 	Default: 100
