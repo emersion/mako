@@ -166,21 +166,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 		notif_height = icon->height + border_size + padding_height;
 	}
 
-	// Render border
-	set_source_u32(cairo, style->colors.border);
-	set_rounded_rectangle(cairo,
-		offset_x + style->border_size / 2.0,
-		offset_y + style->border_size / 2.0,
-		notif_width - style->border_size,
-		notif_height - style->border_size,
-		scale, radius);
-	cairo_save(cairo);
-	cairo_set_line_width(cairo, style->border_size * scale);
-	cairo_stroke_preserve(cairo);
-	cairo_restore(cairo);
-
-
-	int notif_background_width = notif_width - border_size;
+	int notif_background_width = notif_width - style->border_size;
 	int progress_width = notif_background_width * progress / 100;
 	if (progress_width < 0) {
 		progress_width = 0;
@@ -188,22 +174,52 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 		progress_width = notif_background_width;
 	}
 
-	// Render background
-	set_source_u32(cairo, style->colors.background);
-	cairo_fill(cairo);
+	// Define the shape of the notification. The stroke is drawn centered on
+	// the edge of the fill, so we need to inset the shape by half the
+	// border_size.
+	set_rounded_rectangle(cairo,
+		offset_x + style->border_size / 2.0,
+		offset_y + style->border_size / 2.0,
+		notif_background_width,
+		notif_height - style->border_size,
+		scale, radius);
 
-	// Render progress
+	// Render background, keeping the path.
+	set_source_u32(cairo, style->colors.background);
+	cairo_fill_preserve(cairo);
+
+	// Keep a copy of the path. We need it later to draw the border on top, but
+	// we have to create a new one for progress in the meantime.
+	cairo_path_t *border_path = cairo_copy_path(cairo);
+
+	// Render progress. We need to render this as a normal rectangle, but clip
+	// it to the rounded rectangle we drew for the background.
 	cairo_save(cairo);
+	cairo_clip(cairo);
 	cairo_set_operator(cairo, style->colors.progress.operator);
 	set_source_u32(cairo, style->colors.progress.value);
 	set_rounded_rectangle(cairo,
-		offset_x + style->border_size,
-		offset_y + style->border_size,
-		progress_width,
-		notif_height - border_size,
-		scale, radius);
+			offset_x + style->border_size / 2.0,
+			offset_y + style->border_size / 2.0,
+			progress_width,
+			notif_height - style->border_size,
+			scale, 0);
 	cairo_fill(cairo);
 	cairo_restore(cairo);
+
+	// Render border, using the SOURCE operator to clip away the background
+	// and progress beneath. This is the only way to make the background appear
+	// to line up with the inside of a rounded border, while not revealing any
+	// of the background when using a translucent border color.
+	cairo_save(cairo);
+	cairo_append_path(cairo, border_path);
+	set_source_u32(cairo, style->colors.border);
+	cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
+	cairo_set_line_width(cairo, style->border_size * scale);
+	cairo_stroke(cairo);
+	cairo_restore(cairo);
+
+	cairo_path_destroy(border_path);
 
 	if (icon != NULL) {
 		// Render icon
