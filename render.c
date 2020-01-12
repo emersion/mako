@@ -48,14 +48,6 @@ static void set_rounded_rectangle(cairo_t *cairo, double x, double y, double wid
 	radius *= scale;
 	double degrees = M_PI / 180.0;
 
-	if (width < radius * 2) {
-		width = radius * 2;
-	}
-
-	if (height < radius * 2) {
-		height = radius * 2;
-	}
-
 	cairo_new_sub_path(cairo);
 	cairo_arc(cairo, x + width - radius, y + radius, radius, -90 * degrees, 0 * degrees);
 	cairo_arc(cairo, x + width - radius, y + height - radius, radius, 0 * degrees, 90 * degrees);
@@ -165,6 +157,10 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	int notif_height = text_height + border_size + padding_height;
 	if (icon != NULL && icon->height > text_height) {
 		notif_height = icon->height + border_size + padding_height;
+	}
+
+	if (notif_height < radius * 2) {
+		notif_height = radius * 2 + border_size;
 	}
 
 	int notif_background_width = notif_width - style->border_size;
