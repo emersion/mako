@@ -193,17 +193,7 @@ static int handle_list_notifications(sd_bus_message *msg, void *data,
 	return 0;
 }
 
-static int handle_reload(sd_bus_message *msg, void *data,
-		sd_bus_error *ret_error) {
-	struct mako_state *state = data;
-
-	if (reload_config(&state->config, state->argc, state->argv) != 0) {
-		sd_bus_error_set_const(
-				ret_error, "fr.emersion.Mako.InvalidConfig",
-				"Unable to parse configuration file");
-		return -1;
-	}
-
+static void reapply_config(struct mako_state *state) {
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		// Reset the notifications' grouped state so that if criteria have been
@@ -226,6 +216,41 @@ static int handle_reload(sd_bus_message *msg, void *data,
 	}
 
 	set_dirty(state);
+}
+
+static int handle_reload(sd_bus_message *msg, void *data,
+		sd_bus_error *ret_error) {
+	struct mako_state *state = data;
+
+	if (reload_config(&state->config, state->argc, state->argv) != 0) {
+		sd_bus_error_set_const(
+				ret_error, "fr.emersion.Mako.InvalidConfig",
+				"Unable to parse configuration file");
+		return -1;
+	}
+
+	reapply_config(state);
+
+	return sd_bus_reply_method_return(msg, "");
+}
+
+static int handle_set_config_option(sd_bus_message *msg, void *data,
+		sd_bus_error *ret_error) {
+	struct mako_state *state = data;
+
+	const char *name = NULL, *value = NULL;
+	int ret = sd_bus_message_read(msg, "ss", &name, &value);
+	if (ret < 0) {
+		return ret;
+	}
+
+	if (!apply_global_option(&state->config, name, value)) {
+		sd_bus_error_set_const(ret_error, "fr.emersion.Mako.InvalidConfig",
+			"Failed to apply configuration option");
+		return -1;
+	}
+
+	reapply_config(state);
 
 	return sd_bus_reply_method_return(msg, "");
 }
@@ -237,6 +262,7 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_METHOD("InvokeAction", "us", "", handle_invoke_action, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("ListNotifications", "", "aa{sv}", handle_list_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("Reload", "", "", handle_reload, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("SetConfigOption", "ss", "", handle_set_config_option, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_VTABLE_END
 };
 
