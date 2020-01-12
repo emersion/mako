@@ -168,12 +168,6 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	}
 
 	int notif_background_width = notif_width - style->border_size;
-	int progress_width = notif_background_width * progress / 100;
-	if (progress_width < 0) {
-		progress_width = 0;
-	} else if (progress_width > notif_background_width) {
-		progress_width = notif_background_width;
-	}
 
 	// Define the shape of the notification. The stroke is drawn centered on
 	// the edge of the fill, so we need to inset the shape by half the
@@ -194,14 +188,24 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	cairo_path_t *border_path = cairo_copy_path(cairo);
 
 	// Render progress. We need to render this as a normal rectangle, but clip
-	// it to the rounded rectangle we drew for the background.
+	// it to the rounded rectangle we drew for the background. We also inset it
+	// a bit further so that 0 and 100 percent are aligned to the inside edge
+	// of the border and we can actually see the whole range.
+	int progress_width =
+		(notif_background_width - style->border_size) * progress / 100;
+	if (progress_width < 0) {
+		progress_width = 0;
+	} else if (progress_width > notif_background_width) {
+		progress_width = notif_background_width - style->border_size;
+	}
+
 	cairo_save(cairo);
 	cairo_clip(cairo);
 	cairo_set_operator(cairo, style->colors.progress.operator);
 	set_source_u32(cairo, style->colors.progress.value);
 	set_rounded_rectangle(cairo,
-			offset_x + style->border_size / 2.0,
-			offset_y + style->border_size / 2.0,
+			offset_x + style->border_size,
+			offset_y + style->border_size,
 			progress_width,
 			notif_height - style->border_size,
 			scale, 0);
