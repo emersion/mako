@@ -57,7 +57,7 @@ case "$1" in
 	;;
 "menu")
 	shift 1
-	if ! type -p jq > /dev/null; then
+	if ! type jq > /dev/null; then
 		echo >&2 "$0: jq is required to use 'menu'"
 		exit 1
 	fi
