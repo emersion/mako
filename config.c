@@ -508,6 +508,13 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	return false;
 }
 
+bool apply_global_option(struct mako_config *config, const char *name,
+		const char *value) {
+	struct mako_criteria *global = global_criteria(config);
+	return apply_style_option(&global->style, name, value) ||
+		apply_config_option(config, name, value);
+}
+
 static bool file_exists(const char *path) {
 	return path && access(path, R_OK) != -1;
 }
@@ -676,9 +683,6 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{0},
 	};
 
-	struct mako_criteria *root_criteria =
-		wl_container_of(config->criteria.next, root_criteria, link);
-
 	optind = 1;
 	char *config_arg = NULL;
 	while (1) {
@@ -713,8 +717,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		}
 
 		const char *name = long_options[option_index].name;
-		if (!apply_style_option(&root_criteria->style, name, optarg)
-				&& !apply_config_option(config, name, optarg)) {
+		if (!apply_global_option(config, name, optarg)) {
 			fprintf(stderr, "Failed to parse option '%s'\n", name);
 			return -1;
 		}
