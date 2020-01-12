@@ -45,6 +45,7 @@ static void set_rounded_rectangle(cairo_t *cairo, double x, double y, double wid
 	y *= scale;
 	width *= scale;
 	height *= scale;
+	radius *= scale;
 	double degrees = M_PI / 180.0;
 
 	if (width < radius * 2) {
