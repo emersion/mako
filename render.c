@@ -258,6 +258,11 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	int pending_bottom_margin = 0;
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
+		if (config->max_visible >= 0 &&
+				visible_count >= (size_t)config->max_visible) {
+			break;
+		}
+
 		// Note that by this point, everything in the style is guaranteed to
 		// be specified, so we don't need to check.
 		struct mako_style *style = &notif->style;
@@ -300,15 +305,10 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 			// single entity for this purpose.
 			++visible_count;
 		}
-
-		if (config->max_visible >= 0 &&
-				visible_count >= (size_t)config->max_visible) {
-			break;
-		}
 	}
 
 	size_t count = wl_list_length(&state->notifications);
-	if (count > i) {
+	if (count > i && config->max_visible > 0) {
 		// Apply the hidden_style on top of the global style. This has to be
 		// done here since this notification isn't "real" and wasn't processed
 		// by apply_each_criteria.
