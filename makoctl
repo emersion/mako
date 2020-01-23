@@ -21,7 +21,7 @@ call() {
 		fr.emersion.Mako -- "$@"
 }
 
-if [ $# -eq 0 ] || [ $# -gt 5 ]; then
+if [ $# -eq 0 ]; then
    usage
    exit 1
 fi
