@@ -25,7 +25,7 @@ enum mako_sort_criteria {
 struct mako_style_spec {
 	bool width, height, margin, padding, border_size, border_radius, font,
 		markup, format, actions, default_timeout, ignore_timeout, icons,
-		max_icon_size, icon_path, group_criteria_spec, invisible;
+		max_icon_size, icon_path, group_criteria_spec, invisible, history;
 
 	struct {
 		bool background, text, border, progress;
@@ -65,12 +65,14 @@ struct mako_style {
 	struct mako_criteria_spec group_criteria_spec;
 
 	bool invisible; // Skipped during render, doesn't count toward max_visible
+	bool history;
 };
 
 struct mako_config {
 	struct wl_list criteria; // mako_criteria::link
 
 	int32_t max_visible;
+	int32_t max_history;
 	char *output;
 	enum zwlr_layer_shell_v1_layer layer;
 	uint32_t anchor;

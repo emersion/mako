@@ -55,6 +55,7 @@ void init_default_config(struct mako_config *config) {
 	config->layer = ZWLR_LAYER_SHELL_V1_LAYER_TOP;
 
 	config->max_visible = 5;
+	config->max_history = 5;
 	config->sort_criteria = MAKO_SORT_CRITERIA_TIME;
 	config->sort_asc = 0;
 
@@ -119,6 +120,7 @@ void init_default_style(struct mako_style *style) {
 
 	style->group_criteria_spec.none = true;
 	style->invisible = false;
+	style->history = true;
 
 	// Everything in the default config is explicitly specified.
 	memset(&style->spec, true, sizeof(struct mako_style_spec));
@@ -274,6 +276,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		target->spec.invisible = true;
 	}
 
+	if (style->spec.history) {
+		target->history = style->history;
+		target->spec.history = true;
+	}
+
 	if (style->border_radius) {
 		target->border_radius = style->border_radius;
 		target->spec.border_radius = true;
@@ -300,6 +307,7 @@ bool apply_superset_style(
 	target->spec.default_timeout = true;
 	target->spec.markup = true;
 	target->spec.actions = true;
+	target->spec.history = true;
 	target->spec.format = true;
 
 	free(target->format);
@@ -337,6 +345,7 @@ bool apply_superset_style(
 
 		target->markup |= style->markup;
 		target->actions |= style->actions;
+		target->history |= style->history;
 
 		// We do need to be safe about this one though.
 		if (style->spec.format) {
@@ -371,6 +380,8 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 		const char *value) {
 	if (strcmp(name, "max-visible") == 0) {
 		return parse_int(value, &config->max_visible);
+	} else if (strcmp(name, "max-history") == 0) {
+		return parse_int(value, &config->max_history);
 	} else if (strcmp(name, "output") == 0) {
 		free(config->output);
 		config->output = strdup(value);
@@ -496,6 +507,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 			parse_criteria_spec(value, &style->group_criteria_spec);
 	} else if (strcmp(name, "invisible") == 0) {
 		return spec->invisible = parse_boolean(value, &style->invisible);
+	} else if (strcmp(name, "history") == 0) {
+		return spec->history = parse_boolean(value, &style->history);
 	} else if (strcmp(name, "border-radius") == 0) {
 		spec->border_radius = parse_int(value, &style->border_radius);
 		if (spec->border_radius && spec->padding) {
@@ -673,6 +686,8 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"actions", required_argument, 0, 0},
 		{"format", required_argument, 0, 0},
 		{"max-visible", required_argument, 0, 0},
+		{"max-history", required_argument, 0, 0},
+		{"history", required_argument, 0, 0},
 		{"default-timeout", required_argument, 0, 0},
 		{"ignore-timeout", required_argument, 0, 0},
 		{"output", required_argument, 0, 0},

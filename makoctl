@@ -5,6 +5,8 @@ usage() {
 	echo ""
 	echo "Commands:"
 	echo "  dismiss [-a|--all]       Dismiss the last or all notifications"
+	echo "  restore                  Restore the most recently expired"
+	echo "                           notification from the history buffer"
 	echo "  invoke [-n id] [action]  Invoke an action on the notification"
 	echo "                           with the given id, or the last"
 	echo "                           notification if none is given"
@@ -55,6 +57,9 @@ case "$1" in
 	fi
 
 	call InvokeAction "us" "$id" "$action"
+	;;
+"restore")
+	call RestoreNotification
 	;;
 "menu")
 	shift 1
