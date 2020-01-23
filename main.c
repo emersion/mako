@@ -40,6 +40,8 @@ static const char usage[] =
 	"      --format <format>               Format string.\n"
 	"      --hidden-format <format>        Format string.\n"
 	"      --max-visible <n>               Max number of visible notifications.\n"
+	"      --max-history <n>               Max size of history buffer.\n"
+	"      --history <0|1>                 Add expired notificatinos to history.\n"
 	"      --sort <sort_criteria>          Sorts incoming notifications by time\n"
 	"                                      and/or priority in ascending(+) or\n"
 	"                                      descending(-) order.\n"
@@ -65,12 +67,16 @@ static bool init(struct mako_state *state) {
 		return false;
 	}
 	wl_list_init(&state->notifications);
+	wl_list_init(&state->history);
 	return true;
 }
 
 static void finish(struct mako_state *state) {
 	struct mako_notification *notif, *tmp;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
+		destroy_notification(notif);
+	}
+	wl_list_for_each_safe(notif, tmp, &state->history, link) {
 		destroy_notification(notif);
 	}
 	finish_event_loop(&state->event_loop);

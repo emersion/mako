@@ -22,6 +22,9 @@ Sends IPC commands to the running mako daemon via dbus.
 	*-a, --all*
 		Dismiss all notifications.
 
+*restore*
+	Restores the most recently expired notification from the history buffer.
+
 *invoke* [action]
 	Invokes an action on the first notification. If _action_ is not specified,
 	invokes the default action.

@@ -22,6 +22,13 @@ Empty lines and lines that begin with # are ignored.
 
 	Default: 5
 
+*max-history* = _n_
+	Set maximum number of expired notifications to keep in the history
+	buffer to _n_. If the buffer is full, newly expired notifications
+	replace the oldest ones. If 0, history is disabled.
+
+	Default: 5
+
 *sort* = _+/-time_ | _+/-priority_
 	Sorts incoming notifications by time and/or priority in ascending(+)
 	or descending(-) order.
@@ -147,6 +154,13 @@ Empty lines and lines that begin with # are ignored.
 *actions* = 0|1
 	Applications may request an action to be associated with activating a
 	notification. Disabling this will cause mako to ignore these requests.
+
+	Default: 1
+
+*history* = 0|1
+	If set, mako will save notifications that have reached their timeout
+	into the history buffer instead of immediately deleting them.
+	_max-history_ determines the size of the history buffer.
 
 	Default: 1
 
