@@ -36,10 +36,10 @@ Sends IPC commands to the running mako daemon via dbus.
 
 	Examples:
 
-		```
-		makoctl menu dmenu -p 'Select Action: '
-		makoctl menu wofi -d -p 'Choose Action: '
-		```
+```
+makoctl menu dmenu -p 'Select Action: '
+makoctl menu wofi -d -p 'Choose Action: '
+```
 
 *list*
 	Retrieve a list of current notifications.
