@@ -15,6 +15,32 @@
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "xdg-output-unstable-v1-client-protocol.h"
 
+struct mako_state;
+
+struct mako_surface {
+	struct wl_list link;
+
+	struct mako_state *state;
+
+	struct wl_surface *surface;
+	struct mako_output *surface_output;
+	struct zwlr_layer_surface_v1 *layer_surface;
+	struct mako_output *layer_surface_output;
+	struct wl_callback *frame_callback;
+	bool configured;
+	bool dirty; // Do we need to redraw?
+	int32_t scale;
+
+	char *configured_output;
+	enum zwlr_layer_shell_v1_layer layer;
+	uint32_t anchor;
+	int32_t max_visible;
+
+	int32_t width, height;
+	struct pool_buffer buffers[2];
+	struct pool_buffer *current_buffer;
+};
+
 struct mako_state {
 	struct mako_config config;
 	struct mako_event_loop event_loop;
@@ -31,18 +57,7 @@ struct mako_state {
 	struct wl_list outputs; // mako_output::link
 	struct wl_list seats; // mako_seat::link
 
-	struct wl_surface *surface;
-	struct mako_output *surface_output;
-	struct zwlr_layer_surface_v1 *layer_surface;
-	struct mako_output *layer_surface_output;
-	struct wl_callback *frame_callback;
-	bool configured;
-	bool dirty; // Do we need to redraw?
-	int32_t scale;
-
-	int32_t width, height;
-	struct pool_buffer buffers[2];
-	struct pool_buffer *current_buffer;
+	struct wl_list surfaces; // mako_surface::link
 
 	uint32_t last_id;
 	struct wl_list notifications; // mako_notification::link

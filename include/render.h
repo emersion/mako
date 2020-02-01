@@ -2,7 +2,8 @@
 #define MAKO_RENDER_H
 
 struct mako_state;
+struct mako_surface;
 
-int render(struct mako_state *state, struct pool_buffer *buffer, int scale);
+int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale);
 
 #endif

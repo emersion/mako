@@ -74,24 +74,24 @@ static cairo_subpixel_order_t get_cairo_subpixel_order(
 	assert(0);
 }
 
-static void set_font_options(cairo_t *cairo, struct mako_state *state) {
-	if (state->surface_output == NULL) {
+static void set_font_options(cairo_t *cairo, struct mako_surface *surface) {
+	if (surface->surface_output == NULL) {
 		return;
 	}
 
 	cairo_font_options_t *fo = cairo_font_options_create();
-	if (state->surface_output->subpixel == WL_OUTPUT_SUBPIXEL_NONE) {
+	if (surface->surface_output->subpixel == WL_OUTPUT_SUBPIXEL_NONE) {
 		cairo_font_options_set_antialias(fo, CAIRO_ANTIALIAS_GRAY);
 	} else {
 		cairo_font_options_set_antialias(fo, CAIRO_ANTIALIAS_SUBPIXEL);
 		cairo_font_options_set_subpixel_order(fo,
-				get_cairo_subpixel_order(state->surface_output->subpixel));
+			get_cairo_subpixel_order(surface->surface_output->subpixel));
 	}
 	cairo_set_font_options(cairo, fo);
 	cairo_font_options_destroy(fo);
 }
 
-static int render_notification(cairo_t *cairo, struct mako_state *state,
+static int render_notification(cairo_t *cairo, struct mako_state *state, struct mako_surface *surface,
 		struct mako_style *style, const char *text, struct mako_icon *icon, int offset_y, int scale,
 		struct mako_hotspot *hotspot, int progress) {
 	int border_size = 2 * style->border_size;
@@ -103,16 +103,16 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 	// If the compositor has forced us to shrink down, do so.
 	int notif_width =
-		(style->width <= state->width) ? style->width : state->width;
+		(style->width <= surface->width) ? style->width : surface->width;
 
 	// offset_x is for the entire draw operation inside the surface
 	int offset_x;
-	if (state->config.anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT) {
-		offset_x = state->width - notif_width - style->margin.right;
-	} else if (state->config.anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT) {
+	if (surface->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT) {
+		offset_x = surface->width - notif_width - style->margin.right;
+	} else if (surface->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT) {
 		offset_x = style->margin.left;
 	} else { // CENTER has nothing to & with, so it's the else case
-		offset_x = (state->width - notif_width) / 2;
+		offset_x = (surface->width - notif_width) / 2;
 	}
 
 	// text_x is the offset of the text inside our draw operation
@@ -140,7 +140,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 			(style->padding.top * 2) : (style->padding.bottom * 2);
 	}
 
-	set_font_options(cairo, state);
+	set_font_options(cairo, surface);
 
 	PangoLayout *layout = pango_cairo_create_layout(cairo);
 	set_layout_size(layout, text_layout_width, text_layout_height, scale);
@@ -319,7 +319,8 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	return notif_height;
 }
 
-int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
+int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) {
+	struct mako_state *state = surface->state;
 	struct mako_config *config = &state->config;
 	cairo_t *cairo = buffer->cairo;
 
@@ -339,10 +340,16 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	int total_height = 0;
 	int pending_bottom_margin = 0;
 	struct mako_notification *notif;
+	size_t count = 0;
 	wl_list_for_each(notif, &state->notifications, link) {
-		if (config->max_visible >= 0 &&
-				visible_count >= (size_t)config->max_visible) {
-			break;
+		if (notif->surface != surface) {
+			continue;
+		}
+		++count;
+
+		if (surface->max_visible >= 0 &&
+				visible_count >= (size_t)surface->max_visible) {
+			continue;
 		}
 
 		// Note that by this point, everything in the style is guaranteed to
@@ -373,7 +380,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 		struct mako_icon *icon = (style->icons) ? notif->icon : NULL;
 		int notif_height = render_notification(
-			cairo, state, style, text, icon, total_height, scale,
+			cairo, state, surface, style, text, icon, total_height, scale,
 			&notif->hotspot, notif->progress);
 		free(text);
 
@@ -390,7 +397,6 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 	}
 
-	size_t count = wl_list_length(&state->notifications);
 	if (count > i) {
 		// Apply the hidden_style on top of the global style. This has to be
 		// done here since this notification isn't "real" and wasn't processed
@@ -422,7 +428,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		format_text(style.format, text, format_hidden_text, &data);
 
 		int hidden_height = render_notification(
-			cairo, state, &style, text, NULL, total_height, scale, NULL, 0);
+			cairo, state, surface, &style, text, NULL, total_height, scale, NULL, 0);
 		free(text);
 		finish_style(&style);
 

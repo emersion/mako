@@ -12,6 +12,7 @@
 #include "config.h"
 #include "criteria.h"
 #include "notification.h"
+#include "surface.h"
 
 struct mako_criteria *create_criteria(struct mako_config *config) {
 	struct mako_criteria *criteria = calloc(1, sizeof(struct mako_criteria));
@@ -365,6 +366,21 @@ ssize_t apply_each_criteria(struct wl_list *criteria_list,
 		if (!apply_style(&notif->style, &criteria->style)) {
 			return -1;
 		}
+	}
+
+	struct mako_surface *surface;
+	wl_list_for_each(surface, &notif->state->surfaces, link) {
+		if (!strcmp(surface->configured_output, notif->style.output) &&
+				surface->anchor == notif->style.anchor &&
+				surface->layer == notif->style.layer) {
+			notif->surface = surface;
+			break;
+		}
+	}
+
+	if (!notif->surface) {
+		notif->surface = create_surface(notif->state, notif->style.output,
+			notif->style.layer, notif->style.anchor, notif->style.max_visible);
 	}
 
 	return match_count;
