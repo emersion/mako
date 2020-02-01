@@ -13,7 +13,6 @@
 #include "criteria.h"
 #include "types.h"
 
-
 static int32_t max(int32_t a, int32_t b) {
 	return (a > b) ? a : b;
 }
@@ -51,10 +50,6 @@ void init_default_config(struct mako_config *config) {
 	config->hidden_style.format = strdup("(%h more)");
 	config->hidden_style.spec.format = true;
 
-	config->output = strdup("");
-	config->layer = ZWLR_LAYER_SHELL_V1_LAYER_TOP;
-
-	config->max_visible = 5;
 	config->max_history = 5;
 	config->sort_criteria = MAKO_SORT_CRITERIA_TIME;
 	config->sort_asc = 0;
@@ -63,9 +58,6 @@ void init_default_config(struct mako_config *config) {
 	config->button_bindings.right = MAKO_BINDING_DISMISS;
 	config->button_bindings.middle = MAKO_BINDING_NONE;
 	config->touch = MAKO_BINDING_DISMISS;
-
-	config->anchor =
-		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
 }
 
 void finish_config(struct mako_config *config) {
@@ -76,7 +68,6 @@ void finish_config(struct mako_config *config) {
 
 	finish_style(&config->superstyle);
 	finish_style(&config->hidden_style);
-	free(config->output);
 }
 
 void init_default_style(struct mako_style *style) {
@@ -123,6 +114,13 @@ void init_default_style(struct mako_style *style) {
 	style->history = true;
 	style->icon_location = MAKO_ICON_LOCATION_LEFT;
 
+	style->output = strdup("");
+	style->layer = ZWLR_LAYER_SHELL_V1_LAYER_TOP;
+	style->max_visible = 5;
+
+	style->anchor =
+		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+
 	// Everything in the default config is explicitly specified.
 	memset(&style->spec, true, sizeof(struct mako_style_spec));
 }
@@ -135,6 +133,7 @@ void finish_style(struct mako_style *style) {
 	free(style->icon_path);
 	free(style->font);
 	free(style->format);
+	free(style->output);
 }
 
 // Update `target` with the values specified in `style`. If a failure occurs,
@@ -145,6 +144,7 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	char *new_font = NULL;
 	char *new_format = NULL;
 	char *new_icon_path = NULL;
+	char *new_output = NULL;
 
 	if (style->spec.font) {
 		new_font = strdup(style->font);
@@ -168,6 +168,17 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		if (new_icon_path == NULL) {
 			free(new_format);
 			free(new_font);
+			fprintf(stderr, "allocation failed\n");
+			return false;
+		}
+	}
+
+	if (style->spec.output) {
+		new_output = strdup(style->output);
+		if (new_output == NULL) {
+			free(new_format);
+			free(new_font);
+			free(new_icon_path);
 			fprintf(stderr, "allocation failed\n");
 			return false;
 		}
@@ -293,6 +304,27 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		target->spec.border_radius = true;
 	}
 
+	if (style->spec.output) {
+		free(target->output);
+		target->output = new_output;
+		target->spec.output = true;
+	}
+
+	if (style->spec.anchor) {
+		target->anchor = style->anchor;
+		target->spec.anchor = true;
+	}
+
+	if (style->spec.layer) {
+		target->layer = style->layer;
+		target->spec.layer = true;
+	}
+
+	if (style->spec.max_visible) {
+		target->max_visible = style->max_visible;
+		target->spec.max_visible = true;
+	}
+
 	return true;
 }
 
@@ -385,28 +417,7 @@ bool apply_superset_style(
 
 static bool apply_config_option(struct mako_config *config, const char *name,
 		const char *value) {
-	if (strcmp(name, "max-visible") == 0) {
-		return parse_int(value, &config->max_visible);
-	} else if (strcmp(name, "max-history") == 0) {
-		return parse_int(value, &config->max_history);
-	} else if (strcmp(name, "output") == 0) {
-		free(config->output);
-		config->output = strdup(value);
-		return true;
-	} else if (strcmp(name, "layer") == 0) {
-		if (strcmp(value, "background") == 0) {
-			config->layer = ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
-		} else if (strcmp(value, "bottom") == 0) {
-			config->layer = ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM;
-		} else if (strcmp(value, "top") == 0) {
-			config->layer = ZWLR_LAYER_SHELL_V1_LAYER_TOP;
-		} else if (strcmp(value, "overlay") == 0) {
-			config->layer = ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY;
-		} else {
-			return false;
-		}
-		return true;
-	} else if (strcmp(name, "sort") == 0) {
+	if (strcmp(name, "sort") == 0) {
 		if (strcmp(value, "+priority") == 0) {
 			config->sort_criteria |= MAKO_SORT_CRITERIA_URGENCY;
 			config->sort_asc |= MAKO_SORT_CRITERIA_URGENCY;
@@ -419,29 +430,6 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 		} else if (strcmp(value, "-time") == 0) {
 			config->sort_criteria |= MAKO_SORT_CRITERIA_TIME;
 			config->sort_asc &= ~MAKO_SORT_CRITERIA_TIME;
-		} else {
-			return false;
-		}
-		return true;
-	} else if (strcmp(name, "anchor") == 0) {
-		if (strcmp(value, "top-right") == 0) {
-			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
-				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
-		} else if (strcmp(value, "top-center") == 0) {
-			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP;
-		} else if (strcmp(value, "top-left") == 0) {
-			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
-				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
-		} else if (strcmp(value, "bottom-right") == 0) {
-			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
-				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
-		} else if (strcmp(value, "bottom-center") == 0) {
-			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
-		} else if (strcmp(value, "bottom-left") == 0) {
-			config->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
-				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
-		} else if (strcmp(value, "center") == 0) {
-			config->anchor = 0;
 		} else {
 			return false;
 		}
@@ -477,6 +465,8 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 			return false;
 		}
 		return true;
+	} else if (strcmp(name, "max-history") == 0) {
+		return parse_int(value, &config->max_history);
 	}
 
 	return false;
@@ -567,6 +557,51 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 			style->padding.right = max(style->border_radius, style->padding.right);
 		}
 		return spec->border_radius;
+	} else if (strcmp(name, "max-visible") == 0) {
+		return style->spec.max_visible = parse_int(value, &style->max_visible);
+	} else if (strcmp(name, "output") == 0) {
+		free(style->output);
+		style->output = strdup(value);
+		style->spec.output = true;
+		return true;
+	} else if (strcmp(name, "layer") == 0) {
+		if (strcmp(value, "background") == 0) {
+			style->layer = ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
+		} else if (strcmp(value, "bottom") == 0) {
+			style->layer = ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM;
+		} else if (strcmp(value, "top") == 0) {
+			style->layer = ZWLR_LAYER_SHELL_V1_LAYER_TOP;
+		} else if (strcmp(value, "overlay") == 0) {
+			style->layer = ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY;
+		} else {
+			return false;
+		}
+		style->spec.layer = true;
+		return true;
+	} else if (strcmp(name, "anchor") == 0) {
+		if (strcmp(value, "top-right") == 0) {
+			style->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
+				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+		} else if (strcmp(value, "top-center") == 0) {
+			style->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP;
+		} else if (strcmp(value, "top-left") == 0) {
+			style->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
+				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
+		} else if (strcmp(value, "bottom-right") == 0) {
+			style->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
+				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+		} else if (strcmp(value, "bottom-center") == 0) {
+			style->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
+		} else if (strcmp(value, "bottom-left") == 0) {
+			style->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
+				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
+		} else if (strcmp(value, "center") == 0) {
+			style->anchor = 0;
+		} else {
+			return false;
+		}
+		style->spec.anchor = true;
+		return true;
 	}
 
 	return false;
@@ -699,6 +734,7 @@ int load_config_file(struct mako_config *config, char *config_arg) {
 		if (!valid_option && section == NULL) {
 			valid_option = apply_config_option(config, line, eq + 1);
 		}
+
 
 		if (!valid_option) {
 			fprintf(stderr, "[%s:%d] Failed to parse option '%s'\n",

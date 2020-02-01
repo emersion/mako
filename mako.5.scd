@@ -16,12 +16,6 @@ Empty lines and lines that begin with # are ignored.
 
 # GLOBAL CONFIGURATION OPTIONS
 
-*max-visible*=_n_
-	Set maximum number of visible notifications to _n_. Older notifications will
-	be hidden. If -1, all notifications are visible.
-
-	Default: 5
-
 *max-history*=_n_
 	Set maximum number of expired notifications to keep in the history
 	buffer to _n_. If the buffer is full, newly expired notifications
@@ -34,30 +28,6 @@ Empty lines and lines that begin with # are ignored.
 	or descending(-) order.
 
 	Default: -time
-
-*output*=_name_
-	Show notifications on the specified output. If empty, notifications will
-	appear on the focused output.
-
-	Requires the compositor to support the Wayland protocol
-	xdg-output-unstable-v1 version 2.
-
-	Default: ""
-
-*layer*=_layer_
-	Arrange mako at the specified layer, relative to normal windows. Supported
-	values are _background_, _bottom_, _top_, and _overlay_. Using _overlay_
-	will cause notifications to be displayed above fullscreen windows, though
-	this may also occur at _top_ depending on your compositor.
-
-	Default: top
-
-*anchor*=_position_
-	Show notifications at the specified position on the output. Supported values
-	are _top-right_, _top-center_, _top-left_, _bottom-right_, _bottom-center_,
-	_bottom-left_, and _center_.
-
-	Default: top-right
 
 # BUTTON AND TOUCH BINDINGS
 
@@ -219,6 +189,36 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 	group.
 
 	Default: none
+
+*max-visible*=_n_
+	Set maximum number of visible notifications to _n_. Older notifications will
+	be hidden. If -1, all notifications are visible.
+
+	Default: 5
+
+*output*=_name_
+	Show notifications on the specified output. If empty, notifications will
+	appear on the focused output.
+
+	Requires the compositor to support the Wayland protocol
+	xdg-output-unstable-v1 version 2.
+
+	Default: ""
+
+*layer*=_layer_
+	Arrange mako at the specified layer, relative to normal windows. Supported
+	values are _background_, _bottom_, _top_, and _overlay_. Using _overlay_
+	will cause notifications to be displayed above fullscreen windows, though
+	this may also occur at _top_ depending on your compositor.
+
+	Default: top
+
+*anchor*=_position_
+	Show notifications at the specified position on the output. Supported values
+	are _top-right_, _top-center_, _top-left_, _bottom-right_, _bottom-center_,
+	_bottom-left_, and _center_.
+
+	Default: top-right
 
 # CRITERIA
 

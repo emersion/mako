@@ -59,6 +59,7 @@ src_files = [
 	'wayland.c',
 	'criteria.c',
 	'types.c',
+	'surface.c',
 	'icon.c',
 	'string-util.c',
 ]

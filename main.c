@@ -9,6 +9,7 @@
 #include "mako.h"
 #include "notification.h"
 #include "render.h"
+#include "surface.h"
 #include "wayland.h"
 
 static const char usage[] =
@@ -79,6 +80,11 @@ static void finish(struct mako_state *state) {
 	wl_list_for_each_safe(notif, tmp, &state->history, link) {
 		destroy_notification(notif);
 	}
+
+	struct mako_surface *surface, *stmp;
+	wl_list_for_each_safe(surface, stmp, &state->surfaces, link) {
+		destroy_surface(surface);
+	}
 	finish_event_loop(&state->event_loop);
 	finish_wayland(state);
 	finish_dbus(state);
@@ -91,6 +97,8 @@ int main(int argc, char *argv[]) {
 
 	state.argc = argc;
 	state.argv = argv;
+
+	wl_list_init(&state.surfaces);
 
 	// This is a bit wasteful, but easier than special-casing the reload.
 	init_default_config(&state.config);

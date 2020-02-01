@@ -8,6 +8,7 @@
 #include "mako.h"
 #include "notification.h"
 #include "render.h"
+#include "surface.h"
 #include "wayland.h"
 
 static void noop() {
@@ -81,11 +82,14 @@ static void create_output(struct mako_state *state,
 }
 
 static void destroy_output(struct mako_output *output) {
-	if (output->state->surface_output == output) {
-		output->state->surface_output = NULL;
-	}
-	if (output->state->layer_surface_output == output) {
-		output->state->layer_surface_output = NULL;
+	struct mako_surface *surface;
+	wl_list_for_each(surface, &output->state->surfaces, link) {
+		if (surface->surface_output == output) {
+			surface->surface_output = NULL;
+		}
+		if (surface->layer_surface_output == output) {
+			surface->layer_surface_output = NULL;
+		}
 	}
 	wl_list_remove(&output->link);
 	if (output->xdg_output != NULL) {
@@ -129,12 +133,13 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
 	}
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (hotspot_at(&notif->hotspot, seat->touch.pts[id].x, seat->touch.pts[id].y)) {
+			struct mako_surface *surface = notif->surface;
 			notification_handle_touch(notif);
+			set_dirty(surface);
 			break;
 		}
 	}
 
-	set_dirty(state);
 }
 
 static void pointer_handle_motion(void *data, struct wl_pointer *wl_pointer,
@@ -153,12 +158,13 @@ static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (hotspot_at(&notif->hotspot, seat->pointer.x, seat->pointer.y)) {
+			struct mako_surface *surface = notif->surface;
 			notification_handle_button(notif, button, button_state);
+			set_dirty(surface);
 			break;
 		}
 	}
 
-	set_dirty(state);
 }
 
 static const struct wl_pointer_listener pointer_listener = {
@@ -231,17 +237,17 @@ static void destroy_seat(struct mako_seat *seat) {
 
 static void surface_handle_enter(void *data, struct wl_surface *surface,
 		struct wl_output *wl_output) {
-	struct mako_state *state = data;
+	struct mako_surface *msurface = data;
 	// Don't bother keeping a list of outputs, a layer surface can only be on
 	// one output a a time
-	state->surface_output = wl_output_get_user_data(wl_output);
-	set_dirty(state);
+	msurface->surface_output = wl_output_get_user_data(wl_output);
+	set_dirty(msurface);
 }
 
 static void surface_handle_leave(void *data, struct wl_surface *surface,
 		struct wl_output *wl_output) {
-	struct mako_state *state = data;
-	state->surface_output = NULL;
+	struct mako_surface *msurface = data;
+	msurface->surface_output = NULL;
 }
 
 static const struct wl_surface_listener surface_listener = {
@@ -250,46 +256,46 @@ static const struct wl_surface_listener surface_listener = {
 };
 
 
-static void schedule_frame_and_commit(struct mako_state *state);
-static void send_frame(struct mako_state *state);
+static void schedule_frame_and_commit(struct mako_surface *state);
+static void send_frame(struct mako_surface *surface);
 
 static void layer_surface_handle_configure(void *data,
 		struct zwlr_layer_surface_v1 *surface,
 		uint32_t serial, uint32_t width, uint32_t height) {
-	struct mako_state *state = data;
+	struct mako_surface *msurface = data;
 
-	state->configured = true;
-	state->width = width;
-	state->height = height;
+	msurface->configured = true;
+	msurface->width = width;
+	msurface->height = height;
 
 	zwlr_layer_surface_v1_ack_configure(surface, serial);
-	send_frame(state);
+	send_frame(msurface);
 }
 
 static void layer_surface_handle_closed(void *data,
 		struct zwlr_layer_surface_v1 *surface) {
-	struct mako_state *state = data;
+	struct mako_surface *msurface = data;
 
-	zwlr_layer_surface_v1_destroy(state->layer_surface);
-	state->layer_surface = NULL;
+	zwlr_layer_surface_v1_destroy(msurface->layer_surface);
+	msurface->layer_surface = NULL;
 
-	wl_surface_destroy(state->surface);
-	state->surface = NULL;
+	wl_surface_destroy(msurface->surface);
+	msurface->surface = NULL;
 
-	if (state->frame_callback) {
-		wl_callback_destroy(state->frame_callback);
-		state->frame_callback = NULL;
-		state->dirty = true;
+	if (msurface->frame_callback) {
+		wl_callback_destroy(msurface->frame_callback);
+		msurface->frame_callback = NULL;
+		msurface->dirty = true;
 	}
 
-	if (state->configured) {
-		state->configured = false;
-		state->width = state->height = 0;
-		state->dirty = true;
+	if (msurface->configured) {
+		msurface->configured = false;
+		msurface->width = msurface->height = 0;
+		msurface->dirty = true;
 	}
 
-	if (state->dirty) {
-		schedule_frame_and_commit(state);
+	if (msurface->dirty) {
+		schedule_frame_and_commit(msurface);
 	}
 }
 
@@ -381,24 +387,27 @@ bool init_wayland(struct mako_state *state) {
 		}
 		wl_display_roundtrip(state->display);
 	}
-	if (state->xdg_output_manager == NULL &&
-			strcmp(state->config.output, "") != 0) {
-		fprintf(stderr, "warning: configured an output but compositor doesn't "
-			"support xdg-output-unstable-v1 version 2\n");
+	if (state->xdg_output_manager == NULL) {
+		struct mako_criteria *criteria;
+		wl_list_for_each(criteria, &state->config.criteria, link) {
+			if (criteria->style.spec.output &&
+					strcmp(criteria->style.output, "") != 0) {
+				fprintf(stderr, "warning: configured an output "
+					"but compositor doesn't support "
+					"xdg-output-unstable-v1 version 2\n");
+				break;
+			}
+		}
 	}
 
 	return true;
 }
 
 void finish_wayland(struct mako_state *state) {
-	if (state->layer_surface != NULL) {
-		zwlr_layer_surface_v1_destroy(state->layer_surface);
+	struct mako_surface *surface, *stmp;
+	wl_list_for_each_safe(surface, stmp, &state->surfaces, link) {
+		destroy_surface(surface);
 	}
-	if (state->surface != NULL) {
-		wl_surface_destroy(state->surface);
-	}
-	finish_buffer(&state->buffers[0]);
-	finish_buffer(&state->buffers[1]);
 
 	struct mako_output *output, *output_tmp;
 	wl_list_for_each_safe(output, output_tmp, &state->outputs, link) {
@@ -420,28 +429,30 @@ void finish_wayland(struct mako_state *state) {
 	wl_display_disconnect(state->display);
 }
 
-static struct wl_region *get_input_region(struct mako_state *state) {
+static struct wl_region *get_input_region(struct mako_surface *surface) {
 	struct wl_region *region =
-		wl_compositor_create_region(state->compositor);
+		wl_compositor_create_region(surface->state->compositor);
 
 	struct mako_notification *notif;
-	wl_list_for_each(notif, &state->notifications, link) {
+	wl_list_for_each(notif, &surface->state->notifications, link) {
 		struct mako_hotspot *hotspot = &notif->hotspot;
-		wl_region_add(region, hotspot->x, hotspot->y,
-			hotspot->width, hotspot->height);
+		if (notif->surface == surface) {
+			wl_region_add(region, hotspot->x, hotspot->y,
+				hotspot->width, hotspot->height);
+		}
 	}
 
 	return region;
 }
 
-static struct mako_output *get_configured_output(struct mako_state *state) {
-	const char *output_name = state->config.output;
+static struct mako_output *get_configured_output(struct mako_surface *surface) {
+	const char *output_name = surface->configured_output;
 	if (strcmp(output_name, "") == 0) {
 		return NULL;
 	}
 
 	struct mako_output *output;
-	wl_list_for_each(output, &state->outputs, link) {
+	wl_list_for_each(output, &surface->state->outputs, link) {
 		if (output->name != NULL && strcmp(output->name, output_name) == 0) {
 			return output;
 		}
@@ -450,66 +461,69 @@ static struct mako_output *get_configured_output(struct mako_state *state) {
 	return NULL;
 }
 
-static void schedule_frame_and_commit(struct mako_state *state);
+static void schedule_frame_and_commit(struct mako_surface *surface);
 
 // Draw and commit a new frame.
-static void send_frame(struct mako_state *state) {
+static void send_frame(struct mako_surface *surface) {
+	struct mako_state *state = surface->state;
+
 	int scale = 1;
-	if (state->surface_output != NULL) {
-		scale = state->surface_output->scale;
+	if (surface->surface_output != NULL) {
+		scale = surface->surface_output->scale;
 	}
 
-	state->current_buffer = get_next_buffer(state->shm, state->buffers,
-		state->width * scale, state->height * scale);
-	if (state->current_buffer == NULL) {
+	surface->current_buffer =
+		get_next_buffer(state->shm, surface->buffers,
+		surface->width * scale, surface->height * scale);
+	if (surface->current_buffer == NULL) {
 		fprintf(stderr, "no buffer available\n");
 		return;
 	}
 
-	struct mako_output *output = get_configured_output(state);
-	int height = render(state, state->current_buffer, scale);
+	struct mako_output *output = get_configured_output(surface);
+	int height = render(surface, surface->current_buffer, scale);
 
 	// There are two cases where we want to tear down the surface: zero
 	// notifications (height = 0) or moving between outputs.
-	if (height == 0 || state->layer_surface_output != output) {
-		if (state->layer_surface != NULL) {
-			zwlr_layer_surface_v1_destroy(state->layer_surface);
-			state->layer_surface = NULL;
+	if (height == 0 || surface->layer_surface_output != output) {
+		if (surface->layer_surface != NULL) {
+			zwlr_layer_surface_v1_destroy(surface->layer_surface);
+			surface->layer_surface = NULL;
 		}
-		if (state->surface != NULL) {
-			wl_surface_destroy(state->surface);
-			state->surface = NULL;
+		if (surface->surface != NULL) {
+			wl_surface_destroy(surface->surface);
+			surface->surface = NULL;
 		}
-		state->width = state->height = 0;
-		state->surface_output = NULL;
-		state->configured = false;
+		surface->width = surface->height = 0;
+		surface->surface_output = NULL;
+		surface->configured = false;
 	}
 
 	// If there are no notifications, there's no point in recreating the
 	// surface right now.
 	if (height == 0) {
-		state->dirty = false;
+		surface->dirty = false;
 		return;
 	}
 
 	// If we've made it here, there is something to draw. If the surface
 	// doesn't exist (this is the first notification, or we moved to a
 	// different output), we need to create it.
-	if (state->layer_surface == NULL) {
+	if (surface->layer_surface == NULL) {
 		struct wl_output *wl_output = NULL;
 		if (output != NULL) {
 			wl_output = output->wl_output;
 		}
-		state->layer_surface_output = output;
+		surface->layer_surface_output = output;
 
-		state->surface = wl_compositor_create_surface(state->compositor);
-		wl_surface_add_listener(state->surface, &surface_listener, state);
+		surface->surface = wl_compositor_create_surface(state->compositor);
+		wl_surface_add_listener(surface->surface, &surface_listener, surface);
 
-		state->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
-			state->layer_shell, state->surface, wl_output,
-			state->config.layer, "notifications");
-		zwlr_layer_surface_v1_add_listener(state->layer_surface,
-			&layer_surface_listener, state);
+		surface->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
+			state->layer_shell, surface->surface, wl_output,
+			surface->layer, "notifications");
+		zwlr_layer_surface_v1_add_listener(surface->layer_surface,
+			&layer_surface_listener, surface);
 
 		// Because we're creating a new surface, we aren't going to draw
 		// anything into it during this call. We don't know what size the
@@ -521,21 +535,21 @@ static void send_frame(struct mako_state *state) {
 		// block to let it set the size for us.
 	}
 
-	assert(state->layer_surface);
+	assert(surface->layer_surface);
 
 	// We now want to resize the surface if it isn't the right size. If the
 	// surface is brand new, it doesn't even have a size yet. If it already
 	// exists, we might need to resize if the list of notifications has changed
 	// since the last time we drew.
-	if (state->height != height) {
+	if (surface->height != height) {
 		struct mako_style *style = &state->config.superstyle;
 
-		zwlr_layer_surface_v1_set_size(state->layer_surface,
+		zwlr_layer_surface_v1_set_size(surface->layer_surface,
 				style->width + style->margin.left + style->margin.right,
 				height);
-		zwlr_layer_surface_v1_set_anchor(state->layer_surface,
-				state->config.anchor);
-		wl_surface_commit(state->surface);
+		zwlr_layer_surface_v1_set_anchor(surface->layer_surface,
+				surface->anchor);
+		wl_surface_commit(surface->surface);
 
 		// Now we're going to bail without drawing anything. This gives the
 		// compositor a chance to create the surface and tell us what size we
@@ -552,34 +566,34 @@ static void send_frame(struct mako_state *state) {
 		return;
 	}
 
-	assert(state->configured);
+	assert(surface->configured);
 
 	// Yay we can finally draw something!
-	struct wl_region *input_region = get_input_region(state);
-	wl_surface_set_input_region(state->surface, input_region);
+	struct wl_region *input_region = get_input_region(surface);
+	wl_surface_set_input_region(surface->surface, input_region);
 	wl_region_destroy(input_region);
 
-	wl_surface_set_buffer_scale(state->surface, scale);
-	wl_surface_damage_buffer(state->surface, 0, 0, INT32_MAX, INT32_MAX);
-	wl_surface_attach(state->surface, state->current_buffer->buffer, 0, 0);
-	state->current_buffer->busy = true;
+	wl_surface_set_buffer_scale(surface->surface, scale);
+	wl_surface_damage_buffer(surface->surface, 0, 0, INT32_MAX, INT32_MAX);
+	wl_surface_attach(surface->surface, surface->current_buffer->buffer, 0, 0);
+	surface->current_buffer->busy = true;
 
 	// Schedule a frame in case the state becomes dirty again
-	schedule_frame_and_commit(state);
+	schedule_frame_and_commit(surface);
 
-	state->dirty = false;
+	surface->dirty = false;
 }
 
 static void frame_handle_done(void *data, struct wl_callback *callback,
 		uint32_t time) {
-	struct mako_state *state = data;
+	struct mako_surface *surface = data;
 
-	wl_callback_destroy(state->frame_callback);
-	state->frame_callback = NULL;
+	wl_callback_destroy(surface->frame_callback);
+	surface->frame_callback = NULL;
 
 	// Only draw again if we need to
-	if (state->dirty) {
-		send_frame(state);
+	if (surface->dirty) {
+		send_frame(surface);
 	}
 }
 
@@ -587,24 +601,24 @@ static const struct wl_callback_listener frame_listener = {
 	.done = frame_handle_done,
 };
 
-static void schedule_frame_and_commit(struct mako_state *state) {
-	if (state->frame_callback) {
+static void schedule_frame_and_commit(struct mako_surface *surface) {
+	if (surface->frame_callback) {
 		return;
 	}
-	if (state->surface == NULL) {
+	if (surface->surface == NULL) {
 		// We don't yet have a surface, create it immediately
-		send_frame(state);
+		send_frame(surface);
 		return;
 	}
-	state->frame_callback = wl_surface_frame(state->surface);
-	wl_callback_add_listener(state->frame_callback, &frame_listener, state);
-	wl_surface_commit(state->surface);
+	surface->frame_callback = wl_surface_frame(surface->surface);
+	wl_callback_add_listener(surface->frame_callback, &frame_listener, surface);
+	wl_surface_commit(surface->surface);
 }
 
-void set_dirty(struct mako_state *state) {
-	if (state->dirty) {
+void set_dirty(struct mako_surface *surface) {
+	if (surface->dirty) {
 		return;
 	}
-	state->dirty = true;
-	schedule_frame_and_commit(state);
+	surface->dirty = true;
+	schedule_frame_and_commit(surface);
 }

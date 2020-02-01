@@ -34,8 +34,7 @@ struct mako_style_spec {
 	bool width, height, margin, padding, border_size, border_radius, font,
 		markup, format, actions, default_timeout, ignore_timeout, icons,
 		max_icon_size, icon_path, group_criteria_spec, invisible, history,
-		icon_location;
-
+		icon_location, max_visible, layer, output, anchor;
 	struct {
 		bool background, text, border, progress;
 	} colors;
@@ -76,18 +75,19 @@ struct mako_style {
 	bool invisible; // Skipped during render, doesn't count toward max_visible
 	bool history;
 	enum mako_icon_location icon_location;
+
+	int32_t max_visible;
+	char *output;
+	enum zwlr_layer_shell_v1_layer layer;
+	uint32_t anchor;
 };
 
 struct mako_config {
 	struct wl_list criteria; // mako_criteria::link
 
-	int32_t max_visible;
-	int32_t max_history;
-	char *output;
-	enum zwlr_layer_shell_v1_layer layer;
-	uint32_t anchor;
 	uint32_t sort_criteria; //enum mako_sort_criteria
 	uint32_t sort_asc;
+	int32_t max_history;
 
 	struct mako_style hidden_style;
 	struct mako_style superstyle;

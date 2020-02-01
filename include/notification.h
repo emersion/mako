@@ -9,6 +9,7 @@
 #include "types.h"
 
 struct mako_state;
+struct mako_surface;
 struct mako_timer;
 struct mako_criteria;
 struct mako_icon;
@@ -20,6 +21,7 @@ struct mako_hotspot {
 
 struct mako_notification {
 	struct mako_state *state;
+	struct mako_surface *surface;
 	struct wl_list link; // mako_state::notifications
 
 	struct mako_style style;
