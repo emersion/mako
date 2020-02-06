@@ -160,9 +160,9 @@ Empty lines and lines that begin with # are ignored.
 
 *default-timeout* = _timeout_
 	Set the default timeout to _timeout_ in milliseconds. To disable the
-	timeout, set it to zero.
+	timeout, set it to minus one.
 
-	Default: 0
+	Default: -1
 
 *ignore-timeout* = 0|1
 	If set, mako will ignore the expire timeout sent by notifications and use

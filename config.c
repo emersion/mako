@@ -108,7 +108,7 @@ void init_default_style(struct mako_style *style) {
 	style->format = strdup("<b>%s</b>\n%b");
 
 	style->actions = true;
-	style->default_timeout = 0;
+	style->default_timeout = -1;
 	style->ignore_timeout = false;
 
 	style->colors.background = 0x285577FF;

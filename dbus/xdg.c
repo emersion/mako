@@ -377,7 +377,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		expire_timeout = notif->style.default_timeout;
 	}
 
-	if (expire_timeout > 0) {
+	if (expire_timeout >= 0) {
 		notif->timer = add_event_loop_timer(&state->event_loop, expire_timeout,
 			handle_notification_timer, notif);
 	}
