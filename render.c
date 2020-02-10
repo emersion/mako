@@ -310,9 +310,9 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 		total_height += notif_height;
 		pending_bottom_margin = style->margin.bottom;
-                if (i == count){
-	            pending_bottom_margin = 0;
-                }
+		if (i == count){
+			pending_bottom_margin = 0;
+		}
 
 		if (notif->group_index < 1) {
 			// If the notification is ungrouped, or is the first in a group, it
