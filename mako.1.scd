@@ -30,7 +30,7 @@ See *mako*(5) for a list of options.
 
 Maintained by Simon Ser <contact@emersion.fr>, who is assisted by other
 open-source contributors. For more information about mako development, see
-https://github.com/emersion/mako.
+https://github.com/emersion/mako
 
 # SEE ALSO
 
