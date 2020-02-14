@@ -102,7 +102,7 @@ configure_file(
 	install_dir: datadir + '/dbus-1/services',
 )
 
-scdoc = find_program('scdoc', required: get_option('man-pages'))
+scdoc = dependency('scdoc', required: get_option('man-pages'), version: '>= 1.9.7')
 
 if scdoc.found()
 	sh = find_program('sh')
@@ -121,7 +121,7 @@ if scdoc.found()
 			input: src,
 			output: output,
 			command: [
-				sh, '-c', '@0@ < @INPUT@ > @1@'.format(scdoc.path(), output)
+				sh, '-c', '@0@ < @INPUT@ > @1@'.format(scdoc.get_pkgconfig_variable('scdoc'), output)
 			],
 			install: true,
 			install_dir: '@0@/man@1@'.format(mandir, section)
