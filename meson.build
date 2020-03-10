@@ -109,8 +109,8 @@ if systemd.found()
 
   configure_file(
     configuration: conf_data,
-    input: 'mako.systemd.service.in',
-    output: 'mako.service',
+    input: 'contrib/systemd/mako.service.in',
+    output: '@BASENAME@',
     install_dir: user_units_dir
   )
 endif
