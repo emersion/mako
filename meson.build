@@ -102,6 +102,13 @@ configure_file(
 	install_dir: datadir + '/dbus-1/services',
 )
 
+configure_file(
+	configuration: conf_data,
+	input: 'mako.systemd.service.in',
+	output: 'mako.service',
+	install_dir: get_option('prefix') + '/lib/systemd/user',
+)
+
 scdoc = dependency('scdoc', required: get_option('man-pages'), version: '>= 1.9.7')
 
 if scdoc.found()
