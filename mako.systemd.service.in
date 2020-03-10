@@ -9,4 +9,4 @@ BusName=org.freedesktop.Notifications
 ExecStart=@bindir@/mako
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target
