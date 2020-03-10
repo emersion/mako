@@ -6,6 +6,7 @@ PartOf=graphical-session.target
 [Service]
 Type=dbus
 BusName=org.freedesktop.Notifications
+ExecCondition=/bin/sh -c '[[ "$XDG_SESSION_TYPE" == "wayland" ]]'
 ExecStart=@bindir@/mako
 ExecReload=@bindir@/mako reload
 
