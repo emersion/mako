@@ -2,6 +2,7 @@
 Description=Lightweight Wayland notification daemon
 Documentation=man:mako(1)
 PartOf=graphical-session.target
+After=graphical-session.target
 
 [Service]
 Type=dbus
