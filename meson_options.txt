@@ -3,3 +3,4 @@ option('man-pages', type: 'feature', value: 'auto', description: 'Generate and i
 option('fish-completions', type: 'boolean', value: false, description: 'Install fish completions')
 option('zsh-completions', type: 'boolean', value: false, description: 'Install zsh completions')
 option('apparmor', type: 'boolean', value: 'false', description: 'Install AppArmor profile')
+option('systemd', type: 'feature', value: 'auto', description: 'Install systemd user service unit')
