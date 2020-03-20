@@ -13,7 +13,7 @@ Feel free to join the IRC channel: ##emersion on irc.freenode.net.
 ## Running
 
 
-`mako` will run automatically when a notification is emmited. This happens via
+`mako` will run automatically when a notification is emitted. This happens via
 DBus-activation, so you don't really need to explicitly start it up (this also
 allows delaying its startup time and speed up system startup).
 
