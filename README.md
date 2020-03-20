@@ -14,7 +14,7 @@ Feel free to join the IRC channel: ##emersion on irc.freenode.net.
 
 
 `mako` will run automatically when a notification is emitted. This happens via
-DBus-activation, so you don't really need to explicitly start it up (this also
+D-Bus activation, so you don't really need to explicitly start it up (this also
 allows delaying its startup time and speed up system startup).
 
 If you have several notification daemons installed though, you might want to
