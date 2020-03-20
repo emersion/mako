@@ -12,11 +12,19 @@ Feel free to join the IRC channel: ##emersion on irc.freenode.net.
 
 ## Running
 
-If you're using Sway you can start mako on launch by putting `exec mako` in
-your configuration file.
 
-If you are using elogind, you might need to manually start a dbus user session:
-`dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus`
+`mako` will run automatically when a notification is emitted. This happens via
+D-Bus activation, so you don't really need to explicitly start it up (this also
+allows delaying its startup time and speed up system startup).
+
+If you have several notification daemons installed though, you might want to
+explicitly start this one. Some ways of achieving this is:
+
+- If you're using Sway you can start mako on launch by putting `exec mako` in
+  your configuration file.
+
+- If you are using elogind, you might need to manually start a dbus user
+  session: `dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus`
 
 ## Building
 
