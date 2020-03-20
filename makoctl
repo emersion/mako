@@ -4,7 +4,10 @@ usage() {
 	echo "Usage: makoctl <command> [options...]"
 	echo ""
 	echo "Commands:"
-	echo "  dismiss [-a|--all]       Dismiss the last or all notifications"
+	echo "  dismiss                  Dismiss the last notification"
+	echo "          [-a|--all]       Dismiss all notifications"
+	echo "          [-g|--group]     Dismiss all the notifications"
+	echo "                           in the last notification's group"
 	echo "  restore                  Restore the most recently expired"
 	echo "                           notification from the history buffer"
 	echo "  invoke [-n id] [action]  Invoke an action on the notification"
@@ -34,6 +37,9 @@ case "$1" in
 	case "$action" in
 	"-a"|"--all")
 		call DismissAllNotifications
+		;;
+	"-g"|"--group")
+		call DismissGroupNotifications
 		;;
 	"")
 		call DismissLastNotification
