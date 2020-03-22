@@ -29,7 +29,7 @@ bool init_dbus(struct mako_state *state) {
 		goto error;
 	}
 
-	ret = sd_bus_request_name(state->bus, service_name, 0);
+	ret = sd_bus_request_name_async(state->bus, NULL, service_name, 0, NULL, NULL);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to acquire service name: %s\n", strerror(-ret));
 		if (ret == -EEXIST) {
