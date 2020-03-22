@@ -185,8 +185,35 @@ int run_event_loop(struct mako_event_loop *loop) {
 	loop->running = true;
 
 	int ret = 0;
+
+	// Unprocessed messages can be queued up by synchronous sd_bus methods. We
+	// need to process these.
+	do {
+		ret = sd_bus_process(loop->bus, NULL);
+	} while (ret > 0);
+
+	if (ret < 0) {
+		return ret;
+	}
+
 	while (loop->running) {
 		errno = 0;
+
+		// Wayland requests can be generated while handling non-Wayland events.
+		// We need to flush these.
+		do {
+			ret = wl_display_dispatch_pending(loop->display);
+			wl_display_flush(loop->display);
+		} while (ret > 0);
+
+		if (ret < 0) {
+			fprintf(stderr, "failed to dispatch pending Wayland events\n");
+			break;
+		}
+
+		// Same for D-Bus.
+		sd_bus_flush(loop->bus);
+
 		ret = poll(loop->fds, MAKO_EVENT_COUNT, -1);
 		if (!loop->running) {
 			ret = 0;
@@ -254,21 +281,6 @@ int run_event_loop(struct mako_event_loop *loop) {
 		if (loop->fds[MAKO_EVENT_TIMER].revents & POLLIN) {
 			handle_event_loop_timer(loop);
 		}
-
-		// Wayland requests can be generated while handling non-Wayland events.
-		// We need to flush these.
-		do {
-			ret = wl_display_dispatch_pending(loop->display);
-			wl_display_flush(loop->display);
-		} while (ret > 0);
-
-		if (ret < 0) {
-			fprintf(stderr, "failed to dispatch pending Wayland events\n");
-			break;
-		}
-
-		// Same for D-Bus.
-		sd_bus_flush(loop->bus);
 	}
 	return ret;
 }
