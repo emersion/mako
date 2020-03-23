@@ -439,6 +439,37 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 			return false;
 		}
 		return true;
+	} else if (strncmp(name, "on-button-", 10) == 0
+		   || strcmp(name, "on-touch") == 0) {
+
+		enum mako_binding action;
+
+		if (strcmp(value, "none") == 0) {
+			action = MAKO_BINDING_NONE;
+		} else if (strcmp(value, "dismiss") == 0) {
+			action = MAKO_BINDING_DISMISS;
+		} else if (strcmp(value, "dismiss-all") == 0) {
+			action = MAKO_BINDING_DISMISS_ALL;
+		} else if (strcmp(value, "dismiss-group") == 0) {
+			action = MAKO_BINDING_DISMISS_GROUP;
+		} else if (strcmp(value, "invoke-default-action") == 0) {
+			action = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
+		} else {
+			return false;
+		}
+
+		if (strcmp(name, "on-button-left") == 0) {
+			config->button_bindings.left = action;
+		} else if (strcmp(name, "on-button-right") == 0) {
+			config->button_bindings.right = action;
+		} else if (strcmp(name, "on-button-middle") == 0) {
+			config->button_bindings.middle = action;
+		} else if (strcmp(name, "on-touch") == 0) {
+			config->touch = action;
+		} else {
+			return false;
+		}
+		return true;
 	}
 
 	return false;
@@ -695,6 +726,10 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"anchor", required_argument, 0, 0},
 		{"sort", required_argument, 0, 0},
 		{"group-by", required_argument, 0, 0},
+		{"on-button-left", required_argument, 0, 0},
+		{"on-button-right", required_argument, 0, 0},
+		{"on-button-middle", required_argument, 0, 0},
+		{"on-touch", required_argument, 0, 0},
 		{0},
 	};
 
