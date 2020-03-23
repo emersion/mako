@@ -354,6 +354,15 @@ void notification_execute_binding(struct mako_notification *notif,
 			perror("fork failed");
 			break;
 		} else if (pid == 0) {
+			char id[32];
+			snprintf(id, sizeof(id), "%"PRIu32, notif->id);
+			setenv("id", id, 1);
+
+			unsetenv("desktop_entry");
+			if (notif->desktop_entry != NULL) {
+				setenv("desktop_entry", notif->desktop_entry, 1);
+			}
+
 			// Double-fork to avoid SIGCHLD issues
 			pid = fork();
 			if (pid < 0) {
