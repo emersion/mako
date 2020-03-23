@@ -103,7 +103,7 @@ void close_notification(struct mako_notification *notif,
 			notif, &notif->style.group_criteria_spec);
 	if (notif_criteria) {
 		group_notifications(notif->state, notif_criteria);
-		free(notif_criteria);
+		destroy_criteria(notif_criteria);
 	}
 
 	if (!notif->style.history ||
