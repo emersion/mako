@@ -59,11 +59,11 @@ Empty lines and lines that begin with # are ignored.
 
 	Default: top-right
 
-# BUTTON AND TOUCH BINDINGS
+# BINDINGS
 
-Specify the action to take per button or touch event. Supported values are
-_none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_
-and _exec <command>_.
+Bindings allow to execute an action when an event is triggered. Supported
+actions are _none_, _dismiss_, _dismiss-all_, _dismiss-group_,
+_invoke-default-action_ and _exec <command>_.
 
 *on-button-left* = _action_
 	Default: invoke-default-action
@@ -76,6 +76,9 @@ and _exec <command>_.
 
 *on-touch* = _action_
 	Default: dismiss
+
+*on-notify* = _action_
+	Default: none
 
 # STYLE OPTIONS
 

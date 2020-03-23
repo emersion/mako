@@ -83,16 +83,16 @@ struct mako_config {
 	char *output;
 	enum zwlr_layer_shell_v1_layer layer;
 	uint32_t anchor;
-	uint32_t sort_criteria; //enum mako_sort_criteria
+	uint32_t sort_criteria; // enum mako_sort_criteria
 	uint32_t sort_asc;
 
 	struct mako_style hidden_style;
 	struct mako_style superstyle;
 
+	struct mako_binding notify_binding;
 	struct {
 		struct mako_binding left, right, middle;
 	} button_bindings;
-
 	struct mako_binding touch_binding;
 };
 

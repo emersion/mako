@@ -79,6 +79,7 @@ void finish_config(struct mako_config *config) {
 
 	finish_style(&config->superstyle);
 	finish_style(&config->hidden_style);
+	finish_binding(&config->notify_binding);
 	finish_binding(&config->button_bindings.left);
 	finish_binding(&config->button_bindings.right);
 	finish_binding(&config->button_bindings.middle);
@@ -450,8 +451,7 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 			return false;
 		}
 		return true;
-	} else if (has_prefix(name, "on-button-")
-			|| strcmp(name, "on-touch") == 0) {
+	} else if (has_prefix(name, "on-")) {
 		struct mako_binding binding = {0};
 		if (strcmp(value, "none") == 0) {
 			binding.action = MAKO_BINDING_NONE;
@@ -478,6 +478,8 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 			config->button_bindings.middle = binding;
 		} else if (strcmp(name, "on-touch") == 0) {
 			config->touch_binding = binding;
+		} else if (strcmp(name, "on-notify") == 0) {
+			config->notify_binding = binding;
 		} else {
 			finish_binding(&binding);
 			return false;

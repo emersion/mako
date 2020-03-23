@@ -401,6 +401,8 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	group_notifications(state, notif_criteria);
 	free(notif_criteria);
 
+	notification_execute_binding(notif, &notif->state->config.notify_binding);
+
 	set_dirty(state);
 
 	return sd_bus_reply_method_return(msg, "u", notif->id);
