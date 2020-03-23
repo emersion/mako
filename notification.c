@@ -153,7 +153,7 @@ void close_group_notifications(struct mako_notification *top_notif,
 		close_notification(notif, reason);
 	}
 
-	free(notif_criteria);
+	destroy_criteria(notif_criteria);
 	close_notification(top_notif, reason);
 }
 
