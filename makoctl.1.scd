@@ -17,10 +17,13 @@ Sends IPC commands to the running mako daemon via dbus.
 *dismiss*
 	Dismisses the first notification.
 
-	*Options*
+	Options:
 
 	*-a, --all*
 		Dismiss all notifications.
+
+	*-g, --group*
+		Dismiss the first notification group.
 
 *restore*
 	Restores the most recently expired notification from the history buffer.
@@ -29,7 +32,7 @@ Sends IPC commands to the running mako daemon via dbus.
 	Invokes an action on the first notification. If _action_ is not specified,
 	invokes the default action.
 
-*menu* [program] [argument ...]
+*menu* [program] [argument...]
 	Use a program to select an action on the first notification. The list of
 	actions are joined on newlines and passed to _program_. The program should
 	write the selected action to stdout. If an action is given, this action
