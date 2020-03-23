@@ -78,6 +78,8 @@ void destroy_notification(struct mako_notification *notif);
 
 void close_notification(struct mako_notification *notif,
 	enum mako_notification_close_reason reason);
+void close_group_notifications(struct mako_notification *notif,
+	enum mako_notification_close_reason reason);
 void close_all_notifications(struct mako_state *state,
 	enum mako_notification_close_reason reason);
 char *format_hidden_text(char variable, bool *markup, void *data);

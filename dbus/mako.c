@@ -24,6 +24,24 @@ static int handle_dismiss_all_notifications(sd_bus_message *msg, void *data,
 	return sd_bus_reply_method_return(msg, "");
 }
 
+static int handle_dismiss_group_notifications(sd_bus_message *msg, void *data,
+		sd_bus_error *ret_error) {
+	struct mako_state *state = data;
+
+	if (wl_list_empty(&state->notifications)) {
+		goto done;
+	}
+
+	struct mako_notification *notif =
+		wl_container_of(state->notifications.next, notif, link);
+
+	close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+	set_dirty(state);
+
+done:
+	return sd_bus_reply_method_return(msg, "");
+}
+
 static int handle_dismiss_last_notification(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
@@ -277,6 +295,7 @@ static int handle_set_config_option(sd_bus_message *msg, void *data,
 static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_VTABLE_START(0),
 	SD_BUS_METHOD("DismissAllNotifications", "", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("DismissGroupNotifications", "", "", handle_dismiss_group_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("DismissLastNotification", "", "", handle_dismiss_last_notification, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("InvokeAction", "us", "", handle_invoke_action, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("RestoreNotification", "", "", handle_restore_action, SD_BUS_VTABLE_UNPRIVILEGED),

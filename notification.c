@@ -135,6 +135,29 @@ struct mako_notification *get_notification(struct mako_state *state,
 	return NULL;
 }
 
+void close_group_notifications(struct mako_notification *top_notif,
+	       enum mako_notification_close_reason reason) {
+	struct mako_state *state = top_notif->state;
+
+	if (top_notif->style.group_criteria_spec.none) {
+		// No grouping, just close the notification
+		close_notification(top_notif, reason);
+		return;
+	}
+
+	struct mako_criteria *notif_criteria = create_criteria_from_notification(
+		top_notif, &top_notif->style.group_criteria_spec);
+
+	struct mako_notification *notif, *tmp;
+	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
+		if (match_criteria(notif_criteria, notif)) {
+			close_notification(notif, reason);
+		}
+	}
+
+	destroy_criteria(notif_criteria);
+}
+
 void close_all_notifications(struct mako_state *state,
 		enum mako_notification_close_reason reason) {
 	struct mako_notification *notif, *tmp;
@@ -304,6 +327,9 @@ void notification_execute_binding(struct mako_notification *notif,
 		break;
 	case MAKO_BINDING_DISMISS:
 		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+		break;
+	case MAKO_BINDING_DISMISS_GROUP:
+		close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 		break;
 	case MAKO_BINDING_DISMISS_ALL:
 		close_all_notifications(notif->state, MAKO_NOTIFICATION_CLOSE_DISMISSED);
