@@ -92,7 +92,7 @@ void notification_handle_button(struct mako_notification *notif, uint32_t button
 	enum wl_pointer_button_state state);
 void notification_handle_touch(struct mako_notification *notif);
 void notification_execute_binding(struct mako_notification *notif,
-	enum mako_binding binding);
+	const struct mako_binding *binding);
 void insert_notification(struct mako_state *state, struct mako_notification *notif);
 int group_notifications(struct mako_state *state, struct mako_criteria *criteria);
 

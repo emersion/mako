@@ -1,8 +1,11 @@
 #define _POSIX_C_SOURCE 200809L
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
 #include <pango/pangocairo.h>
 #include <wayland-client.h>
 #ifdef __linux__
@@ -307,22 +310,22 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 	return len;
 }
 
-static enum mako_binding get_binding(struct mako_config *config,
+static const struct mako_binding *get_button_binding(struct mako_config *config,
 		uint32_t button) {
 	switch (button) {
 	case BTN_LEFT:
-		return config->button_bindings.left;
+		return &config->button_bindings.left;
 	case BTN_RIGHT:
-		return config->button_bindings.right;
+		return &config->button_bindings.right;
 	case BTN_MIDDLE:
-		return config->button_bindings.middle;
+		return &config->button_bindings.middle;
 	}
-	return MAKO_BINDING_NONE;
+	return NULL;
 }
 
 void notification_execute_binding(struct mako_notification *notif,
-		enum mako_binding binding) {
-	switch (binding) {
+		const struct mako_binding *binding) {
+	switch (binding->action) {
 	case MAKO_BINDING_NONE:
 		break;
 	case MAKO_BINDING_DISMISS:
@@ -344,6 +347,30 @@ void notification_execute_binding(struct mako_notification *notif,
 		}
 		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 		break;
+	case MAKO_BINDING_EXEC:;
+		assert(binding->command != NULL);
+		pid_t pid = fork();
+		if (pid < 0) {
+			perror("fork failed");
+			break;
+		} else if (pid == 0) {
+			// Double-fork to avoid SIGCHLD issues
+			pid = fork();
+			if (pid < 0) {
+				perror("fork failed");
+				_exit(1);
+			} else if (pid == 0) {
+				char *const argv[] = { "sh", "-c", binding->command, NULL };
+				execvp("sh", argv);
+				perror("exec failed");
+				_exit(1);
+			}
+			_exit(0);
+		}
+		if (waitpid(pid, NULL, 0) < 0) {
+			perror("waitpid failed");
+		}
+		break;
 	}
 }
 
@@ -353,13 +380,15 @@ void notification_handle_button(struct mako_notification *notif, uint32_t button
 		return;
 	}
 
-	notification_execute_binding(notif,
-		get_binding(&notif->state->config, button));
+	const struct mako_binding *binding =
+		get_button_binding(&notif->state->config, button);
+	if (binding != NULL) {
+		notification_execute_binding(notif, binding);
+	}
 }
 
 void notification_handle_touch(struct mako_notification *notif) {
-	notification_execute_binding(notif,
-		notif->state->config.touch);
+	notification_execute_binding(notif, &notif->state->config.touch_binding);
 }
 
 /*

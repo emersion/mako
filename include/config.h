@@ -7,17 +7,23 @@
 #include "types.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
-enum mako_binding {
+enum mako_binding_action {
 	MAKO_BINDING_NONE,
 	MAKO_BINDING_DISMISS,
 	MAKO_BINDING_DISMISS_GROUP,
 	MAKO_BINDING_DISMISS_ALL,
 	MAKO_BINDING_INVOKE_DEFAULT_ACTION,
+	MAKO_BINDING_EXEC,
 };
 
 enum mako_sort_criteria {
 	MAKO_SORT_CRITERIA_TIME = 1,
 	MAKO_SORT_CRITERIA_URGENCY = 2,
+};
+
+struct mako_binding {
+	enum mako_binding_action action;
+	char *command; // for MAKO_BINDING_EXEC
 };
 
 // Represents which fields in the style were specified in this style. All
@@ -84,11 +90,13 @@ struct mako_config {
 	struct mako_style superstyle;
 
 	struct {
-		enum mako_binding left, right, middle;
+		struct mako_binding left, right, middle;
 	} button_bindings;
 
-	enum mako_binding touch;
+	struct mako_binding touch_binding;
 };
+
+void finish_binding(struct mako_binding *binding);
 
 void init_default_config(struct mako_config *config);
 void finish_config(struct mako_config *config);

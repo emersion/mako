@@ -13,6 +13,9 @@
 #include "criteria.h"
 #include "types.h"
 
+void finish_binding(struct mako_binding *binding) {
+	free(binding->command);
+}
 
 static int32_t max(int32_t a, int32_t b) {
 	return (a > b) ? a : b;
@@ -59,10 +62,10 @@ void init_default_config(struct mako_config *config) {
 	config->sort_criteria = MAKO_SORT_CRITERIA_TIME;
 	config->sort_asc = 0;
 
-	config->button_bindings.left = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
-	config->button_bindings.right = MAKO_BINDING_DISMISS;
-	config->button_bindings.middle = MAKO_BINDING_NONE;
-	config->touch = MAKO_BINDING_DISMISS;
+	config->button_bindings.left.action = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
+	config->button_bindings.right.action = MAKO_BINDING_DISMISS;
+	config->button_bindings.middle.action = MAKO_BINDING_NONE;
+	config->touch_binding.action = MAKO_BINDING_DISMISS;
 
 	config->anchor =
 		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
@@ -76,6 +79,10 @@ void finish_config(struct mako_config *config) {
 
 	finish_style(&config->superstyle);
 	finish_style(&config->hidden_style);
+	finish_binding(&config->button_bindings.left);
+	finish_binding(&config->button_bindings.right);
+	finish_binding(&config->button_bindings.middle);
+	finish_binding(&config->touch_binding);
 	free(config->output);
 }
 
@@ -376,6 +383,10 @@ bool apply_superset_style(
 	return true;
 }
 
+static bool has_prefix(const char *str, const char *prefix) {
+	return strncmp(str, prefix, strlen(prefix)) == 0;
+}
+
 static bool apply_config_option(struct mako_config *config, const char *name,
 		const char *value) {
 	if (strcmp(name, "max-visible") == 0) {
@@ -439,34 +450,36 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 			return false;
 		}
 		return true;
-	} else if (strncmp(name, "on-button-", 10) == 0
-		   || strcmp(name, "on-touch") == 0) {
-
-		enum mako_binding action;
-
+	} else if (has_prefix(name, "on-button-")
+			|| strcmp(name, "on-touch") == 0) {
+		struct mako_binding binding = {0};
 		if (strcmp(value, "none") == 0) {
-			action = MAKO_BINDING_NONE;
+			binding.action = MAKO_BINDING_NONE;
 		} else if (strcmp(value, "dismiss") == 0) {
-			action = MAKO_BINDING_DISMISS;
+			binding.action = MAKO_BINDING_DISMISS;
 		} else if (strcmp(value, "dismiss-all") == 0) {
-			action = MAKO_BINDING_DISMISS_ALL;
+			binding.action = MAKO_BINDING_DISMISS_ALL;
 		} else if (strcmp(value, "dismiss-group") == 0) {
-			action = MAKO_BINDING_DISMISS_GROUP;
+			binding.action = MAKO_BINDING_DISMISS_GROUP;
 		} else if (strcmp(value, "invoke-default-action") == 0) {
-			action = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
+			binding.action = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
+		} else if (has_prefix(value, "exec ")) {
+			binding.action = MAKO_BINDING_EXEC;
+			binding.command = strdup(value + strlen("exec "));
 		} else {
 			return false;
 		}
 
 		if (strcmp(name, "on-button-left") == 0) {
-			config->button_bindings.left = action;
+			config->button_bindings.left = binding;
 		} else if (strcmp(name, "on-button-right") == 0) {
-			config->button_bindings.right = action;
+			config->button_bindings.right = binding;
 		} else if (strcmp(name, "on-button-middle") == 0) {
-			config->button_bindings.middle = action;
+			config->button_bindings.middle = binding;
 		} else if (strcmp(name, "on-touch") == 0) {
-			config->touch = action;
+			config->touch_binding = binding;
 		} else {
+			finish_binding(&binding);
 			return false;
 		}
 		return true;
