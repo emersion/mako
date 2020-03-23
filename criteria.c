@@ -354,6 +354,8 @@ struct mako_criteria *create_criteria_from_notification(
 		return NULL;
 	}
 
+	wl_list_init(&criteria->link);
+
 	memcpy(&criteria->spec, spec, sizeof(struct mako_criteria_spec));
 
 	// We only really need to copy the ones that are in the spec, but it
