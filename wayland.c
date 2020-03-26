@@ -250,6 +250,7 @@ static const struct wl_surface_listener surface_listener = {
 };
 
 
+static void schedule_frame_and_commit(struct mako_state *state);
 static void send_frame(struct mako_state *state);
 
 static void layer_surface_handle_configure(void *data,
@@ -275,11 +276,22 @@ static void layer_surface_handle_closed(void *data,
 	wl_surface_destroy(state->surface);
 	state->surface = NULL;
 
+	bool need_reschedule = false;
+	if (state->frame_callback) {
+		wl_callback_destroy(state->frame_callback);
+		state->frame_callback = NULL;
+		need_reschedule = true;
+	}
+
 	if (state->configured) {
 		state->configured = false;
 		state->width = state->height = 0;
+		state->dirty = true;
+		need_reschedule = true;
+	}
 
-		set_dirty(state);
+	if (need_reschedule) {
+		schedule_frame_and_commit(state);
 	}
 }
 
@@ -564,8 +576,8 @@ static void frame_handle_done(void *data, struct wl_callback *callback,
 		uint32_t time) {
 	struct mako_state *state = data;
 
-	wl_callback_destroy(callback);
-	state->frame_pending = false;
+	wl_callback_destroy(state->frame_callback);
+	state->frame_callback = NULL;
 
 	// Only draw again if we need to
 	if (state->dirty) {
@@ -578,7 +590,7 @@ static const struct wl_callback_listener frame_listener = {
 };
 
 static void schedule_frame_and_commit(struct mako_state *state) {
-	if (state->frame_pending) {
+	if (state->frame_callback) {
 		return;
 	}
 	if (state->surface == NULL) {
@@ -586,10 +598,9 @@ static void schedule_frame_and_commit(struct mako_state *state) {
 		send_frame(state);
 		return;
 	}
-	struct wl_callback *callback = wl_surface_frame(state->surface);
-	wl_callback_add_listener(callback, &frame_listener, state);
+	state->frame_callback = wl_surface_frame(state->surface);
+	wl_callback_add_listener(state->frame_callback, &frame_listener, state);
 	wl_surface_commit(state->surface);
-	state->frame_pending = true;
 }
 
 void set_dirty(struct mako_state *state) {
