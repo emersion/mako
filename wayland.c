@@ -276,21 +276,19 @@ static void layer_surface_handle_closed(void *data,
 	wl_surface_destroy(state->surface);
 	state->surface = NULL;
 
-	bool need_reschedule = false;
 	if (state->frame_callback) {
 		wl_callback_destroy(state->frame_callback);
 		state->frame_callback = NULL;
-		need_reschedule = true;
+		state->dirty = true;
 	}
 
 	if (state->configured) {
 		state->configured = false;
 		state->width = state->height = 0;
 		state->dirty = true;
-		need_reschedule = true;
 	}
 
-	if (need_reschedule) {
+	if (state->dirty) {
 		schedule_frame_and_commit(state);
 	}
 }
