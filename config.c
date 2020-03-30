@@ -131,6 +131,7 @@ void init_empty_style(struct mako_style *style) {
 }
 
 void finish_style(struct mako_style *style) {
+	free(style->icon_path);
 	free(style->font);
 	free(style->format);
 }

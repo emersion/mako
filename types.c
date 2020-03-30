@@ -198,6 +198,7 @@ bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out) {
 		token = strtok_r(NULL, ",", &saveptr);
 	}
 
+	free(components);
 	return true;
 }
 

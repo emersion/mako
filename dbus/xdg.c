@@ -399,7 +399,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		return -1;
 	}
 	group_notifications(state, notif_criteria);
-	free(notif_criteria);
+	destroy_criteria(notif_criteria);
 
 	set_dirty(state);
 
