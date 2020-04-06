@@ -90,6 +90,11 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 
 	Default: #285577FF
 
+*title-color* = _color_
+	Set title text color to _color_. See *COLORS* for more information.
+
+	Default: #FFFFFFFF
+
 *text-color* = _color_
 	Set text color to _color_. See *COLORS* for more information.
 
@@ -118,6 +123,12 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 
 	Default: 5
 
+*title-padding* = _directional_
+	Set padding on each side of the title (in the titlebar) to the size
+	specified by _directional_. See *DIRECTIONAL VALUES* for more information.
+
+	Default: 5
+
 *border-size* = _px_
 	Set popup border size to _px_ pixels.
 
@@ -125,6 +136,7 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 
 *border-color* = _color_
 	Set popup border color to _color_. See *COLORS* for more information.
+	The titlebar background will be the same color as *border-color*.
 
 	Default: #4C7899FF
 
@@ -190,6 +202,14 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 
 	Default: <b>%s</b>\\n%b
 	Default when grouped: (%g) <b>%s</b>\\n%b
+
+*title-format* = _format_
+	Set title format string to _format_. See *FORMAT SPECIFIERS* for
+	more information. To change this for grouped notifications, set it within
+	a _grouped_ criteria.
+	If there is no format set, the titlebar won't be rendered.
+
+	Default: "" (empty string)
 
 *default-timeout* = _timeout_
 	Set the default timeout to _timeout_ in milliseconds. To disable the
