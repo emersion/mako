@@ -34,6 +34,8 @@ void init_default_config(struct mako_config *config) {
 	new_criteria->style.spec.invisible = true;
 	new_criteria->style.format = strdup("(%g) <b>%s</b>\n%b");
 	new_criteria->style.spec.format = true;
+	new_criteria->style.title_format = strdup("");
+	new_criteria->style.spec.title_format = true;
 	new_criteria->raw_string = strdup("(default grouped)");
 
 	// ...but make the first one in the group visible.
@@ -93,6 +95,11 @@ void init_default_style(struct mako_style *style) {
 	style->padding.bottom = 5;
 	style->padding.left = 5;
 
+	style->title_padding.top = 5;
+	style->title_padding.right = 5;
+	style->title_padding.bottom = 5;
+	style->title_padding.left = 5;
+
 	style->border_size = 2;
 	style->border_radius = 0;
 
@@ -107,12 +114,14 @@ void init_default_style(struct mako_style *style) {
 	style->font = strdup("monospace 10");
 	style->markup = true;
 	style->format = strdup("<b>%s</b>\n%b");
+	style->title_format = strdup("");
 
 	style->actions = true;
 	style->default_timeout = 0;
 	style->ignore_timeout = false;
 
 	style->colors.background = 0x285577FF;
+	style->colors.title = 0xFFFFFFFF;
 	style->colors.text = 0xFFFFFFFF;
 	style->colors.border = 0x4C7899FF;
 	style->colors.progress.value = 0x5588AAFF;
@@ -134,6 +143,7 @@ void finish_style(struct mako_style *style) {
 	free(style->icon_path);
 	free(style->font);
 	free(style->format);
+	free(style->title_format);
 }
 
 // Update `target` with the values specified in `style`. If a failure occurs,
@@ -143,6 +153,7 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	// to bail without changing `target`.
 	char *new_font = NULL;
 	char *new_format = NULL;
+	char *new_title_format = NULL;
 	char *new_icon_path = NULL;
 
 	if (style->spec.font) {
@@ -162,9 +173,20 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		}
 	}
 
+	if (style->spec.title_format) {
+		new_title_format = strdup(style->title_format);
+		if (new_title_format == NULL) {
+			free(new_format);
+			free(new_font);
+			fprintf(stderr, "allocation failed\n");
+			return false;
+		}
+	}
+
 	if (style->spec.icon_path) {
 		new_icon_path = strdup(style->icon_path);
 		if (new_icon_path == NULL) {
+			free(new_title_format);
 			free(new_format);
 			free(new_font);
 			fprintf(stderr, "allocation failed\n");
@@ -192,6 +214,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.padding) {
 		target->padding = style->padding;
 		target->spec.padding = true;
+	}
+
+	if (style->spec.title_padding) {
+		target->title_padding = style->title_padding;
+		target->spec.title_padding = true;
 	}
 
 	if (style->spec.border_size) {
@@ -232,6 +259,12 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		target->spec.format = true;
 	}
 
+	if (style->spec.title_format) {
+		free(target->title_format);
+		target->title_format = new_title_format;
+		target->spec.title_format = true;
+	}
+
 	if (style->spec.actions) {
 		target->actions = style->actions;
 		target->spec.actions = true;
@@ -250,6 +283,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.colors.background) {
 		target->colors.background = style->colors.background;
 		target->spec.colors.background = true;
+	}
+
+	if (style->spec.colors.title) {
+		target->colors.title = style->colors.title;
+		target->spec.colors.title = true;
 	}
 
 	if (style->spec.colors.text) {
@@ -302,6 +340,7 @@ bool apply_superset_style(
 	target->spec.height = true;
 	target->spec.margin = true;
 	target->spec.padding = true;
+	target->spec.title_padding = true;
 	target->spec.border_size = true;
 	target->spec.icons = true;
 	target->spec.max_icon_size = true;
@@ -310,12 +349,16 @@ bool apply_superset_style(
 	target->spec.actions = true;
 	target->spec.history = true;
 	target->spec.format = true;
+	target->spec.title_format = true;
 
 	free(target->format);
+	free(target->title_format);
 
-	// The "format" needs enough space for one of each specifier.
+	// The "format" and "title_format" need enough space for one of each specifier.
 	target->format = calloc(1, (2 * strlen(VALID_FORMAT_SPECIFIERS)) + 1);
+	target->title_format = calloc(1, (2 * strlen(VALID_FORMAT_SPECIFIERS)) + 1);
 	char *target_format_pos = target->format;
+	char *target_format_pos_title = target->title_format;
 
 	// Now we loop over the criteria and add together those fields.
 	// We can't use apply_style, because it simply overwrites each field.
@@ -338,6 +381,11 @@ bool apply_superset_style(
 		target->padding.bottom =
 			max(style->padding.bottom, target->padding.bottom);
 		target->padding.left = max(style->padding.left, target->padding.left);
+		target->title_padding.top = max(style->title_padding.top, target->title_padding.top);
+		target->title_padding.right = max(style->title_padding.right, target->title_padding.right);
+		target->title_padding.bottom =
+			max(style->title_padding.bottom, target->title_padding.bottom);
+		target->title_padding.left = max(style->title_padding.left, target->title_padding.left);
 		target->border_size = max(style->border_size, target->border_size);
 		target->icons = style->icons || target->icons;
 		target->max_icon_size = max(style->max_icon_size, target->max_icon_size);
@@ -348,7 +396,7 @@ bool apply_superset_style(
 		target->actions |= style->actions;
 		target->history |= style->history;
 
-		// We do need to be safe about this one though.
+		// We do need to be safe about these two though.
 		if (style->spec.format) {
 			char *format_pos = style->format;
 			char current_specifier[3] = {0};
@@ -370,6 +418,30 @@ bool apply_superset_style(
 
 				++format_pos; // Enough to move to the next match.
 				target_format_pos += 2; // This needs to go to the next slot.
+			}
+		}
+
+		if (style->spec.title_format) {
+			char *format_pos = style->title_format;
+			char current_specifier[3] = {0};
+			while (*format_pos) {
+				format_pos = strstr(format_pos, "%");
+				if (!format_pos) {
+					break;
+				}
+
+				// We only want to add the format specifier to the target if we
+				// haven't already seen it.
+				// Need to copy the specifier into its own string to use strstr
+				// here, because there's no way to limit how much of the string
+				// it uses in the comparison.
+				memcpy(&current_specifier, format_pos, 2);
+				if (!strstr(target->title_format, current_specifier)) {
+					memcpy(target_format_pos_title, format_pos, 2);
+				}
+
+				++format_pos; // Enough to move to the next match.
+				target_format_pos_title += 2; // This needs to go to the next slot.
 			}
 		}
 	}
@@ -486,6 +558,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "background-color") == 0) {
 		return spec->colors.background =
 			parse_color(value, &style->colors.background);
+	} else if (strcmp(name, "title-color") == 0) {
+		return spec->colors.title = parse_color(value, &style->colors.title);
 	} else if (strcmp(name, "text-color") == 0) {
 		return spec->colors.text = parse_color(value, &style->colors.text);
 	} else if (strcmp(name, "width") == 0) {
@@ -501,6 +575,13 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 			style->padding.right = max(style->border_radius, style->padding.right);
 		}
 		return spec->padding;
+	} else if (strcmp(name, "title-padding") == 0) {
+		spec->title_padding = parse_directional(value, &style->title_padding);
+		if (spec->border_radius && spec->title_padding) {
+			style->title_padding.left = max(style->border_radius, style->title_padding.left);
+			style->title_padding.right = max(style->border_radius, style->title_padding.right);
+		}
+		return spec->title_padding;
 	} else if (strcmp(name, "border-size") == 0) {
 		return spec->border_size = parse_int(value, &style->border_size);
 	} else if (strcmp(name, "border-color") == 0) {
@@ -528,6 +609,9 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "format") == 0) {
 		free(style->format);
 		return spec->format = parse_format(value, &style->format);
+	} else if (strcmp(name, "title-format") == 0) {
+		free(style->title_format);
+		return spec->title_format = parse_format(value, &style->title_format);
 	} else if (strcmp(name, "default-timeout") == 0) {
 		return spec->default_timeout =
 			parse_int(value, &style->default_timeout);
@@ -546,6 +630,10 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		if (spec->border_radius && spec->padding) {
 			style->padding.left = max(style->border_radius, style->padding.left);
 			style->padding.right = max(style->border_radius, style->padding.right);
+		}
+		if (spec->border_radius && spec->title_padding) {
+			style->title_padding.left = max(style->border_radius, style->title_padding.left);
+			style->title_padding.right = max(style->border_radius, style->title_padding.right);
 		}
 		return spec->border_radius;
 	}
@@ -702,11 +790,13 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"config", required_argument, 0, 'c'},
 		{"font", required_argument, 0, 0},
 		{"background-color", required_argument, 0, 0},
+		{"title-color", required_argument, 0, 0},
 		{"text-color", required_argument, 0, 0},
 		{"width", required_argument, 0, 0},
 		{"height", required_argument, 0, 0},
 		{"margin", required_argument, 0, 0},
 		{"padding", required_argument, 0, 0},
+		{"title_padding", required_argument, 0, 0},
 		{"border-size", required_argument, 0, 0},
 		{"border-color", required_argument, 0, 0},
 		{"border-radius", required_argument, 0, 0},
@@ -717,6 +807,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"markup", required_argument, 0, 0},
 		{"actions", required_argument, 0, 0},
 		{"format", required_argument, 0, 0},
+		{"title_format", required_argument, 0, 0},
 		{"max-visible", required_argument, 0, 0},
 		{"max-history", required_argument, 0, 0},
 		{"history", required_argument, 0, 0},
