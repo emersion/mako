@@ -88,11 +88,14 @@ static void set_font_options(cairo_t *cairo, struct mako_state *state) {
 }
 
 static int render_notification(cairo_t *cairo, struct mako_state *state,
-		struct mako_style *style, const char *text, struct mako_icon *icon, int offset_y, int scale,
+		struct mako_style *style, const char *title, const char *text,
+		struct mako_icon *icon, int offset_y, int scale,
 		struct mako_hotspot *hotspot, int progress) {
 	int border_size = 2 * style->border_size;
 	int padding_height = style->padding.top + style->padding.bottom;
 	int padding_width = style->padding.left + style->padding.right;
+	int title_padding_height = style->title_padding.top + style->title_padding.bottom;
+	int title_padding_width = style->title_padding.left + style->title_padding.right;
 	int radius = style->border_radius;
 
 	// If the compositor has forced us to shrink down, do so.
@@ -113,21 +116,71 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 	set_font_options(cairo, state);
 
+	PangoFontDescription *desc = pango_font_description_from_string(style->font);
+	PangoLayout *title_layout = NULL;
+
+	if (strcmp(style->title_format, "") != 0) {
+		title_layout = pango_cairo_create_layout(cairo);
+		set_layout_size(title_layout,
+			notif_width - border_size - title_padding_width,
+			0, scale);
+
+		pango_layout_set_ellipsize(title_layout, PANGO_ELLIPSIZE_END);
+		pango_layout_set_font_description(title_layout, desc);
+	}
+
+	// Create layout early and set the font so we can free it
 	PangoLayout *layout = pango_cairo_create_layout(cairo);
-	set_layout_size(layout,
-		notif_width - border_size - padding_width - text_x,
-		style->height - border_size - padding_height,
-		scale);
-	pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
-	pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-	PangoFontDescription *desc =
-		pango_font_description_from_string(style->font);
 	pango_layout_set_font_description(layout, desc);
 	pango_font_description_free(desc);
 
 	PangoAttrList *attrs = NULL;
 	GError *error = NULL;
 	char *buf = NULL;
+
+	int title_height = 0;
+	int titlebar_height = style->border_size;
+
+	if (strcmp(style->title_format, "") != 0) {
+		if (pango_parse_markup(title, -1, 0, &attrs, &buf, NULL, &error)) {
+			pango_layout_set_text(title_layout, buf, -1);
+			free(buf);
+		} else {
+			fprintf(stderr, "cannot parse pango markup: %s\n", error->message);
+			g_error_free(error);
+			// fallback to plain text
+			pango_layout_set_text(title_layout, title, -1);
+		}
+
+		if (attrs == NULL) {
+			attrs = pango_attr_list_new();
+		}
+		pango_attr_list_insert(attrs, pango_attr_scale_new(scale));
+		pango_layout_set_attributes(title_layout, attrs);
+		pango_attr_list_unref(attrs);
+
+		int buffer_title_height = 0;
+
+		// If there's no text to be rendered, the titlebar won't be rendered at all
+		if (pango_layout_get_character_count(title_layout) > 0) {
+			pango_layout_get_pixel_size(title_layout, NULL, &buffer_title_height);
+			title_height = buffer_title_height / scale;
+			titlebar_height = title_height + title_padding_height + border_size;
+		}
+	}
+
+	attrs = NULL;
+	error = NULL;
+	buf = NULL;
+
+	set_layout_size(layout,
+		notif_width - border_size - padding_width - text_x,
+		style->height - border_size - padding_height - title_height,
+		scale);
+
+	pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
+	pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
+
 	if (pango_parse_markup(text, -1, 0, &attrs, &buf, NULL, &error)) {
 		pango_layout_set_text(layout, buf, -1);
 		free(buf);
@@ -154,13 +207,16 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	}
 	int text_height = buffer_text_height / scale;
 
-	int notif_height = text_height + border_size + padding_height;
+	int layout_height = text_height + padding_height + style->border_size;
 	if (icon != NULL && icon->height > text_height) {
-		notif_height = icon->height + border_size + padding_height;
+		layout_height += icon->height - text_height;
 	}
+
+	int notif_height = titlebar_height + layout_height;
 
 	if (notif_height < radius * 2) {
 		notif_height = radius * 2 + border_size;
+		layout_height = notif_height - titlebar_height;
 	}
 
 	int notif_background_width = notif_width - style->border_size;
@@ -183,6 +239,34 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	// we have to create a new one for progress in the meantime.
 	cairo_path_t *border_path = cairo_copy_path(cairo);
 
+	// Render the titlebar
+	if (title_height > 0) {
+		cairo_save(cairo);
+		cairo_clip(cairo);
+		cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
+		set_source_u32(cairo, style->colors.border);
+		set_rounded_rectangle(cairo,
+			offset_x + style->border_size / 2.0,
+			offset_y + style->border_size / 2.0,
+			notif_background_width,
+			titlebar_height - style->border_size / 2.0,
+			scale, radius);
+		cairo_fill(cairo);
+		cairo_restore(cairo);
+
+		// Some of the operations above reset the path, without this progress won't render
+		cairo_append_path(cairo, border_path);
+
+		// Render title
+		set_source_u32(cairo, style->colors.title);
+		move_to(cairo,
+			offset_x + style->border_size + style->title_padding.left,
+			offset_y + style->border_size + style->title_padding.top,
+			scale);
+		pango_cairo_update_layout(cairo, title_layout);
+		pango_cairo_show_layout(cairo, title_layout);
+	}
+
 	// Render progress. We need to render this as a normal rectangle, but clip
 	// it to the rounded rectangle we drew for the background. We also inset it
 	// a bit further so that 0 and 100 percent are aligned to the inside edge
@@ -201,9 +285,9 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	set_source_u32(cairo, style->colors.progress.value);
 	set_rounded_rectangle(cairo,
 			offset_x + style->border_size,
-			offset_y + style->border_size,
+			offset_y + titlebar_height,
 			progress_width,
-			notif_height - style->border_size,
+			layout_height,
 			scale, 0);
 	cairo_fill(cairo);
 	cairo_restore(cairo);
@@ -226,8 +310,8 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 		// Render icon
 		double xpos = offset_x + style->border_size +
 			(text_x - icon->width) / 2;
-		double ypos = offset_y + style->border_size +
-			(notif_height - icon->height - border_size) / 2;
+		double ypos = offset_y + titlebar_height +
+			(layout_height - icon->height - style->border_size) / 2;
 		draw_icon(cairo, icon, xpos, ypos, scale);
 	}
 
@@ -235,8 +319,8 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	set_source_u32(cairo, style->colors.text);
 	move_to(cairo,
 		offset_x + style->border_size + text_x,
-		offset_y + style->border_size +
-			(double)(notif_height - border_size - text_height) / 2,
+		offset_y + titlebar_height +
+			(double)(layout_height - text_height - style->border_size) / 2,
 		scale);
 	pango_cairo_update_layout(cairo, layout);
 	pango_cairo_show_layout(cairo, layout);
@@ -290,6 +374,16 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 			continue;
 		}
 
+		size_t title_len =
+			format_text(style->title_format, NULL, format_notif_text, notif);
+
+		char *title = malloc(title_len + 1);
+		if (title == NULL) {
+			fprintf(stderr, "Unable to allocate memory to render notification\n");
+			break;
+		}
+		format_text(style->title_format, title, format_notif_text, notif);
+
 		size_t text_len =
 			format_text(style->format, NULL, format_notif_text, notif);
 
@@ -308,8 +402,9 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 		struct mako_icon *icon = (style->icons) ? notif->icon : NULL;
 		int notif_height = render_notification(
-			cairo, state, style, text, icon, total_height, scale,
+			cairo, state, style, title, text, icon, total_height, scale,
 			&notif->hotspot, notif->progress);
+		free(title);
 		free(text);
 
 		total_height += notif_height;
@@ -346,6 +441,16 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 			.count = count,
 		};
 
+		size_t title_ln =
+			format_text(style.title_format, NULL, format_hidden_text, &data);
+		char *title = malloc(title_ln + 1);
+		if (title == NULL) {
+			fprintf(stderr, "allocation failed");
+			return 0;
+		}
+
+		format_text(style.title_format, title, format_hidden_text, &data);
+
 		size_t text_ln =
 			format_text(style.format, NULL, format_hidden_text, &data);
 		char *text = malloc(text_ln + 1);
@@ -357,7 +462,8 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		format_text(style.format, text, format_hidden_text, &data);
 
 		int hidden_height = render_notification(
-			cairo, state, &style, text, NULL, total_height, scale, NULL, 0);
+			cairo, state, &style, title, text, NULL, total_height, scale, NULL, 0);
+		free(title);
 		free(text);
 		finish_style(&style);
 
