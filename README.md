@@ -52,6 +52,10 @@ build/mako
   <img src="https://sr.ht/frOL.jpg" alt="mako">
 </p>
 
+## I have a question!
+
+See the [faq section in the wiki](https://github.com/emersion/mako/wiki/Frequently-asked-questions).
+
 ## License
 
 MIT
