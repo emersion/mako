@@ -239,6 +239,33 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	// we have to create a new one for progress in the meantime.
 	cairo_path_t *border_path = cairo_copy_path(cairo);
 
+	// Render progress. We need to render this as a normal rectangle, but clip
+	// it to the rounded rectangle we drew for the background. We also inset it
+	// a bit further so that 0 and 100 percent are aligned to the inside edge
+	// of the border and we can actually see the whole range.
+	int progress_width =
+		(notif_background_width - style->border_size) * progress / 100;
+	if (progress_width < 0) {
+		progress_width = 0;
+	} else if (progress_width > notif_background_width) {
+		progress_width = notif_background_width - style->border_size;
+	}
+
+	cairo_save(cairo);
+	cairo_clip(cairo);
+	cairo_set_operator(cairo, style->colors.progress.operator);
+	set_source_u32(cairo, style->colors.progress.value);
+	set_rounded_rectangle(cairo,
+			offset_x + style->border_size,
+			offset_y - style->border_radius + titlebar_height,
+			progress_width,
+			layout_height + style->border_radius,
+			scale, 0);
+	cairo_fill(cairo);
+	cairo_restore(cairo);
+
+	cairo_append_path(cairo, border_path);
+
 	// Render the titlebar
 	if (title_height > 0) {
 		cairo_save(cairo);
@@ -266,31 +293,6 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 		pango_cairo_update_layout(cairo, title_layout);
 		pango_cairo_show_layout(cairo, title_layout);
 	}
-
-	// Render progress. We need to render this as a normal rectangle, but clip
-	// it to the rounded rectangle we drew for the background. We also inset it
-	// a bit further so that 0 and 100 percent are aligned to the inside edge
-	// of the border and we can actually see the whole range.
-	int progress_width =
-		(notif_background_width - style->border_size) * progress / 100;
-	if (progress_width < 0) {
-		progress_width = 0;
-	} else if (progress_width > notif_background_width) {
-		progress_width = notif_background_width - style->border_size;
-	}
-
-	cairo_save(cairo);
-	cairo_clip(cairo);
-	cairo_set_operator(cairo, style->colors.progress.operator);
-	set_source_u32(cairo, style->colors.progress.value);
-	set_rounded_rectangle(cairo,
-			offset_x + style->border_size,
-			offset_y + titlebar_height,
-			progress_width,
-			layout_height,
-			scale, 0);
-	cairo_fill(cairo);
-	cairo_restore(cairo);
 
 	// Render border, using the SOURCE operator to clip away the background
 	// and progress beneath. This is the only way to make the background appear
