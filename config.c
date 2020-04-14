@@ -328,6 +328,31 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	return true;
 }
 
+// Find unique specifiers in the given format
+void find_unique_specifiers(char *format, char *target_format, char *target_format_pos) {
+		char *format_pos = format;
+		char current_specifier[3] = {0};
+		while (*format_pos) {
+			format_pos = strstr(format_pos, "%");
+			if (!format_pos) {
+				break;
+			}
+
+			// We only want to add the format specifier to the target if we
+			// haven't already seen it.
+			// Need to copy the specifier into its own string to use strstr
+			// here, because there's no way to limit how much of the string
+			// it uses in the comparison.
+			memcpy(&current_specifier, format_pos, 2);
+			if (!strstr(target_format, current_specifier)) {
+				memcpy(target_format_pos, format_pos, 2);
+			}
+
+			++format_pos; // Enough to move to the next match.
+			target_format_pos += 2; // This needs to go to the next slot.
+		}
+}
+
 // Given a config and a style in which to store the information, this will
 // calculate a style that has the maximum value of all the configured criteria
 // styles (including the default as a base), for values where it makes sense to
@@ -398,51 +423,11 @@ bool apply_superset_style(
 
 		// We do need to be safe about these two though.
 		if (style->spec.format) {
-			char *format_pos = style->format;
-			char current_specifier[3] = {0};
-			while (*format_pos) {
-				format_pos = strstr(format_pos, "%");
-				if (!format_pos) {
-					break;
-				}
-
-				// We only want to add the format specifier to the target if we
-				// haven't already seen it.
-				// Need to copy the specifier into its own string to use strstr
-				// here, because there's no way to limit how much of the string
-				// it uses in the comparison.
-				memcpy(&current_specifier, format_pos, 2);
-				if (!strstr(target->format, current_specifier)) {
-					memcpy(target_format_pos, format_pos, 2);
-				}
-
-				++format_pos; // Enough to move to the next match.
-				target_format_pos += 2; // This needs to go to the next slot.
-			}
+			find_unique_specifiers(style->format, target->format, target_format_pos);
 		}
 
 		if (style->spec.title_format) {
-			char *format_pos = style->title_format;
-			char current_specifier[3] = {0};
-			while (*format_pos) {
-				format_pos = strstr(format_pos, "%");
-				if (!format_pos) {
-					break;
-				}
-
-				// We only want to add the format specifier to the target if we
-				// haven't already seen it.
-				// Need to copy the specifier into its own string to use strstr
-				// here, because there's no way to limit how much of the string
-				// it uses in the comparison.
-				memcpy(&current_specifier, format_pos, 2);
-				if (!strstr(target->title_format, current_specifier)) {
-					memcpy(target_format_pos_title, format_pos, 2);
-				}
-
-				++format_pos; // Enough to move to the next match.
-				target_format_pos_title += 2; // This needs to go to the next slot.
-			}
+			find_unique_specifiers(style->title_format, target->format, target_format_pos_title);
 		}
 	}
 
