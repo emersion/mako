@@ -7,7 +7,7 @@ After=graphical-session.target
 [Service]
 Type=dbus
 BusName=org.freedesktop.Notifications
-ExecCondition=/bin/sh -c '[ -n "$WAYLAND_DISPLAY" ]'
+ExecCondition=/bin/sh -c '[ -n $WAYLAND_DISPLAY ]'
 ExecStart=@bindir@/mako
 ExecReload=@bindir@/makoctl reload
 
