@@ -80,9 +80,13 @@ static void set_font_options(cairo_t *cairo, struct mako_state *state) {
 	}
 
 	cairo_font_options_t *fo = cairo_font_options_create();
-	cairo_font_options_set_antialias(fo, CAIRO_ANTIALIAS_SUBPIXEL);
-	cairo_font_options_set_subpixel_order(fo,
-		get_cairo_subpixel_order(state->surface_output->subpixel));
+	if (state->surface_output->subpixel == WL_OUTPUT_SUBPIXEL_NONE) {
+		cairo_font_options_set_antialias(fo, CAIRO_ANTIALIAS_GRAY);
+	} else {
+		cairo_font_options_set_antialias(fo, CAIRO_ANTIALIAS_SUBPIXEL);
+		cairo_font_options_set_subpixel_order(fo,
+				get_cairo_subpixel_order(state->surface_output->subpixel));
+	}
 	cairo_set_font_options(cairo, fo);
 	cairo_font_options_destroy(fo);
 }
