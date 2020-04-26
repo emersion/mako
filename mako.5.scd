@@ -159,6 +159,9 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 	the theme metadata. Therefore, if you want to search parent themes,
 	you'll need to add them to the path manually.
 
+	The path should be the root of the icon theme, the categories and
+	resolutions will be searched for the most appropriate match.
+
 	/usr/share/icons/hicolor and /usr/share/pixmaps are always searched.
 
 	Default: ""
