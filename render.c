@@ -98,11 +98,14 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	int padding_height = style->padding.top + style->padding.bottom;
 	int padding_width = style->padding.left + style->padding.right;
 	int radius = style->border_radius;
+	bool icon_vertical = style->icon_location == MAKO_ICON_LOCATION_TOP ||
+		style->icon_location == MAKO_ICON_LOCATION_BOTTOM;
 
 	// If the compositor has forced us to shrink down, do so.
 	int notif_width =
 		(style->width <= state->width) ? style->width : state->width;
 
+	// offset_x is for the entire draw operation inside the surface
 	int offset_x;
 	if (state->config.anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT) {
 		offset_x = state->width - notif_width - style->margin.right;
@@ -112,18 +115,35 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 		offset_x = (state->width - notif_width) / 2;
 	}
 
+	// text_x is the offset of the text inside our draw operation
 	double text_x = style->padding.left;
-	if (icon != NULL) {
+	if (icon != NULL && style->icon_location == MAKO_ICON_LOCATION_LEFT) {
 		text_x = icon->width + 2*style->padding.left;
+	}
+
+	// text_y is the offset of the text inside our draw operation
+	double text_y = style->padding.top;
+	if (icon != NULL && style->icon_location == MAKO_ICON_LOCATION_TOP) {
+		text_y = icon->height + 2*style->padding.top;
+	}
+
+	double text_layout_width = notif_width - border_size - padding_width;
+	if (icon && ! icon_vertical) {
+		text_layout_width -= icon->width;
+		text_layout_width -= style->icon_location == MAKO_ICON_LOCATION_LEFT ?
+			(style->padding.left * 2) : (style->padding.right * 2);
+	}
+	double text_layout_height = style->height - border_size - padding_height;
+	if (icon && icon_vertical) {
+		text_layout_height -= icon->height;
+		text_layout_height -= style->icon_location == MAKO_ICON_LOCATION_TOP ?
+			(style->padding.top * 2) : (style->padding.bottom * 2);
 	}
 
 	set_font_options(cairo, state);
 
 	PangoLayout *layout = pango_cairo_create_layout(cairo);
-	set_layout_size(layout,
-		notif_width - border_size - padding_width - text_x,
-		style->height - border_size - padding_height,
-		scale);
+	set_layout_size(layout, text_layout_width, text_layout_height, scale);
 	pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
 	pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
 	PangoFontDescription *desc =
@@ -152,16 +172,27 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 	pango_attr_list_unref(attrs);
 
 	int buffer_text_height = 0;
+	int buffer_text_width = 0;
 
 	// If there's no text to be rendered, the notification can shrink down
 	// smaller than the line height.
 	if (pango_layout_get_character_count(layout) > 0) {
-		pango_layout_get_pixel_size(layout, NULL, &buffer_text_height);
+		pango_layout_get_pixel_size(layout, &buffer_text_width, &buffer_text_height);
 	}
 	int text_height = buffer_text_height / scale;
+	int text_width = buffer_text_width / scale;
+
+	if (text_height > text_layout_height) {
+		text_height = text_layout_height;
+	}
 
 	int notif_height = text_height + border_size + padding_height;
-	if (icon != NULL && icon->height > text_height) {
+	if (icon && icon_vertical) {
+		notif_height += icon->height;
+		notif_height += style->icon_location == MAKO_ICON_LOCATION_TOP ?
+			style->padding.top : style->padding.bottom;
+	}
+	if (icon != NULL && ! icon_vertical && icon->height > text_height) {
 		notif_height = icon->height + border_size + padding_height;
 	}
 
@@ -230,19 +261,47 @@ static int render_notification(cairo_t *cairo, struct mako_state *state,
 
 	if (icon != NULL) {
 		// Render icon
-		double xpos = offset_x + style->border_size +
-			(text_x - icon->width) / 2;
-		double ypos = offset_y + style->border_size +
+		double xpos = -1;
+		double ypos = -1;
+		double ypos_center = offset_y + style->border_size +
 			(notif_height - icon->height - border_size) / 2;
+		double xpos_center = offset_x + style->border_size +
+			(notif_width - icon->width - border_size) / 2;
+
+		switch (style->icon_location) {
+		case MAKO_ICON_LOCATION_LEFT:
+			xpos = offset_x + style->border_size +
+				(text_x - icon->width) / 2;
+			ypos = ypos_center;
+			break;
+		case MAKO_ICON_LOCATION_RIGHT:
+			xpos = offset_x + notif_width - style->border_size -
+				icon->width - style->margin.right;
+			ypos = ypos_center;
+			break;
+		case MAKO_ICON_LOCATION_TOP:
+			xpos = xpos_center;
+			ypos = offset_y + style->border_size;
+			break;
+		case MAKO_ICON_LOCATION_BOTTOM:
+			xpos = xpos_center;
+			ypos = offset_y + text_y + text_height + style->margin.bottom;
+			break;
+		}
 		draw_icon(cairo, icon, xpos, ypos, scale);
+	}
+
+	if (icon_vertical) {
+		text_x = (notif_width - text_width) / 2;
+	} else {
+		text_y = (notif_height - text_height) / 2;
 	}
 
 	// Render text
 	set_source_u32(cairo, style->colors.text);
 	move_to(cairo,
 		offset_x + style->border_size + text_x,
-		offset_y + style->border_size +
-			(double)(notif_height - border_size - text_height) / 2,
+		offset_y + style->border_size + text_y,
 		scale);
 	pango_cairo_update_layout(cairo, layout);
 	pango_cairo_show_layout(cairo, layout);
