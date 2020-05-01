@@ -20,13 +20,21 @@ enum mako_sort_criteria {
 	MAKO_SORT_CRITERIA_URGENCY = 2,
 };
 
+enum mako_icon_location {
+	MAKO_ICON_LOCATION_LEFT,
+	MAKO_ICON_LOCATION_RIGHT,
+	MAKO_ICON_LOCATION_TOP,
+	MAKO_ICON_LOCATION_BOTTOM,
+};
+
 // Represents which fields in the style were specified in this style. All
 // fields in the mako_style structure should have a counterpart here. Inline
 // structs are also mirrored.
 struct mako_style_spec {
 	bool width, height, margin, padding, border_size, border_radius, font,
 		markup, format, actions, default_timeout, ignore_timeout, icons,
-		max_icon_size, icon_path, group_criteria_spec, invisible, history;
+		max_icon_size, icon_path, group_criteria_spec, invisible, history,
+		icon_location;
 
 	struct {
 		bool background, text, border, progress;
@@ -67,6 +75,7 @@ struct mako_style {
 
 	bool invisible; // Skipped during render, doesn't count toward max_visible
 	bool history;
+	enum mako_icon_location icon_location;
 };
 
 struct mako_config {

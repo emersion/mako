@@ -121,6 +121,7 @@ void init_default_style(struct mako_style *style) {
 	style->group_criteria_spec.none = true;
 	style->invisible = false;
 	style->history = true;
+	style->icon_location = MAKO_ICON_LOCATION_LEFT;
 
 	// Everything in the default config is explicitly specified.
 	memset(&style->spec, true, sizeof(struct mako_style_spec));
@@ -280,6 +281,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.history) {
 		target->history = style->history;
 		target->spec.history = true;
+	}
+
+	if (style->spec.icon_location) {
+		target->icon_location = style->icon_location;
+		target->spec.icon_location = true;
 	}
 
 	if (style->border_radius) {
@@ -515,6 +521,19 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		fprintf(stderr, "Icon support not built in, ignoring icons setting.\n");
 		return true;
 #endif
+	} else if (strcmp(name, "icon-location") == 0) {
+		if (!strcmp(value, "left")) {
+			style->icon_location = MAKO_ICON_LOCATION_LEFT;
+		} else if (!strcmp(value, "right")) {
+			style->icon_location = MAKO_ICON_LOCATION_RIGHT;
+		} else if (!strcmp(value, "top")) {
+			style->icon_location = MAKO_ICON_LOCATION_TOP;
+		} else if (!strcmp(value, "bottom")) {
+			style->icon_location = MAKO_ICON_LOCATION_BOTTOM;
+		} else {
+			return false;
+		}
+		return spec->icon_location = true;
 	} else if (strcmp(name, "max-icon-size") == 0) {
 		return spec->max_icon_size =
 			parse_int(value, &style->max_icon_size);
@@ -712,6 +731,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"border-radius", required_argument, 0, 0},
 		{"progress-color", required_argument, 0, 0},
 		{"icons", required_argument, 0, 0},
+		{"icon-location", required_argument, 0, 0},
 		{"icon-path", required_argument, 0, 0},
 		{"max-icon-size", required_argument, 0, 0},
 		{"markup", required_argument, 0, 0},
