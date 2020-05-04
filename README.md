@@ -26,6 +26,15 @@ explicitly start this one. Some ways of achieving this is:
 - If you are using elogind, you might need to manually start a dbus user
   session: `dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus`
 
+## Configuration
+
+`mako` can be extensively configured and customized - feel free to read more
+using the command `man 5 mako`
+
+You can also check out the example config file [here](https://github.com/emersion/mako/tree/master/examples/config)
+
+For control of mako during runtime, `makoctl` can be used; see `man makoctl`
+
 ## Building
 
 Install dependencies:
