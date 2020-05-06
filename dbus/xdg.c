@@ -59,6 +59,16 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 		}
 	}
 
+	ret = sd_bus_message_append(reply, "s", "x-canonical-private-synchronous");
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_append(reply, "s", "x-dunst-stack-tag");
+	if (ret < 0) {
+		return ret;
+	}
+
 	ret = sd_bus_message_close_container(reply);
 	if (ret < 0) {
 		return ret;
@@ -239,6 +249,14 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			// will win over app_icon if provided.
 			free(notif->app_icon);
 			notif->app_icon = strdup(image_path);
+		} else if (strcmp(hint, "x-canonical-private-synchronous") == 0 ||
+				strcmp(hint, "x-dunst-stack-tag") == 0) {
+			const char *tag = NULL;
+			ret = sd_bus_message_read(msg, "v", "s", &tag);
+			if (ret < 0) {
+				return ret;
+			}
+			notif->tag = strdup(tag);
 		} else if (strcmp(hint, "image-data") == 0 ||
 				strcmp(hint, "image_data") == 0 ||  // Deprecated.
 				strcmp(hint, "icon_data") == 0) {  // Even more deprecated.
@@ -342,6 +360,17 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		return ret;
 	}
 	notif->requested_timeout = requested_timeout;
+
+	if (notif->tag) {
+		// Find and replace the existing notfication with a matching tag
+		struct mako_notification *replace_notif = get_tagged_notification(state, notif->tag, app_name);
+		if (replace_notif) {
+			notif->id = replace_notif->id;
+			wl_list_insert(&replace_notif->link, &notif->link);
+			destroy_notification(replace_notif);
+			replaces_id = notif->id;
+		}
+	}
 
 	// We can insert a notification prior to matching criteria, because sort is
 	// global. We also know that inserting a notification into the global list
