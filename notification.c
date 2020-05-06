@@ -44,6 +44,7 @@ void reset_notification(struct mako_notification *notif) {
 	free(notif->body);
 	free(notif->category);
 	free(notif->desktop_entry);
+	free(notif->tag);
 	if (notif->image_data != NULL) {
 		free(notif->image_data->data);
 		free(notif->image_data);
@@ -55,6 +56,7 @@ void reset_notification(struct mako_notification *notif) {
 	notif->body = strdup("");
 	notif->category = strdup("");
 	notif->desktop_entry = strdup("");
+	notif->tag = strdup("");
 
 	notif->image_data = NULL;
 
@@ -127,6 +129,17 @@ struct mako_notification *get_notification(struct mako_state *state,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (notif->id == id) {
+			return notif;
+		}
+	}
+	return NULL;
+}
+
+struct mako_notification *get_tagged_notification(struct mako_state *state,
+		const char *tag, const char *app_name) {
+	struct mako_notification *notif;
+	wl_list_for_each(notif, &state->notifications, link) {
+		if (strcmp(notif->tag, tag) == 0 && strcmp(notif->app_name, app_name) == 0) {
 			return notif;
 		}
 	}
