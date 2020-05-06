@@ -609,7 +609,7 @@ int load_config_file(struct mako_config *config, char *config_arg) {
 
 	FILE *f = fopen(path, "r");
 	if (!f) {
-		fprintf(stderr, "Unable to open %s for reading", path);
+		fprintf(stderr, "Unable to open %s for reading\n", path);
 		free(path);
 		return -1;
 	}
