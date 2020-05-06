@@ -27,6 +27,7 @@ struct mako_criteria {
 	enum mako_notification_urgency urgency;
 	char *category;
 	char *desktop_entry;
+	char *synchronous_group;
 	char *summary;
 	char *body;
 	int group_index;

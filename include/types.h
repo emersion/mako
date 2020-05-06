@@ -47,6 +47,7 @@ struct mako_criteria_spec {
 	bool urgency;
 	bool category;
 	bool desktop_entry;
+	bool synchronous_group;
 	bool summary;
 	bool body;
 	bool group_index;

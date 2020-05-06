@@ -31,6 +31,7 @@ void destroy_criteria(struct mako_criteria *criteria) {
 	free(criteria->app_icon);
 	free(criteria->category);
 	free(criteria->desktop_entry);
+	free(criteria->synchronous_group);
 	free(criteria->summary);
 	free(criteria->body);
 	free(criteria->raw_string);
@@ -78,6 +79,11 @@ bool match_criteria(struct mako_criteria *criteria,
 
 	if (spec.desktop_entry &&
 			strcmp(criteria->desktop_entry, notif->desktop_entry) != 0) {
+		return false;
+	}
+
+	if (spec.synchronous_group &&
+			strcmp(criteria->synchronous_group, notif->synchronous_group) != 0) {
 		return false;
 	}
 
@@ -255,6 +261,10 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			criteria->desktop_entry = strdup(value);
 			criteria->spec.desktop_entry = true;
 			return true;
+		} else if (strcmp(key, "synchronous_group") == 0) {
+			criteria->synchronous_group = strdup(value);
+			criteria->spec.synchronous_group = true;
+			return true;
 		} else if (strcmp(key, "group-index") == 0) {
 			if (!parse_int(value, &criteria->group_index)) {
 				fprintf(stderr, "Invalid group-index value '%s'", value);
@@ -368,6 +378,7 @@ struct mako_criteria *create_criteria_from_notification(
 	criteria->urgency = notif->urgency;
 	criteria->category = strdup(notif->category);
 	criteria->desktop_entry = strdup(notif->desktop_entry);
+	criteria->synchronous_group = strdup(notif->synchronous_group);
 	criteria->summary = strdup(notif->summary);
 	criteria->body = strdup(notif->body);
 	criteria->group_index = notif->group_index;

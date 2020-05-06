@@ -48,6 +48,7 @@ void reset_notification(struct mako_notification *notif) {
 	free(notif->body);
 	free(notif->category);
 	free(notif->desktop_entry);
+	free(notif->synchronous_group);
 	if (notif->image_data != NULL) {
 		free(notif->image_data->data);
 		free(notif->image_data);
@@ -59,6 +60,7 @@ void reset_notification(struct mako_notification *notif) {
 	notif->body = NULL;
 	notif->category = NULL;
 	notif->desktop_entry = NULL;
+	notif->synchronous_group = NULL;
 	notif->image_data = NULL;
 
 	destroy_icon(notif->icon);
@@ -129,6 +131,21 @@ struct mako_notification *get_notification(struct mako_state *state,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (notif->id == id) {
+			return notif;
+		}
+	}
+	return NULL;
+}
+
+struct mako_notification *get_notification_by_synchronous_group(struct mako_state *state,
+		char *synchronous_group) {
+	struct mako_notification *notif;
+	if (strcmp(synchronous_group, "") == 0) {
+		// This should never be considered a match.
+		return NULL;
+	}
+	wl_list_for_each(notif, &state->notifications, link) {
+		if (strcmp(notif->synchronous_group, synchronous_group) == 0) {
 			return notif;
 		}
 	}

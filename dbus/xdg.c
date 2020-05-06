@@ -101,6 +101,12 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		notif = get_notification(state, replaces_id);
 	}
 
+	// This only handles the case that replaces_id is given explicitly.
+	// If synchronous or one of its aliases is given as a hint, a corresponding
+	// notification could be searched here as well, but it would require peeking
+	// at the hints already.
+	// Hence, in this case, a new notification is created and the old to-be-replaced
+	// notification is deleted once all hints are read.
 	if (notif) {
 		reset_notification(notif);
 	} else {
@@ -122,6 +128,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	// These fields may not be filled, so make sure they're valid strings.
 	notif->category = strdup("");
 	notif->desktop_entry = strdup("");
+	notif->synchronous_group = strdup("");
 
 	ret = sd_bus_message_enter_container(msg, 'a', "s");
 	if (ret < 0) {
@@ -319,6 +326,17 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			if (ret < 0) {
 				return ret;
 			}
+		} else if (strcmp(hint, "synchronous") == 0 ||
+				strcmp(hint, "private-synchronous") == 0 ||
+				strcmp(hint, "x-canonical-private-synchronous") == 0 ||
+				strcmp(hint, "x-dunst-stack-tag") == 0) {
+			const char *synchronous_group = NULL;
+			ret = sd_bus_message_read(msg, "v", "s", &synchronous_group);
+			if (ret < 0) {
+				return ret;
+			}
+			free(notif->synchronous_group);
+			notif->synchronous_group = strdup(synchronous_group);
 		} else {
 			ret = sd_bus_message_skip(msg, "v");
 			if (ret < 0) {
@@ -344,6 +362,16 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	}
 	notif->requested_timeout = requested_timeout;
 
+	if (replaces_id == 0) {
+		struct mako_notification *other
+			= get_notification_by_synchronous_group (state, notif->synchronous_group);
+		if (other && notif != other) {
+			notif->id = other->id;
+			destroy_notification (other);
+			--state->last_id;
+		}
+	}
+	
 	// We can insert a notification prior to matching criteria, because sort is
 	// global. We also know that inserting a notification into the global list
 	// regardless of the configured sort criteria places it in the correct
@@ -351,7 +379,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	// knowing what criteria we will be grouping them by (proof left as an
 	// exercise to the reader).
 	if (replaces_id != notif->id) {
-		// Only insert notifcations if they're actually new, to avoid creating
+		// Only insert notifications if they're actually new, to avoid creating
 		// duplicates in the list.
 		insert_notification(state, notif);
 	}

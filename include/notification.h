@@ -39,6 +39,7 @@ struct mako_notification {
 	enum mako_notification_urgency urgency;
 	char *category;
 	char *desktop_entry;
+	char *synchronous_group;
 	int32_t progress;
 	struct mako_image_data *image_data;
 
@@ -86,6 +87,7 @@ char *format_hidden_text(char variable, bool *markup, void *data);
 char *format_notif_text(char variable, bool *markup, void *data);
 size_t format_text(const char *format, char *buf, mako_format_func_t func, void *data);
 struct mako_notification *get_notification(struct mako_state *state, uint32_t id);
+struct mako_notification *get_notification_by_synchronous_group(struct mako_state *state, char *synchronous_group);
 size_t format_notification(struct mako_notification *notif, const char *format,
 	char *buf);
 void notification_handle_button(struct mako_notification *notif, uint32_t button,
