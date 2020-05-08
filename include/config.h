@@ -24,12 +24,13 @@ enum mako_sort_criteria {
 // fields in the mako_style structure should have a counterpart here. Inline
 // structs are also mirrored.
 struct mako_style_spec {
-	bool width, height, margin, padding, border_size, border_radius, font,
-		markup, format, actions, default_timeout, ignore_timeout, icons,
-		max_icon_size, icon_path, group_criteria_spec, invisible, history;
+	bool width, height, margin, padding, title_padding, border_size,
+		 border_radius, font, markup, format, title_format, actions,
+		 default_timeout, ignore_timeout, icons, max_icon_size, icon_path,
+		 group_criteria_spec, invisible, history;
 
 	struct {
-		bool background, text, border, progress;
+		bool background, title, text, border, progress;
 	} colors;
 };
 
@@ -41,6 +42,7 @@ struct mako_style {
 	int32_t height;
 	struct mako_directional margin;
 	struct mako_directional padding;
+	struct mako_directional title_padding;
 	int32_t border_size;
 	int32_t border_radius;
 
@@ -51,6 +53,7 @@ struct mako_style {
 	char *font;
 	bool markup;
 	char *format;
+	char *title_format;
 
 	bool actions;
 	int default_timeout; // in ms
@@ -58,6 +61,7 @@ struct mako_style {
 
 	struct {
 		uint32_t background;
+		uint32_t title;
 		uint32_t text;
 		uint32_t border;
 		struct mako_color progress;
