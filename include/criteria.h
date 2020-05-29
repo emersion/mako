@@ -27,7 +27,7 @@ struct mako_criteria {
 	enum mako_notification_urgency urgency;
 	char *category;
 	char *desktop_entry;
-	char *summary;
+	regex_t summary;
 	char *body;
 	int group_index;
 	bool grouped;  // Whether group_index is non-zero

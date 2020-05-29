@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include <assert.h>
+#include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -31,7 +32,7 @@ void destroy_criteria(struct mako_criteria *criteria) {
 	free(criteria->app_icon);
 	free(criteria->category);
 	free(criteria->desktop_entry);
-	free(criteria->summary);
+	regfree(&criteria->summary);
 	free(criteria->body);
 	free(criteria->raw_string);
 	free(criteria);
@@ -82,7 +83,7 @@ bool match_criteria(struct mako_criteria *criteria,
 	}
 
 	if (spec.summary &&
-			strcmp(criteria->summary, notif->summary) != 0) {
+			regexec(&criteria->summary, notif->summary, 0, NULL, 0) == REG_NOMATCH) {
 		return false;
 	}
 
@@ -263,8 +264,10 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			criteria->spec.group_index = true;
 			return true;
 		} else if (strcmp(key, "summary") == 0) {
-			// TODO: convert to regex, currently only exact matching
-			criteria->summary = strdup(value);
+			if (regcomp(&criteria->summary, value, REG_EXTENDED | REG_NOSUB)) {
+				fprintf(stderr, "Invalid summary regex value '%s'", value);
+				return false;
+			}
 			criteria->spec.summary = true;
 			return true;
 		} else {
@@ -368,7 +371,6 @@ struct mako_criteria *create_criteria_from_notification(
 	criteria->urgency = notif->urgency;
 	criteria->category = strdup(notif->category);
 	criteria->desktop_entry = strdup(notif->desktop_entry);
-	criteria->summary = strdup(notif->summary);
 	criteria->body = strdup(notif->body);
 	criteria->group_index = notif->group_index;
 	criteria->grouped = (notif->group_index >= 0);

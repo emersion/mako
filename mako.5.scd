@@ -242,7 +242,8 @@ The following fields are available in criteria:
 - _app-name_ (string)
 - _app-icon_ (string)
 - _summary_ (string)
-	- An exact match on the summary of the notification.
+	- A POSIX extended regular expression match on the summary of the
+	  notification.
 - _urgency_ (one of "low", "normal", "high")
 - _category_ (string)
 - _desktop-entry_ (string)
