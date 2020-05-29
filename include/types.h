@@ -1,7 +1,6 @@
 #ifndef MAKO_TYPES_H
 #define MAKO_TYPES_H
 
-#include <regex.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <cairo.h>

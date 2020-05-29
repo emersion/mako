@@ -1,6 +1,7 @@
 #ifndef MAKO_CRITERIA_H
 #define MAKO_CRITERIA_H
 
+#include <regex.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <wayland-client.h>
