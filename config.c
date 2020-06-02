@@ -756,18 +756,27 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 
 	optind = 1;
 	char *config_arg = NULL;
+	int opt_status = 0;
 	while (1) {
 		int option_index = -1;
 		int c = getopt_long(argc, argv, "hc:", long_options, &option_index);
 		if (c < 0) {
 			break;
 		} else if (c == 'h') {
-			return 1;
+			opt_status = 1;
+			break;
 		} else if (c == 'c') {
+			free(config_arg);
 			config_arg = strdup(optarg);
 		} else if (c != 0) {
-			return -1;
+			opt_status = -1;
+			break;
 		}
+	}
+
+	if (opt_status != 0) {
+		free(config_arg);
+		return opt_status;
 	}
 
 	int config_status = load_config_file(config, config_arg);
