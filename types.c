@@ -80,6 +80,7 @@ bool parse_mako_color(const char *string, struct mako_color *out) {
 
 		token = strtok_r(NULL, " \t", &saveptr);
 		if (token == NULL) {
+			free(components);
 			return false;
 		}
 	}
@@ -191,6 +192,7 @@ bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out) {
 		} else if (strcmp(token, "none") == 0) {
 			out->none = true;
 		} else {
+			free(components);
 			fprintf(stderr, "Unknown criteria field '%s'\n", token);
 			return false;
 		}
