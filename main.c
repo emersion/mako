@@ -97,8 +97,10 @@ int main(int argc, char *argv[]) {
 	int ret = reload_config(&state.config, argc, argv);
 
 	if (ret < 0) {
+		finish_config(&state.config);
 		return EXIT_FAILURE;
 	} else if (ret > 0) {
+		finish_config(&state.config);
 		printf("%s", usage);
 		return EXIT_SUCCESS;
 	}
