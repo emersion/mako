@@ -32,7 +32,8 @@ void destroy_criteria(struct mako_criteria *criteria) {
 	free(criteria->app_icon);
 	free(criteria->category);
 	free(criteria->desktop_entry);
-	regfree(&criteria->summary);
+	free(criteria->summary);
+	regfree(&criteria->summary_pattern);
 	free(criteria->body);
 	free(criteria->raw_string);
 	free(criteria);
@@ -83,8 +84,21 @@ bool match_criteria(struct mako_criteria *criteria,
 	}
 
 	if (spec.summary &&
-			regexec(&criteria->summary, notif->summary, 0, NULL, 0) == REG_NOMATCH) {
+			strcmp(criteria->summary, notif->summary) != 0) {
 		return false;
+	}
+
+	if (spec.summary_pattern) {
+		int ret = regexec(&criteria->summary_pattern, notif->summary, 0, NULL, 0);
+		if (ret != 0) {
+			if (ret != REG_NOMATCH) {
+				size_t errlen = regerror(ret, &criteria->summary_pattern, NULL, 0);
+				char errbuf[errlen];
+				regerror(ret, &criteria->summary_pattern, errbuf, sizeof(errbuf));
+				fprintf(stderr, "failed to match regex: %s\n", errbuf);
+			}
+			return false;
+		}
 	}
 
 	if (spec.body &&
@@ -264,11 +278,24 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			criteria->spec.group_index = true;
 			return true;
 		} else if (strcmp(key, "summary") == 0) {
-			if (regcomp(&criteria->summary, value, REG_EXTENDED | REG_NOSUB)) {
-				fprintf(stderr, "Invalid summary regex value '%s'", value);
+			criteria->summary = strdup(value);
+			if (criteria->spec.summary_pattern) {
+				fprintf(stderr, "Cannot set both summary and summary-pattern.");
 				return false;
 			}
 			criteria->spec.summary = true;
+			return true;
+		} else if (strcmp(key, "summary-pattern") == 0) {
+			if (regcomp(&criteria->summary_pattern, value,
+					REG_EXTENDED | REG_NOSUB)) {
+				fprintf(stderr, "Invalid summary-pattern regex '%s'\n", value);
+				return false;
+			}
+			if (criteria->spec.summary) {
+				fprintf(stderr, "Cannot set both summary and summary-pattern.");
+				return false;
+			}
+			criteria->spec.summary_pattern = true;
 			return true;
 		} else {
 			// TODO: body, once we support regex and they're useful.
@@ -371,6 +398,7 @@ struct mako_criteria *create_criteria_from_notification(
 	criteria->urgency = notif->urgency;
 	criteria->category = strdup(notif->category);
 	criteria->desktop_entry = strdup(notif->desktop_entry);
+	criteria->summary = strdup(notif->summary);
 	criteria->body = strdup(notif->body);
 	criteria->group_index = notif->group_index;
 	criteria->grouped = (notif->group_index >= 0);
