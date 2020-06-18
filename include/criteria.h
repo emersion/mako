@@ -1,6 +1,7 @@
 #ifndef MAKO_CRITERIA_H
 #define MAKO_CRITERIA_H
 
+#include <regex.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <wayland-client.h>
@@ -28,6 +29,7 @@ struct mako_criteria {
 	char *category;
 	char *desktop_entry;
 	char *summary;
+	regex_t summary_pattern;
 	char *body;
 	int group_index;
 	bool grouped;  // Whether group_index is non-zero

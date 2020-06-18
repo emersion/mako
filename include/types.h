@@ -48,6 +48,7 @@ struct mako_criteria_spec {
 	bool category;
 	bool desktop_entry;
 	bool summary;
+	bool summary_pattern;
 	bool body;
 	bool group_index;
 	bool grouped;
