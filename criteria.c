@@ -280,19 +280,19 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 		} else if (strcmp(key, "summary") == 0) {
 			criteria->summary = strdup(value);
 			if (criteria->spec.summary_pattern) {
-				fprintf(stderr, "Cannot set both summary and summary-pattern.");
+				fprintf(stderr, "Cannot set both summary and summary~ regex.\n");
 				return false;
 			}
 			criteria->spec.summary = true;
 			return true;
-		} else if (strcmp(key, "summary-pattern") == 0) {
+		} else if (strcmp(key, "summary~") == 0) {
 			if (regcomp(&criteria->summary_pattern, value,
 					REG_EXTENDED | REG_NOSUB)) {
-				fprintf(stderr, "Invalid summary-pattern regex '%s'\n", value);
+				fprintf(stderr, "Invalid summary~ regex '%s'\n", value);
 				return false;
 			}
 			if (criteria->spec.summary) {
-				fprintf(stderr, "Cannot set both summary and summary-pattern.");
+				fprintf(stderr, "Cannot set both summary and summary~ regex.\n");
 				return false;
 			}
 			criteria->spec.summary_pattern = true;
