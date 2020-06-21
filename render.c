@@ -339,6 +339,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 	int total_height = 0;
 	int pending_bottom_margin = 0;
 	struct mako_notification *notif;
+	size_t count = wl_list_length(&state->notifications);
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (config->max_visible >= 0 &&
 				visible_count >= (size_t)config->max_visible) {
@@ -379,6 +380,9 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 		total_height += notif_height;
 		pending_bottom_margin = style->margin.bottom;
+		if (i == count){
+			pending_bottom_margin = 0;
+		}
 
 		if (notif->group_index < 1) {
 			// If the notification is ungrouped, or is the first in a group, it
@@ -390,7 +394,6 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 
 	}
 
-	size_t count = wl_list_length(&state->notifications);
 	if (count > i) {
 		// Apply the hidden_style on top of the global style. This has to be
 		// done here since this notification isn't "real" and wasn't processed
@@ -427,7 +430,7 @@ int render(struct mako_state *state, struct pool_buffer *buffer, int scale) {
 		finish_style(&style);
 
 		total_height += hidden_height;
-		pending_bottom_margin = style.margin.bottom;
+		pending_bottom_margin = 0;
 	}
 
 	return total_height + pending_bottom_margin;
