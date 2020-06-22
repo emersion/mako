@@ -16,26 +16,26 @@ Empty lines and lines that begin with # are ignored.
 
 # GLOBAL CONFIGURATION OPTIONS
 
-*max-visible* = _n_
+*max-visible*=_n_
 	Set maximum number of visible notifications to _n_. Older notifications will
 	be hidden. If -1, all notifications are visible.
 
 	Default: 5
 
-*max-history* = _n_
+*max-history*=_n_
 	Set maximum number of expired notifications to keep in the history
 	buffer to _n_. If the buffer is full, newly expired notifications
 	replace the oldest ones. If 0, history is disabled.
 
 	Default: 5
 
-*sort* = _+/-time_ | _+/-priority_
+*sort*=_+/-time_ | _+/-priority_
 	Sorts incoming notifications by time and/or priority in ascending(+)
 	or descending(-) order.
 
 	Default: -time
 
-*output* = _name_
+*output*=_name_
 	Show notifications on the specified output. If empty, notifications will
 	appear on the focused output.
 
@@ -44,7 +44,7 @@ Empty lines and lines that begin with # are ignored.
 
 	Default: ""
 
-*layer* = _layer_
+*layer*=_layer_
 	Arrange mako at the specified layer, relative to normal windows. Supported
 	values are _background_, _bottom_, _top_, and _overlay_. Using _overlay_
 	will cause notifications to be displayed above fullscreen windows, though
@@ -52,7 +52,7 @@ Empty lines and lines that begin with # are ignored.
 
 	Default: top
 
-*anchor* = _position_
+*anchor*=_position_
 	Show notifications at the specified position on the output. Supported values
 	are _top-right_, _top-center_, _top-left_, _bottom-right_, _bottom-center_,
 	_bottom-left_, and _center_.
@@ -65,75 +65,75 @@ Specify the action to take per button or touch event. Supported values are
 _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 
 
-*on-button-left* = _action_
+*on-button-left*=_action_
 	Default: invoke-default-action
 
-*on-button-middle* = _action_
+*on-button-middle*=_action_
 	Default: none
 
-*on-button-right* = _action_
+*on-button-right*=_action_
 	Default: dismiss
 
-*on-touch* = _action_
+*on-touch*=_action_
 	Default: dismiss
 
 
 # STYLE OPTIONS
 
-*font* = _font_
+*font*=_font_
 	Set font to _font_, in Pango format.
 
 	Default: monospace 10
 
-*background-color* = _color_
+*background-color*=_color_
 	Set background color to _color_. See *COLORS* for more information.
 
 	Default: #285577FF
 
-*text-color* = _color_
+*text-color*=_color_
 	Set text color to _color_. See *COLORS* for more information.
 
 	Default: #FFFFFFFF
 
-*width* = _px_
+*width*=_px_
 	Set width of notification popups.
 
 	Default: 300
 
-*height* = _px_
+*height*=_px_
 	Set maximum height of notification popups. Notifications whose text takes
 	up less space are shrunk to fit.
 
 	Default: 100
 
-*margin* = _directional_
+*margin*=_directional_
 	Set margin of each edge to the size specified by _directional_. See
 	*DIRECTIONAL VALUES* for more information.
 
 	Default: 10
 
-*padding* = _directional_
+*padding*=_directional_
 	Set padding on each side to the size specified by _directional_. See
 	*DIRECTIONAL VALUES* for more information.
 
 	Default: 5
 
-*border-size* = _px_
+*border-size*=_px_
 	Set popup border size to _px_ pixels.
 
 	Default: 1
 
-*border-color* = _color_
+*border-color*=_color_
 	Set popup border color to _color_. See *COLORS* for more information.
 
 	Default: #4C7899FF
 
-*border-radius* = _px_
+*border-radius*=_px_
 	Set popup corner radius to _px_ pixels.
 
 	Default: 0
 
-*progress-color* = [over|source] _color_
+*progress-color*=[over|source] _color_
 	Set popup progress indicator color to _color_. See *COLOR* for more
 	information. To draw the progress indicator on top of the background
 	color, use the *over* attribute. To replace the background color, use
@@ -142,17 +142,17 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 
 	Default: over #5588AAFF
 
-*icons* = 0|1
+*icons*=0|1
 	Show icons in notifications.
 
 	Default: 1
 
-*max-icon-size* = _px_
+*max-icon-size*=_px_
 	Set maximum icon size to _px_ pixels.
 
 	Default: 64
 
-*icon-path* = _path_\[:_path_...\]
+*icon-path*=_path_\[:_path_...\]
 	Paths to search for icons when a notification specifies a name instead
 	of a full path. Colon-delimited. This approximates the search algorithm
 	used by the XDG Icon Theme Specification, but does not support any of
@@ -166,33 +166,33 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 
 	Default: ""
 
-*icon-location* = _position_
+*icon-location*=_position_
 	Position of the icon relative to the displayed text. Valid options are
 	_left_, _right_, _top_ and _bottom_.
 
 	Default: left
 
-*markup* = 0|1
+*markup*=0|1
 	If 1, enable Pango markup. If 0, disable Pango markup. If enabled, Pango
 	markup will be interpreted in your format specifier and in the body of
 	notifications.
 
 	Default: 1
 
-*actions* = 0|1
+*actions*=0|1
 	Applications may request an action to be associated with activating a
 	notification. Disabling this will cause mako to ignore these requests.
 
 	Default: 1
 
-*history* = 0|1
+*history*=0|1
 	If set, mako will save notifications that have reached their timeout
 	into the history buffer instead of immediately deleting them.
 	_max-history_ determines the size of the history buffer.
 
 	Default: 1
 
-*format* = _format_
+*format*=_format_
 	Set notification format string to _format_. See *FORMAT SPECIFIERS* for
 	more information. To change this for grouped notifications, set it within
 	a _grouped_ criteria.
@@ -200,19 +200,19 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 	Default: <b>%s</b>\\n%b
 	Default when grouped: (%g) <b>%s</b>\\n%b
 
-*default-timeout* = _timeout_
+*default-timeout*=_timeout_
 	Set the default timeout to _timeout_ in milliseconds. To disable the
 	timeout, set it to zero.
 
 	Default: 0
 
-*ignore-timeout* = 0|1
+*ignore-timeout*=0|1
 	If set, mako will ignore the expire timeout sent by notifications and use
 	the one provided by _default-timeout_ instead.
 
 	Default: 0
 
-*group-by* = _field[,field,...]_
+*group-by*=_field[,field,...]_
 	A comma-separated list of criteria fields that will be compared to other
 	visible notifications to determine if this one should form a group with
 	them. All listed criteria must be exactly equal for two notifications to
@@ -295,7 +295,7 @@ overriding them.
 Some style options are not useful in the global context and therefore have no
 associated command-line option.
 
-*invisible* = 0|1
+*invisible*=0|1
 	Whether this notification should be invisible even if it is above the
 	_max-visible_ cutoff. This is used primarily for hiding members of groups.
 	If you want to make more than the first group member visible, turn this
