@@ -4,7 +4,9 @@ usage() {
 	echo "Usage: makoctl <command> [options...]"
 	echo ""
 	echo "Commands:"
-	echo "  dismiss                        Dismiss the last notification"
+	echo "  dismiss [id]                   Dismiss the notification with the"
+	echo "                                 given id, or the last notification"
+	echo "                                 if none is given"
 	echo "          [-a|--all]             Dismiss all notifications"
 	echo "          [-g|--group]           Dismiss all the notifications"
 	echo "                                 in the last notification's group"
@@ -35,20 +37,21 @@ fi
 
 case "$1" in
 "dismiss")
-	[ $# -lt 2 ] && action="" || action="$2"
-	case "$action" in
+	[ $# -lt 2 ] && arg="0" || arg=$2
+	case "$arg" in
 	"-a"|"--all")
 		call DismissAllNotifications
 		;;
 	"-g"|"--group")
 		call DismissGroupNotifications
 		;;
-	"")
-		call DismissLastNotification
-		;;
 	*)
-		echo "makoctl: unrecognized option '$2'"
-		exit 1
+		re='^[0-9]+$'
+		if ! [[ $arg =~ $re ]] ; then
+			echo "makoctl: Unrecognized ID: '$arg'"
+			exit 1
+		fi
+		call DismissNotification "u" "$arg"
 		;;
 	esac
 	;;
