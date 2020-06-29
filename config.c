@@ -485,9 +485,9 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "text-color") == 0) {
 		return spec->colors.text = parse_color(value, &style->colors.text);
 	} else if (strcmp(name, "width") == 0) {
-		return spec->width = parse_int(value, &style->width);
+		return spec->width = parse_int_ge(value, &style->width, 1);
 	} else if (strcmp(name, "height") == 0) {
-		return spec->height = parse_int(value, &style->height);
+		return spec->height = parse_int_ge(value, &style->height, 1);
 	} else if (strcmp(name, "margin") == 0) {
 		return spec->margin = parse_directional(value, &style->margin);
 	} else if (strcmp(name, "padding") == 0) {
@@ -498,7 +498,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		}
 		return spec->padding;
 	} else if (strcmp(name, "border-size") == 0) {
-		return spec->border_size = parse_int(value, &style->border_size);
+		return spec->border_size = parse_int_ge(value, &style->border_size, 0);
 	} else if (strcmp(name, "border-color") == 0) {
 		return spec->colors.border = parse_color(value, &style->colors.border);
 	} else if (strcmp(name, "progress-color") == 0) {
@@ -526,7 +526,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		return spec->icon_location = true;
 	} else if (strcmp(name, "max-icon-size") == 0) {
 		return spec->max_icon_size =
-			parse_int(value, &style->max_icon_size);
+			parse_int_ge(value, &style->max_icon_size, 1);
 	} else if (strcmp(name, "icon-path") == 0) {
 		free(style->icon_path);
 		return spec->icon_path = !!(style->icon_path = strdup(value));
@@ -539,7 +539,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		return spec->format = parse_format(value, &style->format);
 	} else if (strcmp(name, "default-timeout") == 0) {
 		return spec->default_timeout =
-			parse_int(value, &style->default_timeout);
+			parse_int_ge(value, &style->default_timeout, 0);
 	} else if (strcmp(name, "ignore-timeout") == 0) {
 		return spec->ignore_timeout =
 			parse_boolean(value, &style->ignore_timeout);
@@ -551,7 +551,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "history") == 0) {
 		return spec->history = parse_boolean(value, &style->history);
 	} else if (strcmp(name, "border-radius") == 0) {
-		spec->border_radius = parse_int(value, &style->border_radius);
+		spec->border_radius = parse_int_ge(value, &style->border_radius, 0);
 		if (spec->border_radius && spec->padding) {
 			style->padding.left = max(style->border_radius, style->padding.left);
 			style->padding.right = max(style->border_radius, style->padding.right);
