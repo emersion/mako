@@ -17,15 +17,22 @@ static int32_t max(int32_t a, int32_t b) {
 	return (a > b) ? a : b;
 }
 
-void init_default_config(struct mako_config *config) {
+int init_default_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
 	struct mako_criteria *new_criteria = create_criteria(config);
+	if (!new_criteria) {
+		return -1;
+	}
 	init_default_style(&new_criteria->style);
 	new_criteria->raw_string = strdup("(root)");
 
 	// Hide grouped notifications by default, and put the group count in
 	// their format...
 	new_criteria = create_criteria(config);
+	if (!new_criteria) {
+		return -1;
+	}
+
 	init_empty_style(&new_criteria->style);
 	new_criteria->grouped = true;
 	new_criteria->spec.grouped = true;
@@ -37,6 +44,10 @@ void init_default_config(struct mako_config *config) {
 
 	// ...but make the first one in the group visible.
 	new_criteria = create_criteria(config);
+	if (!new_criteria) {
+		return -1;
+	}
+
 	init_empty_style(&new_criteria->style);
 	new_criteria->group_index = 0;
 	new_criteria->spec.group_index = true;
@@ -58,6 +69,8 @@ void init_default_config(struct mako_config *config) {
 	config->button_bindings.right = MAKO_BINDING_DISMISS;
 	config->button_bindings.middle = MAKO_BINDING_NONE;
 	config->touch = MAKO_BINDING_DISMISS;
+
+	return 0;
 }
 
 void finish_config(struct mako_config *config) {
@@ -353,6 +366,10 @@ bool apply_superset_style(
 
 	// The "format" needs enough space for one of each specifier.
 	target->format = calloc(1, (2 * strlen(VALID_FORMAT_SPECIFIERS)) + 1);
+	if (!target->format) {
+		return false;
+	}
+
 	char *target_format_pos = target->format;
 
 	// Now we loop over the criteria and add together those fields.
@@ -859,7 +876,11 @@ int reload_config(struct mako_config *config, int argc, char **argv) {
 		return -1;
 	}
 
-	apply_superset_style(&new_config.superstyle, &new_config);
+	if (!apply_superset_style(&new_config.superstyle, &new_config)) {
+		fprintf(stderr, "Failed to apply config superstyle\n");
+		finish_config(&new_config);
+		return -1;
+	}
 
 	finish_config(config);
 	*config = new_config;

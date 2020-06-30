@@ -249,8 +249,8 @@ static void reapply_config(struct mako_state *state) {
 		destroy_surface(surface);
 	}
 
-	struct mako_notification *notif;
-	wl_list_for_each(notif, &state->notifications, link) {
+	struct mako_notification *notif, *ntmp;
+	wl_list_for_each_safe(notif, ntmp, &state->notifications, link) {
 		// Reset the notifications' grouped state so that if criteria have been
 		// removed they'll separate properly.
 		notif->group_index = -1;
@@ -260,7 +260,10 @@ static void reapply_config(struct mako_state *state) {
 
 		finish_style(&notif->style);
 		init_empty_style(&notif->style);
-		apply_each_criteria(&state->config.criteria, notif);
+		if (apply_each_criteria(&state->config.criteria, notif) == -1) {
+			fprintf(stderr, "Applying criteria failed\n");
+			destroy_notification(notif);
+		}
 
 		// Having to do this for every single notification really hurts... but
 		// it does do The Right Thing (tm).

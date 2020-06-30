@@ -101,7 +101,10 @@ int main(int argc, char *argv[]) {
 	wl_list_init(&state.surfaces);
 
 	// This is a bit wasteful, but easier than special-casing the reload.
-	init_default_config(&state.config);
+	if (init_default_config(&state.config) < 0) {
+		fprintf(stderr, "Failed to create default config\n");
+		return -1;
+	}
 	int ret = reload_config(&state.config, argc, argv);
 
 	if (ret < 0) {
