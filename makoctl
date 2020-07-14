@@ -4,7 +4,7 @@ usage() {
 	echo "Usage: makoctl <command> [options...]"
 	echo ""
 	echo "Commands:"
-	echo "  dismiss [id]                   Dismiss the notification with the"
+	echo "  dismiss [-n id]                Dismiss the notification with the"
 	echo "                                 given id, or the last notification"
 	echo "                                 if none is given"
 	echo "          [-a|--all]             Dismiss all notifications"
@@ -37,23 +37,39 @@ fi
 
 case "$1" in
 "dismiss")
-	[ $# -lt 2 ] && arg="0" || arg=$2
-	case "$arg" in
-	"-a"|"--all")
-		call DismissAllNotifications
-		;;
-	"-g"|"--group")
-		call DismissGroupNotifications
-		;;
-	*)
-		re='^[0-9]+$'
-		if ! [[ $arg =~ $re ]] ; then
-			echo "makoctl: Unrecognized ID: '$arg'"
+	all=0
+	group=0
+	id=0
+	while [ $# -gt 1 ]; do
+		case "$2" in
+		"-a"|"--all")
+			all=1
+			;;
+		"-g"|"--group")
+			group=1
+			;;
+		"-n")
+			if [ $# -lt 3 ]; then
+				echo >&2 "$0: Expected <id> after '-n'"
+				exit 1
+			fi
+			id=$3
+			shift
+			;;
+		*)
+			echo >&2 "$0: Unrecognized option: $2"
 			exit 1
-		fi
-		call DismissNotification "u" "$arg"
-		;;
-	esac
+			;;
+		esac
+		shift
+	done
+
+	if [ $all -eq 1 ]; then
+		echo "all!!"
+		call DismissAllNotifications
+	else
+		call DismissNotification "ub" "$id" "$group"
+	fi
 	;;
 "invoke")
 	id=0
@@ -85,7 +101,6 @@ case "$1" in
 	else
 		actions="$(call ListNotifications | jq -re '.data[0][0].actions.data')"
 		id="0"
-		echo $id
 	fi
 	if [ "$(jq -rn "$actions | length")" -eq "0" ]; then
 		echo >&2 "$0: No actions found"

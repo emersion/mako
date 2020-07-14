@@ -70,7 +70,8 @@ static int handle_dismiss_notification(sd_bus_message *msg, void *data,
 	struct mako_state *state = data;
 
 	uint32_t id = 0;
-	int ret = sd_bus_message_read(msg, "u", &id);
+	uint32_t dismiss_group = 0;
+	int ret = sd_bus_message_read(msg, "ub", &id, &dismiss_group);
 	if (ret < 0) {
 		return ret;
 	}
@@ -86,7 +87,11 @@ static int handle_dismiss_notification(sd_bus_message *msg, void *data,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (notif->id == id) {
-			close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+			if (dismiss_group) {
+				close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+			} else {
+				close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+			}
 			set_dirty(notif->surface);
 			break;
 		}
@@ -351,7 +356,7 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_METHOD("DismissAllNotifications", "", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("DismissGroupNotifications", "", "", handle_dismiss_group_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("DismissLastNotification", "", "", handle_dismiss_last_notification, SD_BUS_VTABLE_UNPRIVILEGED),
-	SD_BUS_METHOD("DismissNotification", "u", "", handle_dismiss_notification, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("DismissNotification", "ub", "", handle_dismiss_notification, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("InvokeAction", "us", "", handle_invoke_action, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("RestoreNotification", "", "", handle_restore_action, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("ListNotifications", "", "aa{sv}", handle_list_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
