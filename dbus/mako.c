@@ -70,7 +70,7 @@ static int handle_dismiss_notification(sd_bus_message *msg, void *data,
 	struct mako_state *state = data;
 
 	uint32_t id = 0;
-	uint32_t dismiss_group = 0;
+	int dismiss_group = 0;
 	int ret = sd_bus_message_read(msg, "ub", &id, &dismiss_group);
 	if (ret < 0) {
 		return ret;
@@ -78,10 +78,6 @@ static int handle_dismiss_notification(sd_bus_message *msg, void *data,
 
 	if (id == 0) {
 		id = state->last_id;
-	}
-
-	if (wl_list_empty(&state->notifications)) {
-		goto done;
 	}
 
 	struct mako_notification *notif;
@@ -97,7 +93,6 @@ static int handle_dismiss_notification(sd_bus_message *msg, void *data,
 		}
 	}
 
-done:
 	return sd_bus_reply_method_return(msg, "");
 }
 
