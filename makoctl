@@ -4,21 +4,25 @@ usage() {
 	echo "Usage: makoctl <command> [options...]"
 	echo ""
 	echo "Commands:"
-	echo "  dismiss                  Dismiss the last notification"
-	echo "          [-a|--all]       Dismiss all notifications"
-	echo "          [-g|--group]     Dismiss all the notifications"
-	echo "                           in the last notification's group"
-	echo "  restore                  Restore the most recently expired"
-	echo "                           notification from the history buffer"
-	echo "  invoke [-n id] [action]  Invoke an action on the notification"
-	echo "                           with the given id, or the last"
-	echo "                           notification if none is given"
-	echo "  menu [prog] [arg ...]    Use [prog] [args ...] to select one"
-	echo "                           notification action to be invoked"
-	echo "  list                     List notifications"
-	echo "  reload                   Reload the configuration file"
-	echo "  set <key>=<value>        Set a global configuration option"
-	echo "  help                     Show this help"
+	echo "  dismiss [-n id]                Dismiss the notification with the"
+	echo "                                 given id, or the last notification"
+	echo "                                 if none is given"
+	echo "          [-a|--all]             Dismiss all notifications"
+	echo "          [-g|--group]           Dismiss all the notifications"
+	echo "                                 in the last notification's group"
+	echo "  restore                        Restore the most recently expired"
+	echo "                                 notification from the history buffer"
+	echo "  invoke [-n id] [action]        Invoke an action on the notification"
+	echo "                                 with the given id, or the last"
+	echo "                                 notification if none is given"
+	echo "  menu [-n id] [prog] [arg ...]  Use [prog] [args ...] to select one"
+	echo "                                 action to be invoked on the notification"
+	echo "                                 with the given id, or the last"
+	echo "                                 notification if none is given"
+	echo "  list                           List notifications"
+	echo "  reload                         Reload the configuration file"
+	echo "  set <key>=<value>              Set a global configuration option"
+	echo "  help                           Show this help"
 }
 
 call() {
@@ -33,22 +37,38 @@ fi
 
 case "$1" in
 "dismiss")
-	[ $# -lt 2 ] && action="" || action="$2"
-	case "$action" in
-	"-a"|"--all")
+	all=0
+	group=0
+	id=0
+	while [ $# -gt 1 ]; do
+		case "$2" in
+		"-a"|"--all")
+			all=1
+			;;
+		"-g"|"--group")
+			group=1
+			;;
+		"-n")
+			if [ $# -lt 3 ]; then
+				echo >&2 "$0: Expected <id> after '-n'"
+				exit 1
+			fi
+			id=$3
+			shift
+			;;
+		*)
+			echo >&2 "$0: Unrecognized option: $2"
+			exit 1
+			;;
+		esac
+		shift
+	done
+
+	if [ $all -eq 1 ]; then
 		call DismissAllNotifications
-		;;
-	"-g"|"--group")
-		call DismissGroupNotifications
-		;;
-	"")
-		call DismissLastNotification
-		;;
-	*)
-		echo "makoctl: unrecognized option '$2'"
-		exit 1
-		;;
-	esac
+	else
+		call DismissNotification "ub" "$id" "$group"
+	fi
 	;;
 "invoke")
 	id=0
@@ -73,18 +93,26 @@ case "$1" in
 		echo >&2 "$0: jq is required to use 'menu'"
 		exit 1
 	fi
-	if array="$(call ListNotifications | jq -re '.data[0][0].actions.data | if length > 0 then . else false end')"; then
-		sel="$(jq -rn "$array|values[]" | "$@")"
-		sel="$(jq -rn --arg sel "$sel" "$array|to_entries[]|select(.value == \$sel).key")"
-		if [ -z "$sel" ]; then
-			echo >&2 "$0: No action selected"
-			exit 1
-		else
-			call InvokeAction "us" 0 "$sel"
-		fi
+	if [ $# -gt 1 ] && [ "$1" = "-n" ]; then
+		id="$2"
+		actions="$(call ListNotifications | jq --arg id "$id" -re '.data[0][] | select(.id.data==($id | tonumber)) | .actions.data')"
+		shift 2
 	else
+		actions="$(call ListNotifications | jq -re '.data[0][0].actions.data')"
+		id="0"
+	fi
+	if [ "$(jq -rn "$actions | length")" -eq "0" ]; then
 		echo >&2 "$0: No actions found"
 		exit 1
+	fi
+
+	sel="$(jq -rn "$actions|values[]" | "$@")"
+	sel="$(jq -rn --arg sel "$sel" "$actions|to_entries[]|select(.value == \$sel).key")"
+	if [ -z "$sel" ]; then
+		echo >&2 "$0: No action selected"
+		exit 1
+	else
+		call InvokeAction "us" "$id" "$sel"
 	fi
 	;;
 "list")
