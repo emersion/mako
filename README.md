@@ -37,6 +37,7 @@ For control of mako during runtime, `makoctl` can be used; see `man makoctl`
 
 Install dependencies:
 
+* gcc
 * meson (build-time dependency)
 * wayland
 * pango
@@ -58,6 +59,43 @@ build/mako
 <p align="center">
   <img src="https://sr.ht/frOL.jpg" alt="mako">
 </p>
+
+### With docker 🐋
+
+#### Compile the code using `mako-builder` 🚜
+
+Build the `builder`
+
+```sh
+docker build --rm -t mako-builder -f Dockerfile.builder .
+```
+
+Use the builder to compile the code
+
+```sh
+docker run --rm -v $(pwd):/root mako-builder
+```
+
+#### Create a debian package 📦
+
+Build the debian packager
+
+```sh
+docker build --rm -t mako-debian -f Dockerfile.debian
+```
+
+Package the package
+
+```sh
+docker run --rm -v $(pwd)/build/mako:/root/mako_1/usr/local/bin/mako -v
+$(pwd):/output mako-debian
+```
+
+Now it is ready to be installed! Install with
+
+```sh
+dpkg -i mako_1.deb
+```
 
 ## I have a question!
 

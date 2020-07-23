@@ -1,0 +1,16 @@
+FROM debian:buster
+
+WORKDIR /root
+
+RUN mkdir -p mako_1/usr/local/bin \
+  && mkdir -p mako_1/DEBIAN \
+  && echo 'Package: mako\n\
+Version: 1\n\
+Section: base\n\
+Priority: optional\n\
+Architecture: amd64\n\
+Depends:\n\
+Maintainer: Your Name <you@email.com>\n\
+Description: mako' > mako_1/DEBIAN/control
+
+CMD dpkg-deb --build mako_1 && mv mako_1.deb /output
