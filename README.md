@@ -73,7 +73,7 @@ docker build --rm -t mako-builder -f Dockerfile.builder .
 Use the builder to compile the code
 
 ```sh
-docker run --rm -v $(pwd):/root mako-builder
+docker run --rm -v $(pwd):/mako mako-builder
 ```
 
 #### Create a debian package 📦
@@ -81,14 +81,13 @@ docker run --rm -v $(pwd):/root mako-builder
 Build the debian packager
 
 ```sh
-docker build --rm -t mako-debian -f Dockerfile.debian
+docker build --rm -t mako-debian -f Dockerfile.debian .
 ```
 
 Package the package
 
 ```sh
-docker run --rm -v $(pwd)/build/mako:/root/mako_1/usr/local/bin/mako -v
-$(pwd):/output mako-debian
+docker run --rm -v $(pwd)/build/mako:/root/mako_1/usr/local/bin/mako -v $(pwd):/output mako-debian
 ```
 
 Now it is ready to be installed! Install with
