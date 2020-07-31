@@ -76,13 +76,9 @@ static int handle_dismiss_notification(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	if (id == 0) {
-		id = state->last_id;
-	}
-
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
-		if (notif->id == id) {
+		if (notif->id == id || id == 0) {
 			if (dismiss_group) {
 				close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 			} else {
@@ -107,13 +103,9 @@ static int handle_invoke_action(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	if (id == 0) {
-		id = state->last_id;
-	}
-
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
-		if (notif->id == id) {
+		if (notif->id == id || id == 0) {
 			struct mako_action *action;
 			wl_list_for_each(action, &notif->actions, link) {
 				if (strcmp(action->key, action_key) == 0) {
