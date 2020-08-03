@@ -111,10 +111,6 @@ static int handle_invoke_action(sd_bus_message *msg, void *data,
 		id = state->last_id;
 	}
 
-	if (wl_list_empty(&state->notifications)) {
-		goto done;
-	}
-
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (notif->id == id) {
@@ -129,7 +125,6 @@ static int handle_invoke_action(sd_bus_message *msg, void *data,
 		}
 	}
 
-done:
 	return sd_bus_reply_method_return(msg, "");
 }
 
