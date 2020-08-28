@@ -365,7 +365,7 @@ void notification_handle_touch(struct mako_notification *notif) {
 /*
  * Searches through the notifications list and returns the next position at
  * which to insert. If no results for the specified urgency are found,
- * it will return the closest link searching in the direction specifed.
+ * it will return the closest link searching in the direction specified.
  * (-1 for lower, 1 or upper).
  */
 static struct wl_list *get_last_notif_by_urgency(struct wl_list *notifications,

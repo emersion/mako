@@ -341,7 +341,7 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 	assert(false && "Criteria parser fell through");
 }
 
-// Retreive the global criteria from a given mako_config. This just so happens
+// Retrieve the global criteria from a given mako_config. This just so happens
 // to be the first criteria in the list.
 struct mako_criteria *global_criteria(struct mako_config *config) {
 	struct mako_criteria *criteria =
