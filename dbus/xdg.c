@@ -350,7 +350,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	// knowing what criteria we will be grouping them by (proof left as an
 	// exercise to the reader).
 	if (replaces_id != notif->id) {
-		// Only insert notifcations if they're actually new, to avoid creating
+		// Only insert notifications if they're actually new, to avoid creating
 		// duplicates in the list.
 		insert_notification(state, notif);
 	}
@@ -386,7 +386,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	}
 
 	// Now we need to perform the grouping based on the new notification's
-	// group criteria specification (list of critera which must match). We
+	// group criteria specification (list of criteria which must match). We
 	// don't necessarily want to start with the new notification, as depending
 	// on the sort criteria, there may be matching ones earlier in the list.
 	// After this call, the matching notifications will be contiguous in the
