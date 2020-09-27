@@ -6,7 +6,7 @@ profile fr.emersion.Mako /usr/bin/mako {
   #include <abstractions/freedesktop.org>
   #include <abstractions/wayland>
 
-  #include <abstractions/dbus-strict>
+  #include <abstractions/dbus-session-strict>
   dbus bind
        bus=session
        name=org.freedesktop.Notifications,
