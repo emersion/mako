@@ -469,20 +469,6 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 	// anymore.
 	wl_list_for_each(notif, &matches, link) {
 		notif->group_count = count;
-
-		int rematch_count = apply_each_criteria(&state->config.criteria, notif);
-		if (rematch_count == -1) {
-			// We encountered an allocation failure or similar while applying
-			// criteria. The notification may be partially matched, but the
-			// worst case is that it has an empty style, so bail.
-			fprintf(stderr, "Failed to apply criteria\n");
-			return -1;
-		} else if (rematch_count == 0) {
-			// This should be impossible, since the global criteria is always
-			// present in a mako_config and matches everything.
-			fprintf(stderr, "Notification matched zero criteria?!\n");
-			return -1;
-		}
 	}
 
 	// Place all of the matches back into the list where the first one was
