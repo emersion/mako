@@ -296,20 +296,12 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			return true;
 		} else if (strcmp(key, "summary") == 0) {
 			criteria->summary = strdup(value);
-			if (criteria->spec.summary_pattern) {
-				fprintf(stderr, "Cannot set both summary and summary~ regex.\n");
-				return false;
-			}
 			criteria->spec.summary = true;
 			return true;
 		} else if (strcmp(key, "summary~") == 0) {
 			if (regcomp(&criteria->summary_pattern, value,
 					REG_EXTENDED | REG_NOSUB)) {
 				fprintf(stderr, "Invalid summary~ regex '%s'\n", value);
-				return false;
-			}
-			if (criteria->spec.summary) {
-				fprintf(stderr, "Cannot set both summary and summary~ regex.\n");
 				return false;
 			}
 			criteria->spec.summary_pattern = true;
@@ -455,4 +447,35 @@ struct mako_criteria *create_criteria_from_notification(
 	criteria->grouped = (notif->group_index >= 0);
 
 	return criteria;
+}
+
+
+// To keep the behavior of criteria predictable, there are a few rules that we
+// have to impose on what can be modified depending on what was matched:
+// - Criteria matching grouped notifications are not allowed to change the
+//   anchor, output, or group-by, as this would invalidate the grouping.
+bool validate_criteria(struct mako_criteria *criteria) {
+	if (criteria->spec.grouped || criteria->spec.group_index) {
+		static const char *message =
+			"Setting `%s` is not allowed when matching `grouped` or "
+			"`group-index`\n";
+
+		if (criteria->style.spec.anchor) {
+			fprintf(stderr, message, "anchor");
+			return false;
+		} else if (criteria->style.spec.output) {
+			fprintf(stderr, message, "output");
+			return false;
+		} else if (criteria->style.spec.group_criteria_spec) {
+			fprintf(stderr, message, "group-by");
+			return false;
+		}
+	}
+
+	if (criteria->spec.summary && criteria->spec.summary_pattern) {
+		fprintf(stderr, "Cannot set both `summary` and `summary~`\n");
+		return false;
+	}
+
+	return true;
 }
