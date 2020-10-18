@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <wayland-client.h>
 #include "types.h"
-#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 enum mako_binding {
 	MAKO_BINDING_NONE,

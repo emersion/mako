@@ -579,29 +579,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		style->spec.layer = true;
 		return true;
 	} else if (strcmp(name, "anchor") == 0) {
-		if (strcmp(value, "top-right") == 0) {
-			style->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
-				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
-		} else if (strcmp(value, "top-center") == 0) {
-			style->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP;
-		} else if (strcmp(value, "top-left") == 0) {
-			style->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
-				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
-		} else if (strcmp(value, "bottom-right") == 0) {
-			style->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
-				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
-		} else if (strcmp(value, "bottom-center") == 0) {
-			style->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
-		} else if (strcmp(value, "bottom-left") == 0) {
-			style->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
-				ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
-		} else if (strcmp(value, "center") == 0) {
-			style->anchor = 0;
-		} else {
-			return false;
-		}
-		style->spec.anchor = true;
-		return true;
+		return spec->anchor = parse_anchor(value, &style->anchor);
 	}
 
 	return false;

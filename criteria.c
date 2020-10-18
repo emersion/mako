@@ -38,6 +38,7 @@ void destroy_criteria(struct mako_criteria *criteria) {
 	free(criteria->body);
 	regfree(&criteria->body_pattern);
 	free(criteria->raw_string);
+	free(criteria->output);
 	free(criteria);
 }
 
@@ -130,6 +131,15 @@ bool match_criteria(struct mako_criteria *criteria,
 
 	if (spec.grouped &&
 			criteria->grouped != (notif->group_index >= 0)) {
+		return false;
+	}
+
+	if (spec.anchor && criteria->anchor != notif->surface->anchor) {
+		return false;
+	}
+
+	if (spec.output &&
+			strcmp(criteria->output, notif->surface->configured_output) != 0) {
 		return false;
 	}
 
@@ -453,10 +463,13 @@ struct mako_criteria *create_criteria_from_notification(
 // To keep the behavior of criteria predictable, there are a few rules that we
 // have to impose on what can be modified depending on what was matched.
 bool validate_criteria(struct mako_criteria *criteria) {
-	if (criteria->spec.grouped || criteria->spec.group_index) {
+	if (criteria->spec.grouped ||
+			criteria->spec.group_index ||
+			criteria->spec.output ||
+			criteria->spec.anchor) {
 		static const char *message =
-			"Setting `%s` is not allowed when matching `grouped` or "
-			"`group-index`\n";
+			"Setting `%s` is not allowed when matching `grouped`, "
+			"`group-index`, `output`, or `anchor`\n";
 
 		if (criteria->style.spec.anchor) {
 			fprintf(stderr, message, "anchor");
@@ -473,6 +486,25 @@ bool validate_criteria(struct mako_criteria *criteria) {
 	if (criteria->spec.summary && criteria->spec.summary_pattern) {
 		fprintf(stderr, "Cannot set both `summary` and `summary~`\n");
 		return false;
+	}
+
+	if (criteria->style.spec.group_criteria_spec) {
+		struct mako_criteria_spec *spec = &criteria->style.group_criteria_spec;
+		static const char *message = "`%s` cannot be used in `group-by`\n";
+
+		if (spec->group_index) {
+			fprintf(stderr, message, "group-index");
+			return false;
+		} else if (spec->grouped) {
+			fprintf(stderr, message, "grouped");
+			return false;
+		} else if (spec->anchor) {
+			fprintf(stderr, message, "anchor");
+			return false;
+		} else if (spec->output) {
+			fprintf(stderr, message, "output");
+			return false;
+		}
 	}
 
 	return true;
