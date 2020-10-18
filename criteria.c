@@ -13,6 +13,7 @@
 #include "criteria.h"
 #include "notification.h"
 #include "surface.h"
+#include "wayland.h"
 
 struct mako_criteria *create_criteria(struct mako_config *config) {
 	struct mako_criteria *criteria = calloc(1, sizeof(struct mako_criteria));
@@ -134,12 +135,14 @@ bool match_criteria(struct mako_criteria *criteria,
 		return false;
 	}
 
-	if (spec.anchor && criteria->anchor != notif->surface->anchor) {
+	if (spec.anchor && (notif->surface == NULL ||
+			criteria->anchor != notif->surface->anchor)) {
 		return false;
 	}
 
-	if (spec.output &&
-			strcmp(criteria->output, notif->surface->configured_output) != 0) {
+	if (spec.output && (notif->surface == NULL ||
+				notif->surface->surface_output == NULL ||
+				strcmp(criteria->output, notif->surface->surface_output->name) != 0)) {
 		return false;
 	}
 
@@ -335,6 +338,13 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 				return false;
 			}
 			criteria->spec.body_pattern = true;
+			return true;
+		} else if (strcmp(key, "anchor") == 0) {
+			return criteria->spec.anchor =
+				parse_anchor(value, &criteria->anchor);
+		} else if (strcmp(key, "output") == 0) {
+			criteria->output = strdup(value);
+			criteria->spec.output = true;
 			return true;
 		} else {
 			// Anything left must be one of the boolean fields, defined using
