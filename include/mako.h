@@ -36,7 +36,6 @@ struct mako_surface {
 	char *configured_output;
 	enum zwlr_layer_shell_v1_layer layer;
 	uint32_t anchor;
-	int32_t max_visible;
 
 	int32_t width, height;
 	struct pool_buffer buffers[2];

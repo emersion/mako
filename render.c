@@ -347,14 +347,15 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 		}
 		++count;
 
-		if (surface->max_visible >= 0 &&
-				visible_count >= (size_t)surface->max_visible) {
-			continue;
-		}
 
 		// Note that by this point, everything in the style is guaranteed to
 		// be specified, so we don't need to check.
 		struct mako_style *style = &notif->style;
+
+		if (style->max_visible >= 0 &&
+				visible_count >= (size_t)style->max_visible) {
+			continue;
+		}
 
 		++i; // We count how many we've seen even if we're not rendering them.
 

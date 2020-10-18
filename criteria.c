@@ -427,7 +427,7 @@ ssize_t apply_each_criteria(struct wl_list *criteria_list,
 
 	if (!notif->surface) {
 		notif->surface = create_surface(notif->state, notif->style.output,
-			notif->style.layer, notif->style.anchor, notif->style.max_visible);
+			notif->style.layer, notif->style.anchor);
 	}
 
 	return match_count;
