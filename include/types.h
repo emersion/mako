@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <cairo.h>
+#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 struct mako_color {
 	uint32_t value;
@@ -15,6 +16,7 @@ bool parse_int(const char *string, int *out);
 bool parse_int_ge(const char *string, int *out, int min);
 bool parse_color(const char *string, uint32_t *out);
 bool parse_mako_color(const char *string, struct mako_color *out);
+bool parse_anchor(const char *string, uint32_t *out);
 
 enum mako_notification_urgency {
 	MAKO_NOTIFICATION_URGENCY_LOW = 0,
@@ -52,10 +54,15 @@ struct mako_criteria_spec {
 	bool summary_pattern;
 	bool body;
 	bool body_pattern;
-	bool group_index;
-	bool grouped;
 
 	bool none; // Special criteria that never matches, used for grouping
+
+	// Fields that can only be matched after grouping, and thus can't be
+	// used to group.
+	bool group_index;
+	bool grouped;
+	bool output;
+	bool anchor;
 };
 
 bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out);

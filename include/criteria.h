@@ -32,8 +32,12 @@ struct mako_criteria {
 	regex_t summary_pattern;
 	char *body;
 	regex_t body_pattern;
+
+	// Second-pass matches:
 	int group_index;
 	bool grouped;  // Whether group_index is non-zero
+	char *output;
+	uint32_t anchor;
 };
 
 struct mako_criteria *create_criteria(struct mako_config *config);

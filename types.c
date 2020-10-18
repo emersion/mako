@@ -208,11 +208,19 @@ bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out) {
 			out->summary = true;
 		} else if (strcmp(token, "body") == 0) {
 			out->body = true;
+		} else if (strcmp(token, "grouped") == 0) {
+			out->grouped = true;
+		} else if (strcmp(token, "group-index") == 0) {
+			out->group_index = true;
+		} else if (strcmp(token, "anchor") == 0) {
+			out->anchor = true;
+		} else if (strcmp(token, "output") == 0) {
+			out->output = true;
 		} else if (strcmp(token, "none") == 0) {
 			out->none = true;
 		} else {
-			free(components);
 			fprintf(stderr, "Unknown criteria field '%s'\n", token);
+			free(components);
 			return false;
 		}
 
@@ -295,5 +303,31 @@ bool parse_format(const char *string, char **out) {
 	}
 
 	*out = strdup(token);
+	return true;
+}
+
+bool parse_anchor(const char *string, uint32_t *out) {
+	if (strcmp(string, "top-right") == 0) {
+		*out = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
+			ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+	} else if (strcmp(string, "top-center") == 0) {
+		*out = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP;
+	} else if (strcmp(string, "top-left") == 0) {
+		*out = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
+			ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
+	} else if (strcmp(string, "bottom-right") == 0) {
+		*out = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
+			ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+	} else if (strcmp(string, "bottom-center") == 0) {
+		*out = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
+	} else if (strcmp(string, "bottom-left") == 0) {
+		*out = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
+			ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
+	} else if (strcmp(string, "center") == 0) {
+		*out = 0;
+	} else {
+		return false;
+	}
+
 	return true;
 }
