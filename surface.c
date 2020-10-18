@@ -23,8 +23,7 @@ void destroy_surface(struct mako_surface *surface) {
 }
 
 struct mako_surface *create_surface(struct mako_state *state, const char *output,
-		enum zwlr_layer_shell_v1_layer layer, uint32_t anchor,
-		int32_t max_visible) {
+		enum zwlr_layer_shell_v1_layer layer, uint32_t anchor) {
 	struct mako_surface *surface = calloc(1, sizeof(*surface));
 	if (!surface) {
 		return NULL;
@@ -33,7 +32,6 @@ struct mako_surface *create_surface(struct mako_state *state, const char *output
 	surface->configured_output = strdup(output);
 	surface->layer = layer;
 	surface->anchor = anchor;
-	surface->max_visible = max_visible;
 	surface->state = state;
 
 	wl_list_insert(&state->surfaces, &surface->link);
