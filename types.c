@@ -326,6 +326,7 @@ bool parse_anchor(const char *string, uint32_t *out) {
 	} else if (strcmp(string, "center") == 0) {
 		*out = 0;
 	} else {
+		fprintf(stderr, "Invalid anchor value '%s'\n", string);
 		return false;
 	}
 
