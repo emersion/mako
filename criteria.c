@@ -451,9 +451,7 @@ struct mako_criteria *create_criteria_from_notification(
 
 
 // To keep the behavior of criteria predictable, there are a few rules that we
-// have to impose on what can be modified depending on what was matched:
-// - Criteria matching grouped notifications are not allowed to change the
-//   anchor, output, or group-by, as this would invalidate the grouping.
+// have to impose on what can be modified depending on what was matched.
 bool validate_criteria(struct mako_criteria *criteria) {
 	if (criteria->spec.grouped || criteria->spec.group_index) {
 		static const char *message =
