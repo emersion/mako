@@ -347,6 +347,22 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 		}
 		++count;
 
+		// Immediately before rendering we need to re-match all of the criteria
+		// so that matches against the anchor and output work even if the
+		// output was automatically assigned by the compositor.
+		int rematch_count = apply_each_criteria(&state->config.criteria, notif);
+		if (rematch_count == -1) {
+			// We encountered an allocation failure or similar while applying
+			// criteria. The notification may be partially matched, but the
+			// worst case is that it has an empty style, so bail.
+			fprintf(stderr, "Failed to apply criteria\n");
+			break;
+		} else if (rematch_count == 0) {
+			// This should be impossible, since the global criteria is always
+			// present in a mako_config and matches everything.
+			fprintf(stderr, "Notification matched zero criteria?!\n");
+			break;
+		}
 
 		// Note that by this point, everything in the style is guaranteed to
 		// be specified, so we don't need to check.
