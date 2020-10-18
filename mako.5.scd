@@ -300,6 +300,14 @@ There are three criteria always present at the front of the list:
 These options can be overridden by simply defining the criteria yourself and
 overriding them.
 
+There are some rules restricting what can be configured depending on what is
+being matched by a given criteria:
+
+- Criteria matching _grouped_ or _group-index_ are not allowed to change the
+  _anchor_, _output_, or _group-by_, as this would invalidate the grouping.
+  Grouping is only performed once rather than recursively, to avoid the
+  potential for infinite loops.
+
 # CRITERIA-ONLY STYLE OPTIONS
 
 Some style options are not useful in the global context and therefore have no
