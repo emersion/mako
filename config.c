@@ -691,6 +691,15 @@ int load_config_file(struct mako_config *config, char *config_arg) {
 		}
 
 		if (line[0] == '[' && line[strlen(line) - 1] == ']') {
+			// Since we hit the end of the previous criteria section, validate
+			// that it doesn't break any rules before moving on.
+			if (criteria != NULL && !validate_criteria(criteria)) {
+				fprintf(stderr, "Invalid configuration in criteria: [%s]\n",
+						criteria->raw_string);
+				ret = -1;
+				break;
+			}
+
 			free(section);
 			section = strndup(line + 1, strlen(line) - 2);
 			if (strcmp(section, "hidden") == 0) {
@@ -742,6 +751,14 @@ int load_config_file(struct mako_config *config, char *config_arg) {
 			ret = -1;
 			break;
 		}
+	}
+
+	// Validate the final criteria section since there was no opening bracket
+	// after it to do this in the loop.
+	if (criteria != NULL && !validate_criteria(criteria)) {
+		fprintf(stderr, "Invalid configuration in criteria: [%s]\n",
+				criteria->raw_string);
+		ret = -1;
 	}
 
 	free(section);
