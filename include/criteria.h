@@ -31,6 +31,7 @@ struct mako_criteria {
 	char *summary;
 	regex_t summary_pattern;
 	char *body;
+	regex_t body_pattern;
 	int group_index;
 	bool grouped;  // Whether group_index is non-zero
 };

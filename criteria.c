@@ -36,8 +36,23 @@ void destroy_criteria(struct mako_criteria *criteria) {
 	free(criteria->summary);
 	regfree(&criteria->summary_pattern);
 	free(criteria->body);
+	regfree(&criteria->body_pattern);
 	free(criteria->raw_string);
 	free(criteria);
+}
+
+static bool match_regex_criteria(regex_t *pattern, char *value) {
+	int ret = regexec(pattern, value, 0, NULL, 0);
+	if (ret != 0) {
+		if (ret != REG_NOMATCH) {
+			size_t errlen = regerror(ret, pattern, NULL, 0);
+			char errbuf[errlen];
+			regerror(ret, pattern, errbuf, sizeof(errbuf));
+			fprintf(stderr, "failed to match regex: %s\n", errbuf);
+		}
+		return false;
+	}
+	return true;
 }
 
 bool match_criteria(struct mako_criteria *criteria,
@@ -90,14 +105,8 @@ bool match_criteria(struct mako_criteria *criteria,
 	}
 
 	if (spec.summary_pattern) {
-		int ret = regexec(&criteria->summary_pattern, notif->summary, 0, NULL, 0);
-		if (ret != 0) {
-			if (ret != REG_NOMATCH) {
-				size_t errlen = regerror(ret, &criteria->summary_pattern, NULL, 0);
-				char errbuf[errlen];
-				regerror(ret, &criteria->summary_pattern, errbuf, sizeof(errbuf));
-				fprintf(stderr, "failed to match regex: %s\n", errbuf);
-			}
+		bool ret = match_regex_criteria(&criteria->summary_pattern, notif->summary);
+		if (!ret) {
 			return false;
 		}
 	}
@@ -105,6 +114,13 @@ bool match_criteria(struct mako_criteria *criteria,
 	if (spec.body &&
 			strcmp(criteria->body, notif->body) != 0) {
 		return false;
+	}
+
+	if (spec.body_pattern) {
+		bool ret = match_regex_criteria(&criteria->body_pattern, notif->body);
+		if (!ret) {
+			return false;
+		}
 	}
 
 	if (spec.group_index &&
@@ -298,8 +314,27 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			}
 			criteria->spec.summary_pattern = true;
 			return true;
+		} else if (strcmp(key, "body") == 0) {
+			criteria->body = strdup(value);
+			if (criteria->spec.body_pattern) {
+				fprintf(stderr, "Cannot set both body and body~ regex.\n");
+				return false;
+			}
+			criteria->spec.body = true;
+			return true;
+		} else if (strcmp(key, "body~") == 0) {
+			if (regcomp(&criteria->body_pattern, value,
+					REG_EXTENDED | REG_NOSUB)) {
+				fprintf(stderr, "Invalid body~ regex '%s'\n", value);
+				return false;
+			}
+			if (criteria->spec.body) {
+				fprintf(stderr, "Cannot set both body and body~ regex.\n");
+				return false;
+			}
+			criteria->spec.body_pattern = true;
+			return true;
 		} else {
-			// TODO: body, once we support regex and they're useful.
 			// Anything left must be one of the boolean fields, defined using
 			// standard syntax. Continue on.
 		}
