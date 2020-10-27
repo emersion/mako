@@ -248,6 +248,13 @@ The following fields are available in criteria:
 	- A POSIX extended regular expression match on the summary of the
 	  notification.
 	- This field conflicts with _summary_.
+- _body_ (string)
+	- An exact match on the body of the notification.
+	- This field conflicts with _body~_.
+- _body~_ (string)
+	- A POSIX extended regular expression match on the body of the
+	notification.
+	- This field conflicts with _body_.
 - _urgency_ (one of "low", "normal", "high")
 - _category_ (string)
 - _desktop-entry_ (string)

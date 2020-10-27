@@ -51,6 +51,7 @@ struct mako_criteria_spec {
 	bool summary;
 	bool summary_pattern;
 	bool body;
+	bool body_pattern;
 	bool group_index;
 	bool grouped;
 
