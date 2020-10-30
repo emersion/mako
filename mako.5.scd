@@ -110,6 +110,9 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 	the *source* attribute (this can be useful when the notification is
 	semi-transparent).
 
+	Progress can be indicated in a notification by setting a hint, "value"
+	to an integer between 0 and 100 inclusive.
+
 	Default: over #5588AAFF
 
 *icons*=0|1
