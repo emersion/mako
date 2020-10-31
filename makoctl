@@ -1,28 +1,30 @@
 #!/bin/sh -eu
 
 usage() {
-	echo "Usage: makoctl <command> [options...]"
-	echo ""
-	echo "Commands:"
-	echo "  dismiss [-n id]                Dismiss the notification with the"
-	echo "                                 given id, or the last notification"
-	echo "                                 if none is given"
-	echo "          [-a|--all]             Dismiss all notifications"
-	echo "          [-g|--group]           Dismiss all the notifications"
-	echo "                                 in the last notification's group"
-	echo "  restore                        Restore the most recently expired"
-	echo "                                 notification from the history buffer"
-	echo "  invoke [-n id] [action]        Invoke an action on the notification"
-	echo "                                 with the given id, or the last"
-	echo "                                 notification if none is given"
-	echo "  menu [-n id] [prog] [arg ...]  Use [prog] [args ...] to select one"
-	echo "                                 action to be invoked on the notification"
-	echo "                                 with the given id, or the last"
-	echo "                                 notification if none is given"
-	echo "  list                           List notifications"
-	echo "  reload                         Reload the configuration file"
-	echo "  set <key>=<value>              Set a global configuration option"
-	echo "  help                           Show this help"
+	cat <<-'USAGE'
+	Usage: makoctl <command> [options...]
+	
+	Commands:
+	  dismiss [-n id]                Dismiss the notification with the
+	                                 given id, or the last notification
+	                                 if none is given
+	          [-a|--all]             Dismiss all notifications
+	          [-g|--group]           Dismiss all the notifications
+	                                 in the last notification's group
+	  restore                        Restore the most recently expired
+	                                 notification from the history buffer
+	  invoke [-n id] [action]        Invoke an action on the notification
+	                                 with the given id, or the last
+	                                 notification if none is given
+	  menu [-n id] [prog] [arg ...]  Use [prog] [args ...] to select one
+	                                 action to be invoked on the notification
+	                                 with the given id, or the last
+	                                 notification if none is given
+	  list                           List notifications
+	  reload                         Reload the configuration file
+	  set <key>=<value>              Set a global configuration option
+	  help                           Show this help
+	USAGE
 }
 
 call() {
@@ -30,115 +32,100 @@ call() {
 		fr.emersion.Mako -- "$@"
 }
 
-if [ $# -eq 0 ]; then
+case $# in (0)
    usage
    exit 1
-fi
+;;esac
 
-case "$1" in
-"dismiss")
+case "$1" in ("dismiss")
 	all=0
 	group=0
 	id=0
-	while [ $# -gt 1 ]; do
-		case "$2" in
-		"-a"|"--all")
+	while (exit $(($# > 1)) ); do
+		case "$2" in ("-a"|"--all")
 			all=1
-			;;
-		"-g"|"--group")
+		;;("-g"|"--group")
 			group=1
-			;;
-		"-n")
-			if [ $# -lt 3 ]; then
+		;;("-n")
+			case $# in (0|1|2)
 				echo >&2 "$0: Expected <id> after '-n'"
 				exit 1
-			fi
+			;;esac
 			id=$3
 			shift
-			;;
-		*)
+		;;(*)
 			echo >&2 "$0: Unrecognized option: $2"
 			exit 1
-			;;
-		esac
+		;;esac
 		shift
 	done
 
-	if [ $all -eq 1 ]; then
+	case $all in (1)
 		call DismissAllNotifications
-	else
+	;;(*)
 		call DismissNotification "ub" "$id" "$group"
-	fi
-	;;
-"invoke")
+	;;esac
+;;("invoke")
 	id=0
-	if [ $# -gt 1 ] && [ "$2" = "-n" ]; then
+	case "$# "${2-}" in (1?* -n|[2-9]* -n)
 		id="$3"
 		shift 2
-	fi
+	;;esac
 
 	action="default"
-	if [ $# -gt 1 ]; then
+	case $# in (1?*|[2-9]*)
 		action="$2"
-	fi
+	;;esac
 
 	call InvokeAction "us" "$id" "$action"
-	;;
-"restore")
+;;("restore")
 	call RestoreNotification
-	;;
-"menu")
+;;("menu")
 	shift 1
 	if ! type jq > /dev/null; then
 		echo >&2 "$0: jq is required to use 'menu'"
 		exit 1
 	fi
-	if [ $# -gt 1 ] && [ "$1" = "-n" ]; then
+	case "$# "${2-}" in (1?* -n|[2-9]* -n)
 		id="$2"
 		actions="$(call ListNotifications | jq --arg id "$id" -re '.data[0][] | select(.id.data==($id | tonumber)) | .actions.data')"
 		shift 2
-	else
+	;;(*)
 		actions="$(call ListNotifications | jq -re '.data[0][0].actions.data')"
 		id="0"
-	fi
-	if [ "$(jq -rn "$actions | length")" -eq "0" ]; then
+	;;esac
+	case "$(jq -rn "$actions | length")" in (0)
 		echo >&2 "$0: No actions found"
 		exit 1
-	fi
+	;;esac
 
 	sel="$(jq -rn "$actions|values[]" | "$@")"
 	sel="$(jq -rn --arg sel "$sel" "$actions|to_entries[]|select(.value == \$sel).key")"
-	if [ -z "$sel" ]; then
+	case "$sel" in ('')
 		echo >&2 "$0: No action selected"
 		exit 1
-	else
+	;;(*)
 		call InvokeAction "us" "$id" "$sel"
-	fi
-	;;
-"list")
+	;;esac
+;;("list")
 	call ListNotifications
-	;;
-"reload")
+;;("reload")
 	call Reload
-	;;
-"set")
-	if [ $# -lt 2 ]; then
+;;("set")
+	case $# in (0|1)
 		echo >&2 "makoctl: missing argument for 'set'"
 		exit 1
-	fi
+	;;esac
 	name="${2%%'='*}"
 	value="${2#*'='}"
-	if [ "$2" = "$name" ]; then
+	case "$2" in ($name)
 		echo >&2 "makoctl: missing '=' in argument for 'set'"
 		exit 1
-	fi
+	;;esac
 	call SetConfigOption "ss" "$name" "$value"
-	;;
-"help"|"--help"|"-h")
+;;("help"|"--help"|"-h")
 	usage
-	;;
-*)
+;;(*)
 	echo "makoctl: unrecognized command '$1'"
 	exit 1
-	;;
-esac
+;;esac
