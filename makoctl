@@ -25,8 +25,17 @@ usage() {
 	echo "  help                           Show this help"
 }
 
+BUSCTL=busctl
+if ! type $BUSCTL > /dev/null; then
+	BUSCTL=basuctl
+fi
+if ! type $BUSCTL > /dev/null; then
+	echo >&2 "$0: busctl or basuctl is required"
+	exit 1
+fi
+
 call() {
-	busctl -j --user call org.freedesktop.Notifications /fr/emersion/Mako \
+	$BUSCTL -j --user call org.freedesktop.Notifications /fr/emersion/Mako \
 		fr.emersion.Mako -- "$@"
 }
 
