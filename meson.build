@@ -3,7 +3,7 @@ project(
 	'c',
 	version: '1.4.1',
 	license: 'MIT',
-	meson_version: '>=0.47.0',
+	meson_version: '>=0.50.0',
 	default_options: [
 		'c_std=c11',
 		'warning_level=2',
@@ -29,13 +29,24 @@ realtime = cc.find_library('rt')
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 
-logind = dependency('libsystemd', required: false)
-if logind.found()
-	add_project_arguments('-DHAVE_SYSTEMD=1', language: 'c')
+if get_option('sd-bus-provider') == 'auto'
+	assert(get_option('auto_features').auto(), 'sd-bus-provider must not be set to auto since auto_features != auto')
+	sdbus = dependency('libsystemd',
+		required: false,
+		not_found_message: 'libsystemd not found, trying libelogind',
+	)
+	if not sdbus.found()
+		sdbus = dependency('libelogind',
+			required: false,
+		)
+	endif
+	if not sdbus.found()
+		error('Neither libsystemd, nor libelogind was found')
+	endif
 else
-	logind = dependency('libelogind')
-	add_project_arguments('-DHAVE_ELOGIND=1', language: 'c')
+	sdbus = dependency(get_option('sd-bus-provider'))
 endif
+add_project_arguments('-DHAVE_' + sdbus.name().to_upper() + '=1', language: 'c')
 
 gdk_pixbuf = dependency('gdk-pixbuf-2.0', required: get_option('icons'))
 if gdk_pixbuf.found()
@@ -75,7 +86,7 @@ executable(
 		cairo,
 		client_protos,
 		gdk_pixbuf,
-		logind,
+		sdbus,
 		pango,
 		pangocairo,
 		glib,
