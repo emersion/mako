@@ -38,10 +38,16 @@ if get_option('sd-bus-provider') == 'auto'
 	if not sdbus.found()
 		sdbus = dependency('libelogind',
 			required: false,
+			not_found_message: 'libelogind not found, trying basu',
 		)
 	endif
 	if not sdbus.found()
-		error('Neither libsystemd, nor libelogind was found')
+		sdbus = dependency('basu',
+			required: false,
+		)
+	endif
+	if not sdbus.found()
+		error('Neither libsystemd, nor libelogind, nor basu was found')
 	endif
 else
 	sdbus = dependency(get_option('sd-bus-provider'))
