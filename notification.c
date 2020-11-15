@@ -471,5 +471,8 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 	// originally.
 	wl_list_insert_list(location, &matches);
 
+	// We don't actually re-apply criteria here, that will happen just before
+	// we render each notification anyway.
+
 	return count;
 }
