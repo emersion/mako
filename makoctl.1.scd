@@ -14,8 +14,8 @@ Sends IPC commands to the running mako daemon via dbus.
 
 # COMMANDS
 
-*dismiss*
-	Dismisses the first notification.
+*dismiss* [-a|--all] [-g|--group] [-n <id>]
+	Dismisses a notification.
 
 	Options:
 
@@ -25,26 +25,43 @@ Sends IPC commands to the running mako daemon via dbus.
 	*-g, --group*
 		Dismiss the first notification group.
 
+	*-n* <id>
+		Dismiss the notification with the given id. Defaults to the first
+		notification.
+
 *restore*
 	Restores the most recently expired notification from the history buffer.
 
-*invoke* [action]
-	Invokes an action on the first notification. If _action_ is not specified,
-	invokes the default action.
+*invoke* [-n <id>] [action]
+	Invokes an action on a notification. If _action_ is not specified, invokes
+	the default action. Action names can be discovered using `makoctl list`.
 
-*menu* [program] [argument...]
-	Use a program to select an action on the first notification. The list of
+	Options:
+
+	*-n* <id>
+		Invoke the action on the notification with the given id. Defaults to
+		the first notification.
+
+*menu* [-n <id>] [program] [argument...]
+	Use a program to select an action on a notification. The list of
 	actions are joined on newlines and passed to _program_. The program should
 	write the selected action to stdout. If an action is given, this action
 	will be invoked.
 
-	If no action is found, or no action is selected, _makoctl_ will return non-zero.
+	If no action is found, or no action is selected, _makoctl_ will return
+	non-zero.
+
+	Options:
+
+	*-n* <id>
+		List the actions of the notification with the given id. Defaults to
+		the first notification.
 
 	Examples:
 
 		```
 		makoctl menu dmenu -p 'Select Action: '
-		makoctl menu wofi -d -p 'Choose Action: '
+		makoctl menu -n 12345 wofi -d -p 'Choose Action: '
 		```
 
 *list*
