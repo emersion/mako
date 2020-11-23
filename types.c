@@ -114,8 +114,11 @@ bool parse_urgency(const char *string, enum mako_notification_urgency *out) {
 	} else if (strcasecmp(string, "normal") == 0) {
 		*out = MAKO_NOTIFICATION_URGENCY_NORMAL;
 		return true;
+	} else if (strcasecmp(string, "critical") == 0) {
+		*out = MAKO_NOTIFICATION_URGENCY_CRITICAL;
+		return true;
 	} else if (strcasecmp(string, "high") == 0) {
-		*out = MAKO_NOTIFICATION_URGENCY_HIGH;
+		*out = MAKO_NOTIFICATION_URGENCY_CRITICAL;
 		return true;
 	}
 
