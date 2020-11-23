@@ -258,7 +258,7 @@ The following fields are available in criteria:
 	- A POSIX extended regular expression match on the body of the
 	notification.
 	- This field conflicts with _body_.
-- _urgency_ (one of "low", "normal", "high")
+- _urgency_ (one of "low", "normal", "critical")
 - _category_ (string)
 - _desktop-entry_ (string)
 - _actionable_ (boolean)

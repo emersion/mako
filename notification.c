@@ -376,7 +376,7 @@ static struct wl_list *get_last_notif_by_urgency(struct wl_list *notifications,
 		return notifications;
 	}
 
-	while (current <= MAKO_NOTIFICATION_URGENCY_HIGH &&
+	while (current <= MAKO_NOTIFICATION_URGENCY_CRITICAL &&
 		current >= MAKO_NOTIFICATION_URGENCY_UNKNOWN) {
 		struct mako_notification *notif;
 		wl_list_for_each_reverse(notif, notifications, link) {

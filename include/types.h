@@ -19,7 +19,7 @@ bool parse_mako_color(const char *string, struct mako_color *out);
 enum mako_notification_urgency {
 	MAKO_NOTIFICATION_URGENCY_LOW = 0,
 	MAKO_NOTIFICATION_URGENCY_NORMAL = 1,
-	MAKO_NOTIFICATION_URGENCY_HIGH = 2,
+	MAKO_NOTIFICATION_URGENCY_CRITICAL = 2,
 	MAKO_NOTIFICATION_URGENCY_UNKNOWN = -1,
 };
 
