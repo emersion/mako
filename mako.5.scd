@@ -91,7 +91,7 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 *border-size*=_px_
 	Set popup border size to _px_ pixels.
 
-	Default: 1
+	Default: 2
 
 *border-color*=_color_
 	Set popup border color to _color_. See *COLORS* for more information.
