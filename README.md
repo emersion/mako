@@ -41,7 +41,7 @@ Install dependencies:
 * wayland
 * pango
 * cairo
-* systemd or elogind (for the sd-bus library)
+* systemd, elogind or [basu] (for the sd-bus library)
 * gdk-pixbuf (optional, for icons support)
 * dbus (runtime dependency, user-session support is required)
 * scdoc (optional, for man pages)
@@ -68,3 +68,4 @@ See the [faq section in the wiki](https://github.com/emersion/mako/wiki/Frequent
 MIT
 
 [gnome-draft]: https://developer.gnome.org/notification-spec/
+[basu]: https://github.com/emersion/basu
