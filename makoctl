@@ -26,10 +26,10 @@ usage() {
 }
 
 BUSCTL=busctl
-if ! type $BUSCTL > /dev/null; then
+if ! type $BUSCTL >/dev/null 2>&1; then
 	BUSCTL=basuctl
 fi
-if ! type $BUSCTL > /dev/null; then
+if ! type $BUSCTL >/dev/null 2>&1; then
 	echo >&2 "$0: busctl or basuctl is required"
 	exit 1
 fi
@@ -98,7 +98,7 @@ case "$1" in
 	;;
 "menu")
 	shift 1
-	if ! type jq > /dev/null; then
+	if ! type jq >/dev/null 2>&1; then
 		echo >&2 "$0: jq is required to use 'menu'"
 		exit 1
 	fi
