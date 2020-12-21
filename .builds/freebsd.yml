@@ -1,0 +1,20 @@
+image: freebsd/latest
+packages:
+  - basu
+  - gdk-pixbuf2
+  - libepoll-shim
+  - meson
+  - pango
+  - pkgconf
+  - scdoc
+  - wayland
+  - wayland-protocols
+sources:
+  - https://github.com/emersion/mako
+tasks:
+  - setup: |
+      cd mako
+      meson build/ -Dauto_features=enabled -Dsd-bus-provider=basu -Dsystemd=disabled
+  - build: |
+      cd mako
+      ninja -C build/
