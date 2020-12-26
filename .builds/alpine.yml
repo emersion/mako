@@ -1,5 +1,6 @@
 image: alpine/latest
 packages:
+  - elogind-dev
   - meson
   - wayland-dev
   - wayland-protocols
@@ -7,22 +8,12 @@ packages:
   - pango-dev
   - gdk-pixbuf-dev
   - scdoc
-  # required by basu
-  - gperf
-  - linux-headers
-  - libcap-dev
 sources:
   - https://github.com/emersion/mako
-  - https://github.com/emersion/basu
 tasks:
-  - basu: |
-      cd basu
-      meson build/ --prefix=/usr
-      ninja -C build/
-      sudo ninja -C build/ install
   - setup: |
       cd mako
-      meson build/ -Dauto_features=enabled -Dsd-bus-provider=basu -Dsystemd=disabled
+      meson build/ -Dauto_features=enabled -Dsd-bus-provider=libelogind -Dsystemd=disabled
   - build: |
       cd mako
       ninja -C build/
