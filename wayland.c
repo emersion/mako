@@ -22,12 +22,34 @@ static void xdg_output_handle_name(void *data, struct zxdg_output_v1 *xdg_output
 	output->name = strdup(name);
 }
 
+static void xdg_output_handle_description(void *data, struct zxdg_output_v1 *xdg_output,
+										  const char *description)
+{
+	struct mako_output *output = data;
+	// The following code is originally from swaybar.
+	// wlroots currently sets the description to `make model serial (name)`
+	// If this changes in the future, this will need to be modified.
+	free(output->identifier);
+	output->identifier = NULL;
+	char *paren = strrchr(description, '(');
+	if (paren) {
+		size_t length = paren - description;
+		output->identifier = malloc(length);
+		if (!output->identifier) {
+			fprintf(stderr, "failed to allocate output identifier\n");
+			return;
+		}
+		strncpy(output->identifier, description, length);
+		output->identifier[length - 1] = '\0';
+	}
+}
+
 static const struct zxdg_output_v1_listener xdg_output_listener = {
 	.logical_position = noop,
 	.logical_size = noop,
 	.done = noop,
 	.name = xdg_output_handle_name,
-	.description = noop,
+	.description = xdg_output_handle_description,
 };
 
 static void get_xdg_output(struct mako_output *output) {
@@ -453,7 +475,10 @@ static struct mako_output *get_configured_output(struct mako_surface *surface) {
 
 	struct mako_output *output;
 	wl_list_for_each(output, &surface->state->outputs, link) {
-		if (output->name != NULL && strcmp(output->name, output_name) == 0) {
+		if (
+			(output->name != NULL && strcmp(output->name, output_name) == 0) ||
+			(output->identifier != NULL && strcmp(output->identifier, output_name) == 0)
+		) {
 			return output;
 		}
 	}
