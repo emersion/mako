@@ -170,8 +170,8 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 	more information. To change this for grouped notifications, set it within
 	a _grouped_ criteria.
 
-	Default: <b>%s</b>\\n%b
-	Default when grouped: (%g) <b>%s</b>\\n%b
+	Default: <b>%s</b>\\n%b++
+Default when grouped: (%g) <b>%s</b>\\n%b
 
 *default-timeout*=_timeout_
 	Set the default timeout to _timeout_ in milliseconds. To disable the
