@@ -231,6 +231,30 @@ bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out) {
 	return true;
 }
 
+// Checks whether any of the fields of the given specification are set. Useful
+// for checking for some subset of fields without enumerating all known fields
+// yourself. Often you will want to copy a spec and clear fields you _don't_
+// care about to use this.
+bool mako_criteria_spec_any(const struct mako_criteria_spec *spec) {
+	return
+		spec->app_name ||
+		spec->app_icon ||
+		spec->actionable ||
+		spec->expiring ||
+		spec->urgency ||
+		spec->category ||
+		spec->desktop_entry ||
+		spec->summary ||
+		spec->summary_pattern ||
+		spec->body ||
+		spec->body_pattern ||
+		spec->none ||
+		spec->group_index ||
+		spec->grouped ||
+		spec->output ||
+		spec->anchor;
+}
+
 bool parse_format(const char *string, char **out) {
 	size_t token_max_length = strlen(string) + 1;
 	char token[token_max_length];

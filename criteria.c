@@ -493,6 +493,18 @@ bool validate_criteria(struct mako_criteria *criteria) {
 		}
 	}
 
+	struct mako_criteria_spec copy = {0};
+	memcpy(&copy, &criteria->spec, sizeof(struct mako_criteria_spec));
+	copy.output = false;
+	copy.anchor = false;
+	bool any_but_surface = mako_criteria_spec_any(&copy);
+
+	if (criteria->style.max_visible && any_but_surface) {
+		fprintf(stderr, "Setting `max_visible` is allowed only for `output` "
+				"and/or `anchor`\n");
+		return false;
+	}
+
 	if (criteria->spec.summary && criteria->spec.summary_pattern) {
 		fprintf(stderr, "Cannot set both `summary` and `summary~`\n");
 		return false;
