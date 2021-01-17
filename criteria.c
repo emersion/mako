@@ -321,20 +321,12 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			return true;
 		} else if (strcmp(key, "body") == 0) {
 			criteria->body = strdup(value);
-			if (criteria->spec.body_pattern) {
-				fprintf(stderr, "Cannot set both body and body~ regex.\n");
-				return false;
-			}
 			criteria->spec.body = true;
 			return true;
 		} else if (strcmp(key, "body~") == 0) {
 			if (regcomp(&criteria->body_pattern, value,
 					REG_EXTENDED | REG_NOSUB)) {
 				fprintf(stderr, "Invalid body~ regex '%s'\n", value);
-				return false;
-			}
-			if (criteria->spec.body) {
-				fprintf(stderr, "Cannot set both body and body~ regex.\n");
 				return false;
 			}
 			criteria->spec.body_pattern = true;
@@ -507,6 +499,11 @@ bool validate_criteria(struct mako_criteria *criteria) {
 
 	if (criteria->spec.summary && criteria->spec.summary_pattern) {
 		fprintf(stderr, "Cannot set both `summary` and `summary~`\n");
+		return false;
+	}
+
+	if (criteria->spec.body && criteria->spec.body_pattern) {
+		fprintf(stderr, "Cannot set both `body` and `body~`\n");
 		return false;
 	}
 
