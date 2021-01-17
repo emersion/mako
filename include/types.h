@@ -66,6 +66,7 @@ struct mako_criteria_spec {
 };
 
 bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out);
+bool mako_criteria_spec_any(const struct mako_criteria_spec *spec);
 
 // List of specifier characters that can appear in a format string.
 extern const char VALID_FORMAT_SPECIFIERS[];
