@@ -733,7 +733,7 @@ int load_config_file(struct mako_config *config, char *config_arg) {
 
 	// Validate the final criteria section since there was no opening bracket
 	// after it to do this in the loop.
-	if (criteria != NULL && !validate_criteria(criteria)) {
+	if (ret != -1 && criteria != NULL && !validate_criteria(criteria)) {
 		fprintf(stderr, "Invalid configuration in criteria: [%s]\n",
 				criteria->raw_string);
 		ret = -1;
