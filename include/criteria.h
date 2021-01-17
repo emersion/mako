@@ -55,6 +55,8 @@ ssize_t apply_each_criteria(struct wl_list *criteria_list,
 struct mako_criteria *create_criteria_from_notification(
 		struct mako_notification *notif, struct mako_criteria_spec *spec);
 
+bool mako_criteria_spec_any(struct mako_criteria_spec *spec);
+
 bool validate_criteria(struct mako_criteria *criteria);
 
 #endif
