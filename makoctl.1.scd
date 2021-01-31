@@ -70,11 +70,6 @@ Sends IPC commands to the running mako daemon via dbus.
 *reload*
 	Reloads the configuration file.
 
-*set* <key>=<value>
-	Set a global configuration option.
-
-	Reloading the config will discard options set like this.
-
 *help, -h, --help*
 	Show help message and quit.
 

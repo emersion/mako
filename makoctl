@@ -21,7 +21,6 @@ usage() {
 	echo "                                 notification if none is given"
 	echo "  list                           List notifications"
 	echo "  reload                         Reload the configuration file"
-	echo "  set <key>=<value>              Set a global configuration option"
 	echo "  help                           Show this help"
 }
 
@@ -129,19 +128,6 @@ case "$1" in
 	;;
 "reload")
 	call Reload
-	;;
-"set")
-	if [ $# -lt 2 ]; then
-		echo >&2 "makoctl: missing argument for 'set'"
-		exit 1
-	fi
-	name="${2%%'='*}"
-	value="${2#*'='}"
-	if [ "$2" = "$name" ]; then
-		echo >&2 "makoctl: missing '=' in argument for 'set'"
-		exit 1
-	fi
-	call SetConfigOption "ss" "$name" "$value"
 	;;
 "help"|"--help"|"-h")
 	usage
