@@ -198,7 +198,7 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 
 		case MAKO_PARSE_STATE_FORMAT:
 			// Unsupported state for this parser.
-			assert(0);
+			abort();
 		}
 	}
 
