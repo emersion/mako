@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <cairo/cairo.h>
 #include <pango/pangocairo.h>
-#include <assert.h>
 #include <math.h>
 
 #include "config.h"
@@ -71,7 +70,7 @@ static cairo_subpixel_order_t get_cairo_subpixel_order(
 	case WL_OUTPUT_SUBPIXEL_VERTICAL_BGR:
 		return CAIRO_SUBPIXEL_ORDER_VBGR;
 	}
-	assert(0);
+	abort();
 }
 
 static void set_font_options(cairo_t *cairo, struct mako_surface *surface) {
