@@ -65,7 +65,6 @@ if gdk_pixbuf.found()
 	add_global_arguments('-DHAVE_ICONS=1', language: 'c')
 endif
 
-subdir('contrib/apparmor')
 subdir('contrib/completions')
 subdir('protocol')
 
@@ -126,19 +125,6 @@ configure_file(
 	output: '@BASENAME@',
 	install_dir: datadir + '/dbus-1/services',
 )
-
-systemd = dependency('systemd', required: get_option('systemd'))
-
-if systemd.found()
-  user_units_dir = systemd.get_pkgconfig_variable('systemduserunitdir')
-
-  configure_file(
-    configuration: conf_data,
-    input: 'contrib/systemd/mako.service.in',
-    output: '@BASENAME@',
-    install_dir: user_units_dir
-  )
-endif
 
 scdoc = dependency('scdoc', required: get_option('man-pages'), version: '>= 1.9.7')
 
