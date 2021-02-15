@@ -9,8 +9,8 @@ ConditionEnvironment=WAYLAND_DISPLAY
 [Service]
 Type=dbus
 BusName=org.freedesktop.Notifications
-ExecStart=@bindir@/mako
-ExecReload=@bindir@/makoctl reload
+ExecStart=/usr/bin/mako
+ExecReload=/usr/bin/makoctl reload
 
 [Install]
 WantedBy=graphical-session.target
