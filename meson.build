@@ -65,7 +65,6 @@ if gdk_pixbuf.found()
 	add_global_arguments('-DHAVE_ICONS=1', language: 'c')
 endif
 
-subdir('contrib/apparmor')
 subdir('contrib/completions')
 subdir('protocol')
 
