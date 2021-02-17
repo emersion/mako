@@ -1,4 +1,3 @@
 [D-BUS Service]
 Name=org.freedesktop.Notifications
 Exec=@bindir@/mako
-SystemdService=mako.service
