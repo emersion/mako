@@ -63,6 +63,7 @@ struct mako_criteria_spec {
 	bool grouped;
 	bool output;
 	bool anchor;
+	bool hidden;
 };
 
 bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out);

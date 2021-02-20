@@ -251,6 +251,7 @@ bool mako_criteria_spec_any(const struct mako_criteria_spec *spec) {
 		spec->none ||
 		spec->group_index ||
 		spec->grouped ||
+		spec->hidden ||
 		spec->output ||
 		spec->anchor;
 }

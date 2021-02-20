@@ -66,6 +66,11 @@ bool match_criteria(struct mako_criteria *criteria,
 		return false;
 	}
 
+	if (spec.hidden &&
+			criteria->hidden != notif->hidden) {
+		return false;
+	}
+
 	if (spec.app_name &&
 			strcmp(criteria->app_name, notif->app_name) != 0) {
 		return false;
@@ -235,6 +240,14 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 		return false;
 	}
 
+	// All user-specified criteria are implicitly unhidden by default. This
+	// prevents any criteria sections that don't explicitly set `hidden` from
+	// styling the hidden pseudo-notification.
+	if (!criteria->spec.hidden) {
+		criteria->hidden = false;
+		criteria->spec.hidden = true;
+	}
+
 	criteria->raw_string = strdup(string);
 	return true;
 }
@@ -368,6 +381,14 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 		}
 		criteria->spec.grouped = true;
 		return true;
+	} else if (strcmp(key, "hidden") == 0) {
+		if (!parse_boolean(value, &criteria->hidden)) {
+			fprintf(stderr, "Invalid value '%s' for boolean field '%s'\n",
+					value, key);
+			return false;
+		}
+		criteria->spec.hidden = true;
+		return true;
 	} else {
 		if (bare_key) {
 			fprintf(stderr, "Invalid boolean criteria field '%s'\n", key);
@@ -457,6 +478,7 @@ struct mako_criteria *create_criteria_from_notification(
 	criteria->body = strdup(notif->body);
 	criteria->group_index = notif->group_index;
 	criteria->grouped = (notif->group_index >= 0);
+	criteria->hidden = notif->hidden;
 
 	return criteria;
 }
@@ -489,10 +511,18 @@ bool validate_criteria(struct mako_criteria *criteria) {
 	memcpy(&copy, &criteria->spec, sizeof(struct mako_criteria_spec));
 	copy.output = false;
 	copy.anchor = false;
+	copy.hidden = false;
 	bool any_but_surface = mako_criteria_spec_any(&copy);
 
 	if (criteria->style.max_visible && any_but_surface) {
 		fprintf(stderr, "Setting `max_visible` is allowed only for `output` "
+				"and/or `anchor`\n");
+		return false;
+	}
+
+	// Hidden is almost always specified, need to look at the actual value.
+	if (criteria->hidden && any_but_surface) {
+		fprintf(stderr, "Can only set `hidden` along with `output` "
 				"and/or `anchor`\n");
 		return false;
 	}
