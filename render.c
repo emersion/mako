@@ -334,17 +334,17 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 	cairo_paint(cairo);
 	cairo_restore(cairo);
 
-	size_t i = 0;
 	size_t visible_count = 0;
+	size_t hidden_count = 0;
 	int total_height = 0;
 	int pending_bottom_margin = 0;
 	struct mako_notification *notif;
-	size_t count = 0;
+	size_t total_notifications = 0;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (notif->surface != surface) {
 			continue;
 		}
-		++count;
+		++total_notifications;
 
 		// Immediately before rendering we need to re-match all of the criteria
 		// so that matches against the anchor and output work even if the
@@ -369,10 +369,9 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 
 		if (style->max_visible >= 0 &&
 				visible_count >= (size_t)style->max_visible) {
+			++hidden_count;
 			continue;
 		}
-
-		++i; // We count how many we've seen even if we're not rendering them.
 
 		if (style->invisible) {
 			continue;
@@ -413,7 +412,7 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 
 	}
 
-	if (count > i) {
+	if (hidden_count > 0) {
 		// Apply the hidden_style on top of the global style. This has to be
 		// done here since this notification isn't "real" and wasn't processed
 		// by apply_each_criteria.
@@ -429,8 +428,8 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 		}
 
 		struct mako_hidden_format_data data = {
-			.hidden = count - i,
-			.count = count,
+			.hidden = hidden_count,
+			.count = total_notifications,
 		};
 
 		size_t text_ln =
