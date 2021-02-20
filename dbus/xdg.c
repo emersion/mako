@@ -113,14 +113,14 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		return -1;
 	}
 
+	free(notif->app_name);
+	free(notif->app_icon);
+	free(notif->summary);
+	free(notif->body);
 	notif->app_name = strdup(app_name);
 	notif->app_icon = strdup(app_icon);
 	notif->summary = strdup(summary);
 	notif->body = strdup(body);
-
-	// These fields may not be filled, so make sure they're valid strings.
-	notif->category = strdup("");
-	notif->desktop_entry = strdup("");
 
 	ret = sd_bus_message_enter_container(msg, 'a', "s");
 	if (ret < 0) {

@@ -53,12 +53,13 @@ void reset_notification(struct mako_notification *notif) {
 		free(notif->image_data);
 	}
 
-	notif->app_name = NULL;
-	notif->app_icon = NULL;
-	notif->summary = NULL;
-	notif->body = NULL;
-	notif->category = NULL;
-	notif->desktop_entry = NULL;
+	notif->app_name = strdup("");
+	notif->app_icon = strdup("");
+	notif->summary = strdup("");
+	notif->body = strdup("");
+	notif->category = strdup("");
+	notif->desktop_entry = strdup("");
+
 	notif->image_data = NULL;
 
 	destroy_icon(notif->icon);
@@ -77,6 +78,7 @@ struct mako_notification *create_notification(struct mako_state *state) {
 	++state->last_id;
 	notif->id = state->last_id;
 	wl_list_init(&notif->actions);
+	wl_list_init(&notif->link);
 	reset_notification(notif);
 
 	// Start ungrouped.
