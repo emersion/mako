@@ -321,7 +321,6 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 
 int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) {
 	struct mako_state *state = surface->state;
-	struct mako_config *config = &state->config;
 	cairo_t *cairo = buffer->cairo;
 
 	if (wl_list_empty(&state->notifications)) {
@@ -414,16 +413,15 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 	}
 
 	if (hidden_count > 0) {
-		// Apply the hidden_style on top of the global style. This has to be
-		// done here since this notification isn't "real" and wasn't processed
-		// by apply_each_criteria.
-		struct mako_style style;
-		init_empty_style(&style);
-		apply_style(&style, &global_criteria(config)->style);
-		apply_style(&style, &config->hidden_style);
+		struct mako_notification *hidden_notif = create_notification(state);
+		hidden_notif->surface = surface;
+		hidden_notif->hidden = true;
+		apply_each_criteria(&state->config.criteria, hidden_notif);
 
-		if (style.margin.top > pending_bottom_margin) {
-			total_height += style.margin.top;
+		struct mako_style *style = &hidden_notif->style;
+
+		if (style->margin.top > pending_bottom_margin) {
+			total_height += style->margin.top;
 		} else {
 			total_height += pending_bottom_margin;
 		}
@@ -434,22 +432,22 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 		};
 
 		size_t text_ln =
-			format_text(style.format, NULL, format_hidden_text, &data);
+			format_text(style->format, NULL, format_hidden_text, &data);
 		char *text = malloc(text_ln + 1);
 		if (text == NULL) {
 			fprintf(stderr, "allocation failed");
 			return 0;
 		}
 
-		format_text(style.format, text, format_hidden_text, &data);
+		format_text(style->format, text, format_hidden_text, &data);
 
 		int hidden_height = render_notification(
-			cairo, state, surface, &style, text, NULL, total_height, scale, NULL, 0);
+			cairo, state, surface, style, text, NULL, total_height, scale, NULL, 0);
 		free(text);
-		finish_style(&style);
+		destroy_notification(hidden_notif);
 
 		total_height += hidden_height;
-		pending_bottom_margin = style.margin.bottom;
+		pending_bottom_margin = style->margin.bottom;
 	}
 
 	return total_height + pending_bottom_margin;

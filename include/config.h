@@ -90,7 +90,6 @@ struct mako_config {
 	uint32_t sort_asc;
 	int32_t max_history;
 
-	struct mako_style hidden_style;
 	struct mako_style superstyle;
 
 	struct {

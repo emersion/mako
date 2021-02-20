@@ -38,6 +38,7 @@ struct mako_criteria {
 	bool grouped;  // Whether group_index is non-zero
 	char *output;
 	uint32_t anchor;
+	bool hidden;
 };
 
 struct mako_criteria *create_criteria(struct mako_config *config);

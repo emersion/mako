@@ -44,11 +44,16 @@ void init_default_config(struct mako_config *config) {
 	new_criteria->style.spec.invisible = true;
 	new_criteria->raw_string = strdup("(default group-index=0)");
 
-	init_empty_style(&config->superstyle);
+	// Define the default format for the hidden placeholder notification.
+	new_criteria = create_criteria(config);
+	init_empty_style(&new_criteria->style);
+	new_criteria->hidden = true;
+	new_criteria->spec.hidden = true;
+	new_criteria->style.format = strdup("(%h more)");
+	new_criteria->style.spec.format = true;
+	new_criteria->raw_string = strdup("(default hidden)");
 
-	init_empty_style(&config->hidden_style);
-	config->hidden_style.format = strdup("(%h more)");
-	config->hidden_style.spec.format = true;
+	init_empty_style(&config->superstyle);
 
 	config->max_history = 5;
 	config->sort_criteria = MAKO_SORT_CRITERIA_TIME;
@@ -67,7 +72,6 @@ void finish_config(struct mako_config *config) {
 	}
 
 	finish_style(&config->superstyle);
-	finish_style(&config->hidden_style);
 }
 
 void init_default_style(struct mako_style *style) {
@@ -698,11 +702,6 @@ int load_config_file(struct mako_config *config, char *config_arg) {
 
 			free(section);
 			section = strndup(line + 1, strlen(line) - 2);
-			if (strcmp(section, "hidden") == 0) {
-				// Skip making a criteria for the hidden section.
-				criteria = NULL;
-				continue;
-			}
 			criteria = create_criteria(config);
 			if (!parse_criteria(section, criteria)) {
 				fprintf(stderr, "[%s:%d] Invalid criteria definition\n", base,
@@ -723,18 +722,7 @@ int load_config_file(struct mako_config *config, char *config_arg) {
 		bool valid_option = false;
 		eq[0] = '\0';
 
-		struct mako_style *target_style;
-		if (section != NULL && strcmp(section, "hidden") == 0) {
-			// The hidden criteria is a lie, we store the associated style
-			// directly on the config because there's no "real" notification
-			// object to match against it later.
-			target_style = &config->hidden_style;
-		} else {
-			assert(criteria != NULL);
-			target_style = &criteria->style;
-		}
-
-		valid_option = apply_style_option(target_style, line, eq + 1);
+		valid_option = apply_style_option(&criteria->style, line, eq + 1);
 
 		if (!valid_option && section == NULL) {
 			valid_option = apply_config_option(config, line, eq + 1);
