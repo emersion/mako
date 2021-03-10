@@ -173,6 +173,11 @@ _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_,
 	Default: <b>%s</b>\\n%b++
 Default when grouped: (%g) <b>%s</b>\\n%b
 
+*text-alignment*=left|center|right
+	Set notification text alignment.
+
+	Default: left
+
 *default-timeout*=_timeout_
 	Set the default timeout to _timeout_ in milliseconds. To disable the
 	timeout, set it to zero.

@@ -98,6 +98,7 @@ void init_default_style(struct mako_style *style) {
 	style->font = strdup("monospace 10");
 	style->markup = true;
 	style->format = strdup("<b>%s</b>\n%b");
+	style->text_alignment = PANGO_ALIGN_LEFT;
 
 	style->actions = true;
 	style->default_timeout = 0;
@@ -242,6 +243,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		free(target->format);
 		target->format = new_format;
 		target->spec.format = true;
+	}
+
+	if (style->spec.text_alignment) {
+		target->text_alignment = style->text_alignment;
+		target->spec.text_alignment = true;
 	}
 
 	if (style->spec.actions) {
@@ -537,6 +543,18 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "format") == 0) {
 		free(style->format);
 		return spec->format = parse_format(value, &style->format);
+	} else if (strcmp(name, "text-alignment") == 0) {
+		if (strcmp(value, "left") == 0) {
+			style->text_alignment = PANGO_ALIGN_LEFT;
+		} else if (strcmp(value, "center") == 0) {
+			style->text_alignment = PANGO_ALIGN_CENTER;
+		} else if (strcmp(value, "right") == 0) {
+			style->text_alignment = PANGO_ALIGN_RIGHT;
+		} else {
+			return false;
+		}
+		style->spec.text_alignment = true;
+		return true;
 	} else if (strcmp(name, "default-timeout") == 0) {
 		return spec->default_timeout =
 			parse_int_ge(value, &style->default_timeout, 0);

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <wayland-client.h>
+#include <pango/pango.h>
 #include "types.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
@@ -32,8 +33,8 @@ enum mako_icon_location {
 // structs are also mirrored.
 struct mako_style_spec {
 	bool width, height, margin, padding, border_size, border_radius, font,
-		markup, format, actions, default_timeout, ignore_timeout, icons,
-		max_icon_size, icon_path, group_criteria_spec, invisible, history,
+		markup, format, text_alignment, actions, default_timeout, ignore_timeout,
+		icons, max_icon_size, icon_path, group_criteria_spec, invisible, history,
 		icon_location, max_visible, layer, output, anchor;
 	struct {
 		bool background, text, border, progress;
@@ -58,6 +59,7 @@ struct mako_style {
 	char *font;
 	bool markup;
 	char *format;
+	PangoAlignment text_alignment;
 
 	bool actions;
 	int default_timeout; // in ms

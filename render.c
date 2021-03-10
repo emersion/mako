@@ -143,6 +143,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 
 	PangoLayout *layout = pango_cairo_create_layout(cairo);
 	set_layout_size(layout, text_layout_width, text_layout_height, scale);
+	pango_layout_set_alignment(layout, style->text_alignment);
 	pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
 	pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
 	PangoFontDescription *desc =
