@@ -1,6 +1,7 @@
 image: freebsd/latest
 packages:
   - basu
+  - evdev-proto
   - gdk-pixbuf2
   - libepoll-shim
   - meson
