@@ -487,22 +487,25 @@ struct mako_criteria *create_criteria_from_notification(
 // To keep the behavior of criteria predictable, there are a few rules that we
 // have to impose on what can be modified depending on what was matched.
 bool validate_criteria(struct mako_criteria *criteria) {
+	char * invalid_option = NULL;
+
 	if (criteria->spec.grouped ||
 			criteria->spec.group_index ||
 			criteria->spec.output ||
 			criteria->spec.anchor) {
-		static const char *message =
-			"Setting `%s` is not allowed when matching `grouped`, "
-			"`group-index`, `output`, or `anchor`\n";
-
 		if (criteria->style.spec.anchor) {
-			fprintf(stderr, message, "anchor");
-			return false;
+			invalid_option = "anchor";
 		} else if (criteria->style.spec.output) {
-			fprintf(stderr, message, "output");
-			return false;
+			invalid_option = "output";
 		} else if (criteria->style.spec.group_criteria_spec) {
-			fprintf(stderr, message, "group-by");
+			invalid_option = "group-by";
+		}
+
+		if (invalid_option) {
+			fprintf(stderr,
+					"Setting `%s` is not allowed when matching `grouped`, "
+					"`group-index`, `output`, or `anchor`\n",
+					invalid_option);
 			return false;
 		}
 	}
@@ -539,19 +542,20 @@ bool validate_criteria(struct mako_criteria *criteria) {
 
 	if (criteria->style.spec.group_criteria_spec) {
 		struct mako_criteria_spec *spec = &criteria->style.group_criteria_spec;
-		static const char *message = "`%s` cannot be used in `group-by`\n";
 
 		if (spec->group_index) {
-			fprintf(stderr, message, "group-index");
-			return false;
+			invalid_option = "group-index";
 		} else if (spec->grouped) {
-			fprintf(stderr, message, "grouped");
-			return false;
+			invalid_option = "grouped";
 		} else if (spec->anchor) {
-			fprintf(stderr, message, "anchor");
-			return false;
+			invalid_option = "anchor";
 		} else if (spec->output) {
-			fprintf(stderr, message, "output");
+			invalid_option = "output";
+		}
+
+		if (invalid_option) {
+			fprintf(stderr, "`%s` cannot be used in `group-by`\n",
+					invalid_option);
 			return false;
 		}
 	}
