@@ -263,6 +263,10 @@ The following fields are available in criteria:
 - _desktop-entry_ (string)
 - _actionable_ (boolean)
 - _expiring_ (boolean)
+
+The following fields are also available to match on a second pass based on
+where previous style options decided to place each notification:
+
 - _grouped_ (boolean)
 	- Whether the notification is grouped with any others (its group-index is
 	  not -1).
@@ -271,6 +275,15 @@ The following fields are available in criteria:
 - _hidden_ (boolean)
 	- _hidden_ is special, it defines the style for the placeholder shown when
 	  the number of notifications or groups exceeds _max-visible_.
+- _output_ (string)
+    - Which output the notification was sorted onto. See the output style
+	  option for possible values.
+- _anchor_ (string)
+	- Which position on the output the notification was assigned to. See the
+      anchor style option for possible values.
+
+There are only two passes performed on each notification, so the second-pass
+critera are not allowed to reposition the notification.
 
 If a field's value contains special characters, they may be escaped with a
 backslash, or quoted:
