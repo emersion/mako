@@ -29,12 +29,14 @@ struct mako_seat {
 	struct {
 		struct wl_pointer *wl_pointer;
 		int32_t x, y;
+		struct mako_surface *surface;
 	} pointer;
 
 	struct {
 		struct wl_touch *wl_touch;
 		struct {
 			int32_t x, y;
+			struct mako_surface *surface;
 		} pts[MAX_TOUCHPOINTS];
 	} touch;
 };

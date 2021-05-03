@@ -100,6 +100,17 @@ static void destroy_output(struct mako_output *output) {
 	free(output);
 }
 
+static struct mako_surface *get_surface(struct mako_state *state,
+		struct wl_surface *wl_surface) {
+	struct mako_surface *surface;
+	wl_list_for_each(surface, &state->surfaces, link) {
+		if (surface->surface == wl_surface) {
+			return surface;
+		}
+	}
+	return NULL;
+}
+
 static void touch_handle_motion(void *data, struct wl_touch *wl_touch,
 		uint32_t time, int32_t id,
 		wl_fixed_t surface_x, wl_fixed_t surface_y) {
@@ -112,14 +123,15 @@ static void touch_handle_motion(void *data, struct wl_touch *wl_touch,
 }
 
 static void touch_handle_down(void *data, struct wl_touch *wl_touch,
-		uint32_t serial, uint32_t time, struct wl_surface *sfc, int32_t id,
-		wl_fixed_t surface_x, wl_fixed_t surface_y) {
+		uint32_t serial, uint32_t time, struct wl_surface *wl_surface,
+		int32_t id, wl_fixed_t surface_x, wl_fixed_t surface_y) {
 	struct mako_seat *seat = data;
 	if (id >= MAX_TOUCHPOINTS) {
 		return;
 	}
 	seat->touch.pts[id].x = wl_fixed_to_int(surface_x);
 	seat->touch.pts[id].y = wl_fixed_to_int(surface_y);
+	seat->touch.pts[id].surface = get_surface(seat->state, wl_surface);
 }
 
 static void touch_handle_up(void *data, struct wl_touch *wl_touch,
@@ -127,10 +139,11 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
 	struct mako_seat *seat = data;
 	struct mako_state *state = seat->state;
 
-	struct mako_notification *notif;
 	if (id >= MAX_TOUCHPOINTS) {
 		return;
 	}
+
+	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (hotspot_at(&notif->hotspot, seat->touch.pts[id].x, seat->touch.pts[id].y)) {
 			struct mako_surface *surface = notif->surface;
@@ -140,17 +153,30 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
 		}
 	}
 
+	seat->touch.pts[id].surface = NULL;
 }
 
 static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
-		uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y) {
+		uint32_t serial, struct wl_surface *wl_surface,
+		wl_fixed_t surface_x, wl_fixed_t surface_y) {
 	struct mako_seat *seat = data;
 	struct mako_state *state = seat->state;
+
+	seat->pointer.x = wl_fixed_to_int(surface_x);
+	seat->pointer.y = wl_fixed_to_int(surface_y);
+	seat->pointer.surface = get_surface(state, wl_surface);
+
 	// Change the mouse cursor to "left_ptr"
 	if (state->cursor_theme != NULL) {
 		wl_pointer_set_cursor(wl_pointer, serial, state->cursor_surface,
 			state->cursor_image->hotspot_x, state->cursor_image->hotspot_y);
 	}
+}
+
+static void pointer_handle_leave(void *data, struct wl_pointer *wl_pointer,
+		uint32_t serial, struct wl_surface *wl_surface) {
+	struct mako_seat *seat = data;
+	seat->pointer.surface = NULL;
 }
 
 static void pointer_handle_motion(void *data, struct wl_pointer *wl_pointer,
@@ -180,7 +206,7 @@ static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer,
 
 static const struct wl_pointer_listener pointer_listener = {
 	.enter = pointer_handle_enter,
-	.leave = noop,
+	.leave = pointer_handle_leave,
 	.motion = pointer_handle_motion,
 	.button = pointer_handle_button,
 	.axis = noop,
@@ -471,7 +497,7 @@ void finish_wayland(struct mako_state *state) {
 		wl_cursor_theme_destroy(state->cursor_theme);
 		wl_surface_destroy(state->cursor_surface);
 	}
-	
+
 	zwlr_layer_shell_v1_destroy(state->layer_shell);
 	wl_compositor_destroy(state->compositor);
 	wl_shm_destroy(state->shm);
