@@ -1,7 +1,7 @@
 project(
 	'mako',
 	'c',
-	version: '1.4.1',
+	version: '1.5',
 	license: 'MIT',
 	meson_version: '>=0.50.0',
 	default_options: [
