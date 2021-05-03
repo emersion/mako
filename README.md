@@ -6,7 +6,7 @@ A lightweight notification daemon for Wayland. Works on Sway.
   <img src="https://sr.ht/meoc.png" alt="mako screenshot">
 </p>
 
-mako implements the [GNOME Desktop Notifications Specification][gnome-draft].
+mako implements the [FreeDesktop Notifications Specification][spec].
 
 Feel free to join the IRC channel: ##emersion on irc.freenode.net.
 
@@ -67,5 +67,5 @@ See the [faq section in the wiki](https://github.com/emersion/mako/wiki/Frequent
 
 MIT
 
-[gnome-draft]: https://developer.gnome.org/notification-spec/
+[spec]: https://specifications.freedesktop.org/notification-spec/notification-spec-latest.html
 [basu]: https://github.com/emersion/basu
