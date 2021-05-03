@@ -143,11 +143,17 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
 		return;
 	}
 
+	const struct mako_binding_context ctx = {
+		.surface = seat->touch.pts[id].surface,
+		.seat = seat,
+		.serial = serial,
+	};
+
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (hotspot_at(&notif->hotspot, seat->touch.pts[id].x, seat->touch.pts[id].y)) {
 			struct mako_surface *surface = notif->surface;
-			notification_handle_touch(notif);
+			notification_handle_touch(notif, &ctx);
 			set_dirty(surface);
 			break;
 		}
@@ -192,16 +198,21 @@ static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer,
 	struct mako_seat *seat = data;
 	struct mako_state *state = seat->state;
 
+	const struct mako_binding_context ctx = {
+		.surface = seat->pointer.surface,
+		.seat = seat,
+		.serial = serial,
+	};
+
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (hotspot_at(&notif->hotspot, seat->pointer.x, seat->pointer.y)) {
 			struct mako_surface *surface = notif->surface;
-			notification_handle_button(notif, button, button_state);
+			notification_handle_button(notif, button, button_state, &ctx);
 			set_dirty(surface);
 			break;
 		}
 	}
-
 }
 
 static const struct wl_pointer_listener pointer_listener = {
@@ -368,6 +379,9 @@ static void handle_global(void *data, struct wl_registry *registry,
 		state->xdg_output_manager = wl_registry_bind(registry, name,
 			&zxdg_output_manager_v1_interface,
 			ZXDG_OUTPUT_V1_NAME_SINCE_VERSION);
+	} else if (strcmp(interface, xdg_activation_v1_interface.name) == 0) {
+		state->xdg_activation = wl_registry_bind(registry, name,
+			&xdg_activation_v1_interface, 1);
 	}
 }
 
@@ -489,6 +503,9 @@ void finish_wayland(struct mako_state *state) {
 		destroy_seat(seat);
 	}
 
+	if (state->xdg_activation != NULL) {
+		xdg_activation_v1_destroy(state->xdg_activation);
+	}
 	if (state->xdg_output_manager != NULL) {
 		zxdg_output_manager_v1_destroy(state->xdg_output_manager);
 	}
@@ -697,4 +714,39 @@ void set_dirty(struct mako_surface *surface) {
 	}
 	surface->dirty = true;
 	schedule_frame_and_commit(surface);
+}
+
+static void activation_token_handle_done(void *data,
+		struct xdg_activation_token_v1 *token, const char *token_str) {
+	char **out = data;
+	*out = strdup(token_str);
+}
+
+static const struct xdg_activation_token_v1_listener activation_token_listener = {
+	.done = activation_token_handle_done,
+};
+
+char *create_xdg_activation_token(struct mako_surface *surface,
+		struct mako_seat *seat, uint32_t serial) {
+	struct mako_state *state = seat->state;
+	if (state->xdg_activation == NULL) {
+		return NULL;
+	}
+
+	char *token_str = NULL;
+	struct xdg_activation_token_v1 *token =
+		xdg_activation_v1_get_activation_token(state->xdg_activation);
+	xdg_activation_token_v1_add_listener(token, &activation_token_listener,
+		&token_str);
+	xdg_activation_token_v1_set_serial(token, serial, seat->wl_seat);
+	xdg_activation_token_v1_set_surface(token, surface->surface);
+	xdg_activation_token_v1_commit(token);
+
+	while (wl_display_dispatch(state->display) >= 0 && token_str == NULL) {
+		// This space is intentionally left blank
+	}
+
+	xdg_activation_token_v1_destroy(token);
+
+	return token_str;
 }

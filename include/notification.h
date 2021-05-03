@@ -70,6 +70,12 @@ struct mako_hidden_format_data {
 	size_t count;
 };
 
+struct mako_binding_context {
+	struct mako_surface *surface;
+	struct mako_seat *seat;
+	uint32_t serial;
+};
+
 #define DEFAULT_ACTION_KEY "default"
 
 typedef char *(*mako_format_func_t)(char variable, bool *markup, void *data);
@@ -94,10 +100,11 @@ struct mako_notification *get_tagged_notification(struct mako_state *state, cons
 size_t format_notification(struct mako_notification *notif, const char *format,
 	char *buf);
 void notification_handle_button(struct mako_notification *notif, uint32_t button,
-	enum wl_pointer_button_state state);
-void notification_handle_touch(struct mako_notification *notif);
+	enum wl_pointer_button_state state, const struct mako_binding_context *ctx);
+void notification_handle_touch(struct mako_notification *notif,
+	const struct mako_binding_context *ctx);
 void notification_execute_binding(struct mako_notification *notif,
-	enum mako_binding binding);
+	enum mako_binding binding, const struct mako_binding_context *ctx);
 void insert_notification(struct mako_state *state, struct mako_notification *notif);
 int group_notifications(struct mako_state *state, struct mako_criteria *criteria);
 

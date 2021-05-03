@@ -44,5 +44,7 @@ struct mako_seat {
 bool init_wayland(struct mako_state *state);
 void finish_wayland(struct mako_state *state);
 void set_dirty(struct mako_surface *surface);
+char *create_xdg_activation_token(struct mako_surface *surface,
+	struct mako_seat *seat, uint32_t serial);
 
 #endif

@@ -15,6 +15,7 @@
 #include "notification.h"
 #include "icon.h"
 #include "string-util.h"
+#include "wayland.h"
 
 bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y) {
 	return x >= hotspot->x &&
@@ -334,7 +335,7 @@ static enum mako_binding get_button_binding(struct mako_config *config,
 }
 
 void notification_execute_binding(struct mako_notification *notif,
-		enum mako_binding binding) {
+		enum mako_binding binding, const struct mako_binding_context *ctx) {
 	switch (binding) {
 	case MAKO_BINDING_NONE:
 		break;
@@ -351,7 +352,10 @@ void notification_execute_binding(struct mako_notification *notif,
 		struct mako_action *action;
 		wl_list_for_each(action, &notif->actions, link) {
 			if (strcmp(action->key, DEFAULT_ACTION_KEY) == 0) {
-				notify_action_invoked(action);
+				char *activation_token = create_xdg_activation_token(
+					ctx->surface, ctx->seat, ctx->serial);
+				notify_action_invoked(action, activation_token);
+				free(activation_token);
 				break;
 			}
 		}
@@ -361,18 +365,19 @@ void notification_execute_binding(struct mako_notification *notif,
 }
 
 void notification_handle_button(struct mako_notification *notif, uint32_t button,
-		enum wl_pointer_button_state state) {
+		enum wl_pointer_button_state state,
+		const struct mako_binding_context *ctx) {
 	if (state != WL_POINTER_BUTTON_STATE_PRESSED) {
 		return;
 	}
 
 	notification_execute_binding(notif,
-		get_button_binding(&notif->state->config, button));
+		get_button_binding(&notif->state->config, button), ctx);
 }
 
-void notification_handle_touch(struct mako_notification *notif) {
-	notification_execute_binding(notif,
-		notif->state->config.touch);
+void notification_handle_touch(struct mako_notification *notif,
+		const struct mako_binding_context *ctx) {
+	notification_execute_binding(notif, notif->state->config.touch, ctx);
 }
 
 /*
