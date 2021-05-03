@@ -489,13 +489,19 @@ void notify_notification_closed(struct mako_notification *notif,
 		"NotificationClosed", "uu", notif->id, reason);
 }
 
-void notify_action_invoked(struct mako_action *action) {
+void notify_action_invoked(struct mako_action *action,
+		const char *activation_token) {
 	if (!action->notification->style.actions) {
 		// Actions are disabled for this notification, bail.
 		return;
 	}
 
 	struct mako_state *state = action->notification->state;
+
+	if (activation_token != NULL) {
+		sd_bus_emit_signal(state->bus, service_path, service_interface,
+			"ActivationToken", "us", action->notification->id, activation_token);
+	}
 
 	sd_bus_emit_signal(state->bus, service_path, service_interface,
 		"ActionInvoked", "us", action->notification->id, action->key);

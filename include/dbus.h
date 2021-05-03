@@ -20,7 +20,8 @@ void finish_dbus(struct mako_state *state);
 void notify_notification_closed(struct mako_notification *notif,
 	enum mako_notification_close_reason reason);
 
-void notify_action_invoked(struct mako_action *action);
+void notify_action_invoked(struct mako_action *action,
+	const char *activation_token);
 
 int init_dbus_xdg(struct mako_state *state);
 

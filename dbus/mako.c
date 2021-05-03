@@ -109,7 +109,7 @@ static int handle_invoke_action(sd_bus_message *msg, void *data,
 			struct mako_action *action;
 			wl_list_for_each(action, &notif->actions, link) {
 				if (strcmp(action->key, action_key) == 0) {
-					notify_action_invoked(action);
+					notify_action_invoked(action, NULL);
 					break;
 				}
 			}

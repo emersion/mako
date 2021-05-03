@@ -17,6 +17,7 @@
 #include "pool-buffer.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "xdg-output-unstable-v1-client-protocol.h"
+#include "xdg-activation-v1-client-protocol.h"
 
 struct mako_state;
 
@@ -56,6 +57,7 @@ struct mako_state {
 	struct wl_shm *shm;
 	struct zwlr_layer_shell_v1 *layer_shell;
 	struct zxdg_output_manager_v1 *xdg_output_manager;
+	struct xdg_activation_v1 *xdg_activation;
 	struct wl_list outputs; // mako_output::link
 	struct wl_list seats; // mako_seat::link
 	struct wl_cursor_theme *cursor_theme;

@@ -27,7 +27,7 @@ glib = dependency('glib-2.0')
 gobject = dependency('gobject-2.0')
 realtime = cc.find_library('rt')
 wayland_client = dependency('wayland-client')
-wayland_protos = dependency('wayland-protocols', version: '>=1.14')
+wayland_protos = dependency('wayland-protocols', version: '>=1.21')
 wayland_cursor = dependency('wayland-cursor')
 
 epoll = dependency('', required: false)
