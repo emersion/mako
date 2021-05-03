@@ -305,7 +305,7 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 	return len;
 }
 
-static enum mako_binding get_binding(struct mako_config *config,
+static enum mako_binding get_button_binding(struct mako_config *config,
 		uint32_t button) {
 	switch (button) {
 	case BTN_LEFT:
@@ -352,7 +352,7 @@ void notification_handle_button(struct mako_notification *notif, uint32_t button
 	}
 
 	notification_execute_binding(notif,
-		get_binding(&notif->state->config, button));
+		get_button_binding(&notif->state->config, button));
 }
 
 void notification_handle_touch(struct mako_notification *notif) {
