@@ -47,7 +47,8 @@ endif
 add_project_arguments('-DHAVE_' + sdbus.name().to_upper() + '=1', language: 'c')
 
 gdk_pixbuf = dependency('gdk-pixbuf-2.0', required: get_option('icons'))
-if gdk_pixbuf.found()
+gio = dependency('gio-2.0', required: get_option('icons'))
+if gdk_pixbuf.found() and gio.found()
 	add_global_arguments('-DHAVE_ICONS=1', language: 'c')
 endif
 
@@ -88,6 +89,7 @@ executable(
 		sdbus,
 		pango,
 		pangocairo,
+		gio,
 		glib,
 		gobject,
 		realtime,

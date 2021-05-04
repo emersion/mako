@@ -18,6 +18,7 @@
 #ifdef HAVE_ICONS
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gio/gio.h>
 #include "cairo-pixbuf.h"
 
 static bool validate_icon_name(const char* icon_name) {
@@ -41,12 +42,76 @@ static bool validate_icon_name(const char* icon_name) {
 	return true;
 }
 
-static GdkPixbuf *load_image(const char *path) {
+static GdkPixbuf *load_svg(const char *path, struct mako_style *style, GError **err) {
+	// https://gitlab.gnome.org/GNOME/gtk/-/blob/master/gtk/gdkpixbufutils.c#L335
+
+	char *data;
+	gsize size;
+	char *escaped_file_data;
+	int icon_width, icon_height;
+
+	if (!g_file_get_contents(path, &data, &size, err)) {
+		return NULL;
+	}
+
+	/* Fetch size from the original icon */
+	{
+		GInputStream *stream = g_memory_input_stream_new_from_data(data, size, NULL);
+		GdkPixbuf *reference = gdk_pixbuf_new_from_stream(stream, NULL, err);
+
+		g_object_unref(stream);
+
+		if (!reference) {
+			return NULL;
+		}
+
+		icon_width = gdk_pixbuf_get_width(reference);
+		icon_height = gdk_pixbuf_get_height(reference);
+		g_object_unref(reference);
+	}
+
+	escaped_file_data = g_base64_encode((guchar *) data, size);
+	char *str = mako_asprintf(
+		"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
+		"<svg version=\"1.1\"\n"
+		"     xmlns=\"http://www.w3.org/2000/svg\"\n"
+		"     xmlns:xi=\"http://www.w3.org/2001/XInclude\"\n"
+		"     width=\"%d\"\n"
+		"     height=\"%d\">\n"
+		"  <style type=\"text/css\">\n"
+		"    rect,circle,path {\n"
+		"      fill: #%x;\n"
+		"    }\n"
+		"  </style>\n"
+		"  <xi:include href=\"data:text/xml;base64,%s\"/>\n"
+		"</svg>",
+			icon_width,
+			icon_height,
+			style->colors.text,
+			escaped_file_data);
+
+	GInputStream *stream = g_memory_input_stream_new_from_data(str, -1, g_free);
+	GdkPixbuf *ret = gdk_pixbuf_new_from_stream(stream, NULL, err);
+
+	g_free(data);
+	g_free(escaped_file_data);
+	g_object_unref(stream);
+
+	return ret;
+}
+
+static GdkPixbuf *load_image(const char *path, struct mako_style *style) {
 	if (strlen(path) == 0) {
 		return NULL;
 	}
 	GError *err = NULL;
-	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(path, &err);
+	GdkPixbuf *pixbuf;
+	// FIXME ok? or do we need to actually look at mime info?
+	if (strcmp(strrchr(path, '.'), ".svg") == 0) {
+		pixbuf = load_svg(path, style, &err);
+	} else {
+		pixbuf = gdk_pixbuf_new_from_file(path, &err);
+	}
 	if (!pixbuf) {
 		fprintf(stderr, "Failed to load icon (%s)\n", err->message);
 		g_error_free(err);
@@ -263,7 +328,7 @@ struct mako_icon *create_icon(struct mako_notification *notif) {
 			return NULL;
 		}
 
-		image = load_image(path);
+		image = load_image(path, &notif->style);
 		free(path);
 		if (image == NULL) {
 			return NULL;
