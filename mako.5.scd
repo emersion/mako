@@ -224,7 +224,7 @@ Default when grouped: (%g) <b>%s</b>\\n%b
 *anchor*=_position_
 	Show notifications at the specified position on the output. Supported values
 	are _top-right_, _top-center_, _top-left_, _bottom-right_, _bottom-center_,
-	_bottom-left_, and _center_.
+	_bottom-left_, _center-right_, _center-left_ and _center_.
 
 	Default: top-right
 

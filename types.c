@@ -348,6 +348,10 @@ bool parse_anchor(const char *string, uint32_t *out) {
 	} else if (strcmp(string, "bottom-left") == 0) {
 		*out = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
 			ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
+	} else if (strcmp(string, "center-right") == 0) {
+		*out = ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+	} else if (strcmp(string, "center-left") == 0) {
+		*out = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
 	} else if (strcmp(string, "center") == 0) {
 		*out = 0;
 	} else {
