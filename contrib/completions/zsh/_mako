@@ -27,5 +27,5 @@ _arguments \
     '--ignore-timeout[If set, mako will ignore the expire timeout sent by notifications and use the one provided by default-timeout instead.]:Use default timeout:(0 1)' \
     '--output[Show notifications on this output.]:name:' \
     '--layer[Arrange notifications at this layer.]:layer:(background bottom top overlay)' \
-    '--anchor[Position on output to put notifications.]:position:(top-right bottom-right bottom-center bottom-left top-left top-center)' \
+    '--anchor[Position on output to put notifications.]:position:(top-right bottom-right bottom-center bottom-left top-left top-center center-right center-left center)' \
     '--sort[Sorts incoming notifications by time and/or priority in ascending(+) or descending(-) order.]:sort pattern:'
