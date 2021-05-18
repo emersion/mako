@@ -139,7 +139,9 @@ struct mako_notification *get_tagged_notification(struct mako_state *state,
 		const char *tag, const char *app_name) {
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
-		if (strcmp(notif->tag, tag) == 0 && strcmp(notif->app_name, app_name) == 0) {
+		if (notif->tag && strlen(notif->tag) != 0 &&
+			strcmp(notif->tag, tag) == 0 &&
+			strcmp(notif->app_name, app_name) == 0) {
 			return notif;
 		}
 	}
