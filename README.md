@@ -8,7 +8,7 @@ A lightweight notification daemon for Wayland. Works on Sway.
 
 mako implements the [FreeDesktop Notifications Specification][spec].
 
-Feel free to join the IRC channel: ##emersion on irc.freenode.net.
+Feel free to join the IRC channel: #emersion on irc.libera.chat.
 
 ## Running
 
