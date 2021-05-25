@@ -265,6 +265,8 @@ char *format_notif_text(char variable, bool *markup, void *data) {
 	switch (variable) {
 	case 'a':
 		return strdup(notif->app_name);
+	case 'i':
+		return mako_asprintf("%d", notif->id);
 	case 's':
 		return strdup(notif->summary);
 	case 'b':

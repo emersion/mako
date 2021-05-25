@@ -413,6 +413,8 @@ specifiers.
 
 *%g*	Number of notifications in the current group
 
+*%i*	Notification id
+
 ## For the hidden notifications placeholder
 
 *%h*	Number of hidden notifications
