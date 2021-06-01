@@ -414,10 +414,10 @@ bool apply_superset_style(
 				memcpy(&current_specifier, format_pos, 2);
 				if (!strstr(target->format, current_specifier)) {
 					memcpy(target_format_pos, format_pos, 2);
+					target_format_pos += 2; // This needs to go to the next slot.
 				}
 
 				++format_pos; // Enough to move to the next match.
-				target_format_pos += 2; // This needs to go to the next slot.
 			}
 		}
 	}
