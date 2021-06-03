@@ -173,6 +173,12 @@ static int handle_list_notifications(sd_bus_message *msg, void *data,
 			return ret;
 		}
 
+		ret = sd_bus_message_append(reply, "{sv}", "category",
+			"s", notif->category);
+		if (ret < 0) {
+			return ret;
+		}
+
 		ret = sd_bus_message_append(reply, "{sv}", "summary",
 			"s", notif->summary);
 		if (ret < 0) {
