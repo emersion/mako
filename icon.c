@@ -254,12 +254,11 @@ struct mako_icon *create_icon(struct mako_notification *notif) {
 	icon->height = image_height * icon->scale;
 
 	icon->image = create_cairo_surface_from_gdk_pixbuf(image);
+	g_object_unref(image);
 	if (icon->image == NULL) {
 		free(icon);
 		return NULL;
 	}
-
-	g_object_unref(image);
 
 	return icon;
 }
