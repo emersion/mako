@@ -10,7 +10,7 @@ if get_option('zsh-completions')
 endif
 
 if get_option('fish-completions')
-	fish_files = files('fish/mako.fish')
+	fish_files = files('fish/mako.fish', 'fish/makoctl.fish')
 	fish_comp = dependency('fish', required: false)
 	if fish_comp.found()
 		fish_install_dir = fish_comp.get_pkgconfig_variable('completionsdir')
