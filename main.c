@@ -42,7 +42,7 @@ static const char usage[] =
 	"      --hidden-format <format>        Format string.\n"
 	"      --max-visible <n>               Max number of visible notifications.\n"
 	"      --max-history <n>               Max size of history buffer.\n"
-	"      --history <0|1>                 Add expired notificatinos to history.\n"
+	"      --history <0|1>                 Add expired notifications to history.\n"
 	"      --sort <sort_criteria>          Sorts incoming notifications by time\n"
 	"                                      and/or priority in ascending(+) or\n"
 	"                                      descending(-) order.\n"
