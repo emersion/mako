@@ -27,6 +27,8 @@ complete -c mako -l actions -d 'Enable actions or not' -xa "1 0"
 complete -c mako -l format -d 'Format string' -x
 complete -c mako -l hidden-format -d 'Hidden format string' -x
 complete -c mako -l max-visible -d 'Max visible notifications' -x
+complete -c mako -l max-history -d 'Max size of history buffer' -x
+complete -c mako -l history -d 'Add expired notifications to history' -xa "1 0"
 complete -c mako -l sort -d 'Set notification sorting method' -x
 complete -c mako -l default-timeout -d 'Notification timeout in ms' -x
 complete -c mako -l ignore-timeout -d 'Enable notification timeout or not' -xa "1 0"
