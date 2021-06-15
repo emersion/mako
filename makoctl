@@ -21,6 +21,7 @@ usage() {
 	echo "                                 notification if none is given"
 	echo "  list                           List notifications"
 	echo "  reload                         Reload the configuration file"
+	echo "  set-mode <name>                Switch the current mode"
 	echo "  help                           Show this help"
 }
 
@@ -128,6 +129,9 @@ case "$1" in
 	;;
 "reload")
 	call Reload
+	;;
+"set-mode")
+	call SetMode "s" "$2"
 	;;
 "help"|"--help"|"-h")
 	usage

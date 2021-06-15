@@ -268,6 +268,10 @@ The following fields are available in criteria:
 - _desktop-entry_ (string)
 - _actionable_ (boolean)
 - _expiring_ (boolean)
+- _mode_ (string)
+	- Only apply style options in this section if the provided mode is
+	  currently enabled. For more information about modes, see the _MODES_
+	  section.
 
 The following fields are also available to match on a second pass based on
 where previous style options decided to place each notification:
@@ -387,6 +391,25 @@ specifiers.
 *%h*	Number of hidden notifications
 
 *%t*	Total number of notifications
+
+# MODES
+
+mako supports applying style options conditionally via modes. A configuration
+section with a _mode_ criteria will only be applied if the current mode
+matches. **makoctl**(1) can be used to change the current mode.
+
+The default mode is named "default".
+
+For example, to hide all notifications if the mode "do-not-disturb" is
+enabled:
+
+```
+[mode=do-not-disturb]
+invisible=1
+```
+
+_makoctl set-mode do-not-disturb_ will hide all notifications,
+_makoctl set-mode default_ will show them again.
 
 # AUTHORS
 

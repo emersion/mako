@@ -70,6 +70,11 @@ Sends IPC commands to the running mako daemon via dbus.
 *reload*
 	Reloads the configuration file.
 
+*set-mode* <name>
+	Switches the current mode to _name_. This replaces the previous mode.
+
+	See the _MODES_ section in **mako**(5) for more information about modes.
+
 *help, -h, --help*
 	Show help message and quit.
 
