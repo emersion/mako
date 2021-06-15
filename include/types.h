@@ -55,6 +55,8 @@ struct mako_criteria_spec {
 	bool body;
 	bool body_pattern;
 
+	bool mode;
+
 	bool none; // Special criteria that never matches, used for grouping
 
 	// Fields that can only be matched after grouping, and thus can't be

@@ -33,6 +33,8 @@ struct mako_criteria {
 	char *body;
 	regex_t body_pattern;
 
+	char *mode;
+
 	// Second-pass matches:
 	int group_index;
 	bool grouped;  // Whether group_index is non-zero

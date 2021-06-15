@@ -69,10 +69,13 @@ static bool init(struct mako_state *state) {
 	}
 	wl_list_init(&state->notifications);
 	wl_list_init(&state->history);
+	state->current_mode = strdup("default");
 	return true;
 }
 
 static void finish(struct mako_state *state) {
+	free(state->current_mode);
+
 	struct mako_notification *notif, *tmp;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
 		destroy_notification(notif);

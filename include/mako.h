@@ -63,6 +63,7 @@ struct mako_state {
 	uint32_t last_id;
 	struct wl_list notifications; // mako_notification::link
 	struct wl_list history; // mako_notification::link
+	char *current_mode;
 
 	int argc;
 	char **argv;
