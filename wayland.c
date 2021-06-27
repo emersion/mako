@@ -142,6 +142,17 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
 
 }
 
+static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
+		uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y) {
+	struct mako_seat *seat = data;
+	struct mako_state *state = seat->state;
+	// Change the mouse cursor to "left_ptr"
+	if (state->cursor_theme != NULL) {
+		wl_pointer_set_cursor(wl_pointer, serial, state->cursor_surface,
+			state->cursor_image->hotspot_x, state->cursor_image->hotspot_y);
+	}
+}
+
 static void pointer_handle_motion(void *data, struct wl_pointer *wl_pointer,
 		uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y) {
 	struct mako_seat *seat = data;
@@ -168,7 +179,7 @@ static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer,
 }
 
 static const struct wl_pointer_listener pointer_listener = {
-	.enter = noop,
+	.enter = pointer_handle_enter,
 	.leave = noop,
 	.motion = pointer_handle_motion,
 	.button = pointer_handle_button,
@@ -400,6 +411,39 @@ bool init_wayland(struct mako_state *state) {
 		}
 	}
 
+	// Set up the cursor. It needs a wl_surface with the cursor loaded into it.
+	// If one of these fail, mako will work fine without the cursor being able to change.
+	const char *cursor_size_env = getenv("XCURSOR_SIZE");
+	int cursor_size = 24;
+	if (cursor_size_env != NULL) {
+		errno = 0;
+		char *end;
+		int temp_size = (int)strtol(cursor_size_env, &end, 10);
+		if (errno == 0 && cursor_size_env[0] != 0 && end[0] == 0 && temp_size > 0) {
+			cursor_size = temp_size;
+		} else {
+			fprintf(stderr, "Error: XCURSOR_SIZE is invalid\n");
+		}
+	}
+	state->cursor_theme = wl_cursor_theme_load(NULL, cursor_size, state->shm);
+	if (state->cursor_theme == NULL) {
+		fprintf(stderr, "couldn't find a cursor theme\n");
+		return true;
+	}
+	struct wl_cursor *cursor = wl_cursor_theme_get_cursor(state->cursor_theme, "left_ptr");
+	if (cursor == NULL) {
+		fprintf(stderr, "couldn't find cursor icon \"left_ptr\"\n");
+		wl_cursor_theme_destroy(state->cursor_theme);
+		// Set to NULL so it doesn't get free'd again
+		state->cursor_theme = NULL;
+		return true;
+	}
+	state->cursor_image = cursor->images[0];
+	struct wl_buffer *cursor_buffer = wl_cursor_image_get_buffer(cursor->images[0]);
+	state->cursor_surface = wl_compositor_create_surface(state->compositor);
+	wl_surface_attach(state->cursor_surface, cursor_buffer, 0, 0);
+	wl_surface_commit(state->cursor_surface);
+
 	return true;
 }
 
@@ -422,6 +466,12 @@ void finish_wayland(struct mako_state *state) {
 	if (state->xdg_output_manager != NULL) {
 		zxdg_output_manager_v1_destroy(state->xdg_output_manager);
 	}
+
+	if (state->cursor_theme != NULL) {
+		wl_cursor_theme_destroy(state->cursor_theme);
+		wl_surface_destroy(state->cursor_surface);
+	}
+	
 	zwlr_layer_shell_v1_destroy(state->layer_shell);
 	wl_compositor_destroy(state->compositor);
 	wl_shm_destroy(state->shm);
