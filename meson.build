@@ -28,6 +28,7 @@ gobject = dependency('gobject-2.0')
 realtime = cc.find_library('rt')
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
+wayland_cursor = dependency('wayland-cursor')
 
 epoll = dependency('', required: false)
 if (not cc.has_function('timerfd_create', prefix: '#include <sys/timerfd.h>') or
@@ -105,6 +106,7 @@ executable(
 		gobject,
 		realtime,
 		wayland_client,
+		wayland_cursor,
 	],
 	include_directories: [mako_inc],
 	install: true,

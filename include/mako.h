@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <wayland-client.h>
+#include <wayland-cursor.h>
 #ifdef HAVE_LIBSYSTEMD
 #include <systemd/sd-bus.h>
 #elif HAVE_LIBELOGIND
@@ -57,6 +58,9 @@ struct mako_state {
 	struct zxdg_output_manager_v1 *xdg_output_manager;
 	struct wl_list outputs; // mako_output::link
 	struct wl_list seats; // mako_seat::link
+	struct wl_cursor_theme *cursor_theme;
+	const struct wl_cursor_image *cursor_image;
+	struct wl_surface *cursor_surface;
 
 	struct wl_list surfaces; // mako_surface::link
 
