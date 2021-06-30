@@ -99,7 +99,7 @@ struct mako_config {
 	enum mako_binding touch;
 };
 
-void init_default_config(struct mako_config *config);
+int init_default_config(struct mako_config *config);
 void finish_config(struct mako_config *config);
 
 void init_default_style(struct mako_style *style);

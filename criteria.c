@@ -452,6 +452,11 @@ ssize_t apply_each_criteria(struct wl_list *criteria_list,
 			notif->style.layer, notif->style.anchor);
 	}
 
+	if (!notif->surface) {
+		fprintf(stderr, "Couldn't create surface for notification\n");
+		return -1;
+	}
+
 	return match_count;
 }
 
