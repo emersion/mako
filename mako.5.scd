@@ -29,7 +29,7 @@ Empty lines and lines that begin with # are ignored.
 
 	Default: -time
 
-# BUTTON AND TOUCH BINDINGS
+# BINDING OPTIONS
 
 Specify the action to take per button or touch event. Supported values are
 _none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_.
@@ -232,8 +232,9 @@ Default when grouped: (%g) <b>%s</b>\\n%b
 
 In addition to the set of options at the top of the file, the config file may
 contain zero or more sections, each containing any combination of the
-*STYLE OPTIONS*. The sections, called criteria, are defined with an INI-like
-square bracket syntax. The brackets may contain any number of fields, like so:
+*BINDING OPTIONS* and *STYLE OPTIONS*. The sections, called criteria, are
+defined with an INI-like square bracket syntax. The brackets may contain any
+number of fields, like so:
 
 	\[field=value field2=value2 ...\]
 

@@ -321,15 +321,15 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 	return len;
 }
 
-static enum mako_binding get_button_binding(struct mako_config *config,
+static enum mako_binding get_button_binding(struct mako_style *style,
 		uint32_t button) {
 	switch (button) {
 	case BTN_LEFT:
-		return config->button_bindings.left;
+		return style->button_bindings.left;
 	case BTN_RIGHT:
-		return config->button_bindings.right;
+		return style->button_bindings.right;
 	case BTN_MIDDLE:
-		return config->button_bindings.middle;
+		return style->button_bindings.middle;
 	}
 	return MAKO_BINDING_NONE;
 }
@@ -372,12 +372,12 @@ void notification_handle_button(struct mako_notification *notif, uint32_t button
 	}
 
 	notification_execute_binding(notif,
-		get_button_binding(&notif->state->config, button), ctx);
+		get_button_binding(&notif->style, button), ctx);
 }
 
 void notification_handle_touch(struct mako_notification *notif,
 		const struct mako_binding_context *ctx) {
-	notification_execute_binding(notif, notif->state->config.touch, ctx);
+	notification_execute_binding(notif, notif->style.touch_binding, ctx);
 }
 
 /*

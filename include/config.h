@@ -38,6 +38,10 @@ struct mako_style_spec {
 	struct {
 		bool background, text, border, progress;
 	} colors;
+	struct {
+		bool left, right, middle;
+	} button_bindings;
+	bool touch_binding;
 };
 
 
@@ -81,6 +85,11 @@ struct mako_style {
 	char *output;
 	enum zwlr_layer_shell_v1_layer layer;
 	uint32_t anchor;
+
+	struct {
+		enum mako_binding left, right, middle;
+	} button_bindings;
+	enum mako_binding touch_binding;
 };
 
 struct mako_config {
@@ -91,12 +100,6 @@ struct mako_config {
 	int32_t max_history;
 
 	struct mako_style superstyle;
-
-	struct {
-		enum mako_binding left, right, middle;
-	} button_bindings;
-
-	enum mako_binding touch;
 };
 
 void init_default_config(struct mako_config *config);
