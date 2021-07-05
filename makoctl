@@ -15,7 +15,7 @@ usage() {
 	echo "  invoke [-n id] [action]        Invoke an action on the notification"
 	echo "                                 with the given id, or the last"
 	echo "                                 notification if none is given"
-	echo "  menu [-n id] [prog] [arg ...]  Use [prog] [args ...] to select one"
+	echo "  menu [-n id] <prog> [arg ...]  Use <prog> [args ...] to select one"
 	echo "                                 action to be invoked on the notification"
 	echo "                                 with the given id, or the last"
 	echo "                                 notification if none is given"

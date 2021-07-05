@@ -42,7 +42,7 @@ Sends IPC commands to the running mako daemon via dbus.
 		Invoke the action on the notification with the given id. Defaults to
 		the first notification.
 
-*menu* [-n <id>] [program] [argument...]
+*menu* [-n <id>] <program> [argument...]
 	Use a program to select an action on a notification. The list of
 	actions are joined on newlines and passed to _program_. The program should
 	write the selected action to stdout. If an action is given, this action
