@@ -7,12 +7,18 @@
 #include <pango/pango.h>
 #include "types.h"
 
-enum mako_binding {
+enum mako_binding_action {
 	MAKO_BINDING_NONE,
 	MAKO_BINDING_DISMISS,
 	MAKO_BINDING_DISMISS_GROUP,
 	MAKO_BINDING_DISMISS_ALL,
 	MAKO_BINDING_INVOKE_DEFAULT_ACTION,
+	MAKO_BINDING_EXEC,
+};
+
+struct mako_binding {
+	enum mako_binding_action action;
+	char *command; // for MAKO_BINDING_EXEC
 };
 
 enum mako_sort_criteria {
@@ -87,9 +93,9 @@ struct mako_style {
 	uint32_t anchor;
 
 	struct {
-		enum mako_binding left, right, middle;
+		struct mako_binding left, right, middle;
 	} button_bindings;
-	enum mako_binding touch_binding;
+	struct mako_binding touch_binding;
 };
 
 struct mako_config {
