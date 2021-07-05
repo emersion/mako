@@ -121,10 +121,10 @@ void init_default_style(struct mako_style *style) {
 	style->anchor =
 		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
 
-	style->button_bindings.left = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
-	style->button_bindings.right = MAKO_BINDING_DISMISS;
-	style->button_bindings.middle = MAKO_BINDING_NONE;
-	style->touch_binding = MAKO_BINDING_DISMISS;
+	style->button_bindings.left.action = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
+	style->button_bindings.right.action = MAKO_BINDING_DISMISS;
+	style->button_bindings.middle.action = MAKO_BINDING_NONE;
+	style->touch_binding.action = MAKO_BINDING_DISMISS;
 
 	// Everything in the default config is explicitly specified.
 	memset(&style->spec, true, sizeof(struct mako_style_spec));
@@ -134,11 +134,29 @@ void init_empty_style(struct mako_style *style) {
 	memset(style, 0, sizeof(struct mako_style));
 }
 
+static void finish_binding(struct mako_binding *binding) {
+	free(binding->command);
+}
+
 void finish_style(struct mako_style *style) {
+	finish_binding(&style->button_bindings.left);
+	finish_binding(&style->button_bindings.middle);
+	finish_binding(&style->button_bindings.right);
+	finish_binding(&style->touch_binding);
 	free(style->icon_path);
 	free(style->font);
 	free(style->format);
 	free(style->output);
+}
+
+static void copy_binding(struct mako_binding *dst,
+		const struct mako_binding *src) {
+	finish_binding(dst);
+
+	*dst = *src;
+	if (src->command != NULL) {
+		dst->command = strdup(src->command);
+	}
 }
 
 // Update `target` with the values specified in `style`. If a failure occurs,
@@ -336,20 +354,20 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	}
 
 	if (style->spec.button_bindings.left) {
-		target->button_bindings.left = style->button_bindings.left;
+		copy_binding(&target->button_bindings.left, &style->button_bindings.left);
 		target->spec.button_bindings.left = true;
 	}
 	if (style->spec.button_bindings.middle) {
-		target->button_bindings.middle = style->button_bindings.middle;
+		copy_binding(&target->button_bindings.middle, &style->button_bindings.middle);
 		target->spec.button_bindings.middle = true;
 	}
 	if (style->spec.button_bindings.right) {
-		target->button_bindings.right = style->button_bindings.right;
+		copy_binding(&target->button_bindings.right, &style->button_bindings.right);
 		target->spec.button_bindings.right = true;
 	}
 
 	if (style->spec.touch_binding) {
-		target->touch_binding = style->touch_binding;
+		copy_binding(&target->touch_binding, &style->touch_binding);
 		target->spec.touch_binding = true;
 	}
 
@@ -594,36 +612,40 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "anchor") == 0) {
 		return spec->anchor = parse_anchor(value, &style->anchor);
 	} else if (has_prefix(name, "on-button-") || strcmp(name, "on-touch") == 0) {
-		enum mako_binding action;
+		struct mako_binding binding = {0};
 		if (strcmp(value, "none") == 0) {
-			action = MAKO_BINDING_NONE;
+			binding.action = MAKO_BINDING_NONE;
 		} else if (strcmp(value, "dismiss") == 0) {
-			action = MAKO_BINDING_DISMISS;
+			binding.action = MAKO_BINDING_DISMISS;
 		} else if (strcmp(value, "dismiss-all") == 0) {
-			action = MAKO_BINDING_DISMISS_ALL;
+			binding.action = MAKO_BINDING_DISMISS_ALL;
 		} else if (strcmp(value, "dismiss-group") == 0) {
-			action = MAKO_BINDING_DISMISS_GROUP;
+			binding.action = MAKO_BINDING_DISMISS_GROUP;
 		} else if (strcmp(value, "invoke-default-action") == 0) {
-			action = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
+			binding.action = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
+		} else if (has_prefix(value, "exec ")) {
+			binding.action = MAKO_BINDING_EXEC;
+			binding.command = strdup(value + strlen("exec "));
 		} else {
 			return false;
 		}
 
 		if (strcmp(name, "on-button-left") == 0) {
-			style->button_bindings.left = action;
+			copy_binding(&style->button_bindings.left, &binding);
 			style->spec.button_bindings.left = true;
 		} else if (strcmp(name, "on-button-right") == 0) {
-			style->button_bindings.right = action;
+			copy_binding(&style->button_bindings.right, &binding);
 			style->spec.button_bindings.right = true;
 		} else if (strcmp(name, "on-button-middle") == 0) {
-			style->button_bindings.middle = action;
+			copy_binding(&style->button_bindings.middle, &binding);
 			style->spec.button_bindings.middle = true;
 		} else if (strcmp(name, "on-touch") == 0) {
-			style->touch_binding = action;
+			copy_binding(&style->touch_binding, &binding);
 			style->spec.touch_binding = true;
 		} else {
 			return false;
 		}
+
 		return true;
 	}
 
