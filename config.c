@@ -469,6 +469,10 @@ static bool apply_config_option(struct mako_config *config, const char *name,
 	return false;
 }
 
+static bool has_prefix(const char *str, const char *prefix) {
+	return strncmp(str, prefix, strlen(prefix)) == 0;
+}
+
 static bool apply_style_option(struct mako_style *style, const char *name,
 		const char *value) {
 	struct mako_style_spec *spec = &style->spec;
@@ -589,8 +593,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		return true;
 	} else if (strcmp(name, "anchor") == 0) {
 		return spec->anchor = parse_anchor(value, &style->anchor);
-	} else if (strncmp(name, "on-button-", 10) == 0
-		   || strcmp(name, "on-touch") == 0) {
+	} else if (has_prefix(name, "on-button-") || strcmp(name, "on-touch") == 0) {
 		enum mako_binding action;
 		if (strcmp(value, "none") == 0) {
 			action = MAKO_BINDING_NONE;
