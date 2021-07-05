@@ -357,8 +357,11 @@ void notification_execute_binding(struct mako_notification *notif,
 		struct mako_action *action;
 		wl_list_for_each(action, &notif->actions, link) {
 			if (strcmp(action->key, DEFAULT_ACTION_KEY) == 0) {
-				char *activation_token = create_xdg_activation_token(
-					ctx->surface, ctx->seat, ctx->serial);
+				char *activation_token = NULL;
+				if (ctx != NULL) {
+					activation_token = create_xdg_activation_token(ctx->surface,
+						ctx->seat, ctx->serial);
+				}
 				notify_action_invoked(action, activation_token);
 				free(activation_token);
 				break;

@@ -143,6 +143,7 @@ void finish_style(struct mako_style *style) {
 	finish_binding(&style->button_bindings.middle);
 	finish_binding(&style->button_bindings.right);
 	finish_binding(&style->touch_binding);
+	finish_binding(&style->notify_binding);
 	free(style->icon_path);
 	free(style->font);
 	free(style->format);
@@ -369,6 +370,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.touch_binding) {
 		copy_binding(&target->touch_binding, &style->touch_binding);
 		target->spec.touch_binding = true;
+	}
+
+	if (style->spec.notify_binding) {
+		copy_binding(&target->notify_binding, &style->notify_binding);
+		target->spec.notify_binding = true;
 	}
 
 	return true;
@@ -611,7 +617,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		return true;
 	} else if (strcmp(name, "anchor") == 0) {
 		return spec->anchor = parse_anchor(value, &style->anchor);
-	} else if (has_prefix(name, "on-button-") || strcmp(name, "on-touch") == 0) {
+	} else if (has_prefix(name, "on-")) {
 		struct mako_binding binding = {0};
 		if (strcmp(value, "none") == 0) {
 			binding.action = MAKO_BINDING_NONE;
@@ -642,6 +648,9 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		} else if (strcmp(name, "on-touch") == 0) {
 			copy_binding(&style->touch_binding, &binding);
 			style->spec.touch_binding = true;
+		} else if (strcmp(name, "on-notify") == 0) {
+			copy_binding(&style->notify_binding, &binding);
+			style->spec.notify_binding = true;
 		} else {
 			return false;
 		}

@@ -31,9 +31,9 @@ Empty lines and lines that begin with # are ignored.
 
 # BINDING OPTIONS
 
-Specify the action to take per button or touch event. Supported values are
-_none_, _dismiss_, _dismiss-all_, _dismiss-group_, _invoke-default-action_ and
-_exec <command>_.
+Bindings allow to perform an action when an event is triggered. Supported
+values are _none_, _dismiss_, _dismiss-all_, _dismiss-group_,
+_invoke-default-action_ and _exec <command>_.
 
 *on-button-left*=_action_
 	Default: invoke-default-action
@@ -47,12 +47,21 @@ _exec <command>_.
 *on-touch*=_action_
 	Default: dismiss
 
+*on-notify* = _action_
+	Default: none
+
 When _exec_ is used, the command will be executed in a POSIX shell. The
 shell variable _id_ will be set to the notification ID. For example, the
 following option will display an interactive action menu on middle click:
 
 ```
 on-button-middle=exec makoctl menu -n "$id" dmenu -p 'Select action: '
+```
+
+The following option will play a sound when a new notification is opened:
+
+```
+on-notify=exec mpv /usr/share/sounds/freedesktop/stereo/message.oga
 ```
 
 # STYLE OPTIONS
