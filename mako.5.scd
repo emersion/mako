@@ -47,6 +47,14 @@ _exec <command>_.
 *on-touch*=_action_
 	Default: dismiss
 
+When _exec_ is used, the command will be executed in a POSIX shell. The
+shell variable _id_ will be set to the notification ID. For example, the
+following option will display an interactive action menu on middle click:
+
+```
+on-button-middle=exec makoctl menu -n "$id" dmenu -p 'Select action: '
+```
+
 # STYLE OPTIONS
 
 *font*=_font_

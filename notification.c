@@ -379,7 +379,19 @@ void notification_execute_binding(struct mako_notification *notif,
 				perror("fork failed");
 				_exit(1);
 			} else if (pid == 0) {
-				char *const argv[] = { "sh", "-c", binding->command, NULL };
+				// We pass variables using additional sh arguments. To convert
+				// back the arguments to variables, insert a short script
+				// preamble before the user's command.
+				const char setup_vars[] = "id=\"$1\"\n";
+
+				size_t cmd_size = strlen(setup_vars) + strlen(binding->command) + 1;
+				char *cmd = malloc(cmd_size);
+				snprintf(cmd, cmd_size, "%s%s", setup_vars, binding->command);
+
+				char id_str[32];
+				snprintf(id_str, sizeof(id_str), "%" PRIu32, notif->id);
+
+				char *const argv[] = { "sh", "-c", cmd, "sh", id_str, NULL };
 				execvp("sh", argv);
 				perror("exec failed");
 				_exit(1);
