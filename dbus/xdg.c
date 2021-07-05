@@ -429,6 +429,8 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	group_notifications(state, notif_criteria);
 	destroy_criteria(notif_criteria);
 
+	notification_execute_binding(notif, &notif->style.notify_binding, NULL);
+
 	set_dirty(notif->surface);
 
 	return sd_bus_reply_method_return(msg, "u", notif->id);
