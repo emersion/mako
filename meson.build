@@ -130,10 +130,10 @@ configure_file(
 	install_dir: datadir + '/dbus-1/services',
 )
 
-scdoc = dependency('scdoc', required: get_option('man-pages'), version: '>= 1.9.7')
+scdoc = dependency('scdoc', required: get_option('man-pages'), version: '>= 1.9.7', native: true)
 
 if scdoc.found()
-	sh = find_program('sh')
+	sh = find_program('sh', native: true)
 
 	man_pages = ['mako.1.scd', 'mako.5.scd', 'makoctl.1.scd']
 
