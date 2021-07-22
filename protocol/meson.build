@@ -1,6 +1,6 @@
 wl_protocol_dir = wayland_protos.get_pkgconfig_variable('pkgdatadir')
 
-wayland_scanner = find_program('wayland-scanner')
+wayland_scanner = find_program('wayland-scanner', native: true)
 
 # should check wayland_scanner's version, but it is hard to get
 if wayland_client.version().version_compare('>=1.14.91')
