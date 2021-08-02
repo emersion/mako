@@ -3,12 +3,11 @@ Description=Lightweight Wayland notification daemon
 Documentation=man:mako(1)
 PartOf=graphical-session.target
 After=graphical-session.target
-# ConditionEnvironment requires systemd v247 to work correctly
-ConditionEnvironment=WAYLAND_DISPLAY
 
 [Service]
 Type=dbus
 BusName=org.freedesktop.Notifications
+ExecCondition=/bin/sh -c '[ -n "$WAYLAND_DISPLAY" ]'
 ExecStart=/usr/bin/mako
 ExecReload=/usr/bin/makoctl reload
 
