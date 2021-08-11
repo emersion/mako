@@ -465,7 +465,8 @@ bool init_wayland(struct mako_state *state) {
 			fprintf(stderr, "Error: XCURSOR_SIZE is invalid\n");
 		}
 	}
-	state->cursor_theme = wl_cursor_theme_load(NULL, cursor_size, state->shm);
+	const char *xcursor_theme = getenv("XCURSOR_THEME");
+	state->cursor_theme = wl_cursor_theme_load(xcursor_theme, cursor_size, state->shm);
 	if (state->cursor_theme == NULL) {
 		fprintf(stderr, "couldn't find a cursor theme\n");
 		return true;
