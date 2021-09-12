@@ -302,6 +302,13 @@ static void reapply_config(struct mako_state *state) {
 	}
 }
 
+static int handle_get_mode(sd_bus_message *msg, void* data,
+		sd_bus_error *ret_error) {
+	struct mako_state* state = data;
+
+	return sd_bus_reply_method_return(msg, "s", state->current_mode);
+}
+
 static int handle_set_mode(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
@@ -346,6 +353,7 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_METHOD("RestoreNotification", "", "", handle_restore_action, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("ListNotifications", "", "aa{sv}", handle_list_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("Reload", "", "", handle_reload, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("GetMode", "", "s", handle_get_mode, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("SetMode", "s", "", handle_set_mode, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_VTABLE_END
 };

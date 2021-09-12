@@ -21,6 +21,7 @@ usage() {
 	echo "                                 notification if none is given"
 	echo "  list                           List notifications"
 	echo "  reload                         Reload the configuration file"
+	echo "  get-mode                       Show the current mode"
 	echo "  set-mode <name>                Switch the current mode"
 	echo "  help                           Show this help"
 }
@@ -130,6 +131,13 @@ case "$1" in
 "reload")
 	call Reload
 	;;
+"get-mode")
+    if ! type jq >/dev/null 2>&1; then
+        echo >&2 "$0: jq is required to use 'get-mode'"
+        exit 1
+    fi
+    call GetMode | jq -r '.data[]'
+    ;;
 "set-mode")
 	call SetMode "s" "$2"
 	;;
