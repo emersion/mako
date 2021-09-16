@@ -65,7 +65,7 @@ Sends IPC commands to the running mako daemon via dbus.
 		```
 
 *list*
-	Retrieve a list of current notifications.
+	Retrieves a list of current notifications.
 
 *reload*
 	Reloads the configuration file.
