@@ -31,7 +31,7 @@ Empty lines and lines that begin with # are ignored.
 
 # BINDING OPTIONS
 
-Bindings allow to perform an action when an event is triggered. Supported
+Bindings allow one to perform an action when an event is triggered. Supported
 values are _none_, _dismiss_, _dismiss-all_, _dismiss-group_,
 _invoke-default-action_ and _exec <command>_.
 
@@ -309,7 +309,7 @@ where previous style options decided to place each notification:
       anchor style option for possible values.
 
 There are only two passes performed on each notification, so the second-pass
-critera are not allowed to reposition the notification.
+criteria are not allowed to reposition the notification.
 
 If a field's value contains special characters, they may be escaped with a
 backslash, or quoted:
