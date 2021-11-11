@@ -575,8 +575,14 @@ static void send_frame(struct mako_surface *surface) {
 		return;
 	}
 
+	cairo_t *cairo = surface->current_buffer->cairo;
+
+	cairo_identity_matrix(cairo);
+	cairo_scale(cairo, scale, scale);
+
 	struct mako_output *output = get_configured_output(surface);
-	int height = render(surface, surface->current_buffer, scale);
+
+	int height = render(surface, surface->current_buffer);
 
 	// There are two cases where we want to tear down the surface: zero
 	// notifications (height = 0) or moving between outputs.

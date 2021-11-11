@@ -25,26 +25,17 @@ static void set_source_u32(cairo_t *cairo, uint32_t color) {
 		(color >> (0*8) & 0xFF) / 255.0);
 }
 
-static void set_layout_size(PangoLayout *layout, int width, int height,
-		int scale) {
-	pango_layout_set_width(layout, width * scale * PANGO_SCALE);
-	pango_layout_set_height(layout, height * scale * PANGO_SCALE);
-}
-
-static void move_to(cairo_t *cairo, double x, double y, int scale) {
-	cairo_move_to(cairo, x * scale, y * scale);
+static void set_layout_size(PangoLayout *layout, int width, int height) {
+	pango_layout_set_width(layout, width * PANGO_SCALE);
+	pango_layout_set_height(layout, height * PANGO_SCALE);
 }
 
 static void set_rounded_rectangle(cairo_t *cairo, double x, double y, double width, double height,
-		int scale, int radius) {
+		int radius) {
 	if (width == 0 || height == 0) {
 		return;
 	}
-	x *= scale;
-	y *= scale;
-	width *= scale;
-	height *= scale;
-	radius *= scale;
+
 	double degrees = M_PI / 180.0;
 
 	cairo_new_sub_path(cairo);
@@ -91,7 +82,7 @@ static void set_font_options(cairo_t *cairo, struct mako_surface *surface) {
 }
 
 static int render_notification(cairo_t *cairo, struct mako_state *state, struct mako_surface *surface,
-		struct mako_style *style, const char *text, struct mako_icon *icon, int offset_y, int scale,
+		struct mako_style *style, const char *text, struct mako_icon *icon, int offset_y,
 		struct mako_hotspot *hotspot, int progress) {
 	int border_size = 2 * style->border_size;
 	int padding_height = style->padding.top + style->padding.bottom;
@@ -142,7 +133,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	set_font_options(cairo, surface);
 
 	PangoLayout *layout = pango_cairo_create_layout(cairo);
-	set_layout_size(layout, text_layout_width, text_layout_height, scale);
+	set_layout_size(layout, text_layout_width, text_layout_height);
 	pango_layout_set_alignment(layout, style->text_alignment);
 	pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
 	pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
@@ -164,12 +155,10 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 		pango_layout_set_text(layout, text, -1);
 	}
 
-	if (attrs == NULL) {
-		attrs = pango_attr_list_new();
+	if (attrs != NULL) {
+		pango_layout_set_attributes(layout, attrs);
+		pango_attr_list_unref(attrs);
 	}
-	pango_attr_list_insert(attrs, pango_attr_scale_new(scale));
-	pango_layout_set_attributes(layout, attrs);
-	pango_attr_list_unref(attrs);
 
 	int buffer_text_height = 0;
 	int buffer_text_width = 0;
@@ -179,8 +168,8 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	if (pango_layout_get_character_count(layout) > 0) {
 		pango_layout_get_pixel_size(layout, &buffer_text_width, &buffer_text_height);
 	}
-	int text_height = buffer_text_height / scale;
-	int text_width = buffer_text_width / scale;
+	int text_height = buffer_text_height;
+	int text_width = buffer_text_width;
 
 	if (text_height > text_layout_height) {
 		text_height = text_layout_height;
@@ -210,7 +199,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 		offset_y + style->border_size / 2.0,
 		notif_background_width,
 		notif_height - style->border_size,
-		scale, radius);
+		radius);
 
 	// Render background, keeping the path.
 	set_source_u32(cairo, style->colors.background);
@@ -241,7 +230,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 			offset_y + style->border_size,
 			progress_width,
 			notif_height - style->border_size,
-			scale, 0);
+			0);
 	cairo_fill(cairo);
 	cairo_restore(cairo);
 
@@ -253,7 +242,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	cairo_append_path(cairo, border_path);
 	set_source_u32(cairo, style->colors.border);
 	cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
-	cairo_set_line_width(cairo, style->border_size * scale);
+	cairo_set_line_width(cairo, style->border_size);
 	cairo_stroke(cairo);
 	cairo_restore(cairo);
 
@@ -288,7 +277,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 			ypos = offset_y + text_y + text_height + style->margin.bottom;
 			break;
 		}
-		draw_icon(cairo, icon, xpos, ypos, scale);
+		draw_icon(cairo, icon, xpos, ypos);
 	}
 
 	if (icon_vertical) {
@@ -299,10 +288,9 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 
 	// Render text
 	set_source_u32(cairo, style->colors.text);
-	move_to(cairo,
+	cairo_move_to(cairo,
 		offset_x + style->border_size + text_x,
-		offset_y + style->border_size + text_y,
-		scale);
+		offset_y + style->border_size + text_y);
 	pango_cairo_update_layout(cairo, layout);
 	pango_cairo_show_layout(cairo, layout);
 
@@ -319,7 +307,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	return notif_height;
 }
 
-int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) {
+int render(struct mako_surface *surface, struct pool_buffer *buffer) {
 	struct mako_state *state = surface->state;
 	cairo_t *cairo = buffer->cairo;
 
@@ -395,7 +383,7 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 
 		struct mako_icon *icon = (style->icons) ? notif->icon : NULL;
 		int notif_height = render_notification(
-			cairo, state, surface, style, text, icon, total_height, scale,
+			cairo, state, surface, style, text, icon, total_height,
 			&notif->hotspot, notif->progress);
 		free(text);
 
@@ -442,7 +430,7 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 		format_text(style->format, text, format_hidden_text, &data);
 
 		int hidden_height = render_notification(
-			cairo, state, surface, style, text, NULL, total_height, scale, NULL, 0);
+			cairo, state, surface, style, text, NULL, total_height, NULL, 0);
 		free(text);
 		destroy_notification(hidden_notif);
 

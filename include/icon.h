@@ -24,6 +24,6 @@ struct mako_image_data {
 struct mako_icon *create_icon(struct mako_notification *notif);
 void destroy_icon(struct mako_icon *icon);
 void draw_icon(cairo_t *cairo, struct mako_icon *icon,
-		double xpos, double ypos, double scale);
+		double xpos, double ypos);
 
 #endif
