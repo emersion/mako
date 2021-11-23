@@ -76,6 +76,7 @@ static bool init(struct mako_state *state) {
 	wl_array_init(&state->current_modes);
 	const char *mode = "default";
 	set_modes(state, &mode, 1);
+	state->last_scale = 1;
 	return true;
 }
 

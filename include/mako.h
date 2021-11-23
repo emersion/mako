@@ -75,6 +75,7 @@ struct mako_state {
 	struct wl_list notifications; // mako_notification::link
 	struct wl_list history; // mako_notification::link
 	struct wl_array current_modes; // char *
+	uint32_t last_scale;
 
 	int argc;
 	char **argv;
