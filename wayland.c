@@ -624,9 +624,10 @@ static void send_frame(struct mako_surface *surface) {
 		return;
 	}
 
-	int scale = 1;
+	int scale = state->last_scale;
 	if (surface->surface_output != NULL) {
 		scale = surface->surface_output->scale;
+		state->last_scale = scale;
 	}
 
 	surface->current_buffer =
