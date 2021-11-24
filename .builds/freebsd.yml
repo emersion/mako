@@ -15,7 +15,7 @@ sources:
 tasks:
   - setup: |
       cd mako
-      meson build/ -Dauto_features=enabled -Dsd-bus-provider=basu -Dsystemd=disabled
+      meson build/ -Dauto_features=enabled -Dsd-bus-provider=basu
   - build: |
       cd mako
       ninja -C build/
