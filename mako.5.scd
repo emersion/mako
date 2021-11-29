@@ -92,9 +92,19 @@ on-notify=exec mpv /usr/share/sounds/freedesktop/stereo/message.oga
 
 	Default: 100
 
+*outer-margin*=_directional_
+	Set outer-margin of each edge to the size specified by _directional_. See
+	*DIRECTIONAL VALUES* for more information.
+	This margin applies to the outside of the whole notification list.
+
+	Default: 0
+
 *margin*=_directional_
 	Set margin of each edge to the size specified by _directional_. See
 	*DIRECTIONAL VALUES* for more information.
+	This margin applies to each individual notification.
+	Note that it applies in addition to outer-margin, meaning first and last
+	notifications will use the sum of both margins.
 
 	Default: 10
 
@@ -373,7 +383,7 @@ control over each edge is desired:
 - A single value will apply to all four edges.
 - Two values will set vertical and horizontal edges separately.
 - Three will set top, horizontal, and bottom edges separately.
-- Four will give each edge a separate value.
+- Four will set top, right, bottom, and left edges separately.
 
 When specifying multiple values, they should be comma-separated. For example,
 this would set the top margin to 10, left and right to 20, and bottom to five:
