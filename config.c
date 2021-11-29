@@ -73,6 +73,11 @@ void init_default_style(struct mako_style *style) {
 	style->width = 300;
 	style->height = 100;
 
+	style->outer_margin.top = 0;
+	style->outer_margin.right = 0;
+	style->outer_margin.bottom = 0;
+	style->outer_margin.left = 0;
+
 	style->margin.top = 10;
 	style->margin.right = 10;
 	style->margin.bottom = 10;
@@ -218,6 +223,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.height) {
 		target->height = style->height;
 		target->spec.height = true;
+	}
+
+	if (style->spec.outer_margin) {
+		target->outer_margin = style->outer_margin;
+		target->spec.outer_margin = true;
 	}
 
 	if (style->spec.margin) {
@@ -390,6 +400,7 @@ bool apply_superset_style(
 	// Specify eveything that we'll be combining.
 	target->spec.width = true;
 	target->spec.height = true;
+	target->spec.outer_margin = true;
 	target->spec.margin = true;
 	target->spec.padding = true;
 	target->spec.border_size = true;
@@ -418,6 +429,11 @@ bool apply_superset_style(
 		// initialized to zero.
 		target->width = max(style->width, target->width);
 		target->height = max(style->height, target->height);
+		target->outer_margin.top = max(style->outer_margin.top, target->outer_margin.top);
+		target->outer_margin.right = max(style->outer_margin.right, target->outer_margin.right);
+		target->outer_margin.bottom =
+			max(style->outer_margin.bottom, target->outer_margin.bottom);
+		target->outer_margin.left = max(style->outer_margin.left, target->outer_margin.left);
 		target->margin.top = max(style->margin.top, target->margin.top);
 		target->margin.right = max(style->margin.right, target->margin.right);
 		target->margin.bottom =
@@ -513,6 +529,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		return spec->width = parse_int_ge(value, &style->width, 1);
 	} else if (strcmp(name, "height") == 0) {
 		return spec->height = parse_int_ge(value, &style->height, 1);
+	} else if (strcmp(name, "outer-margin") == 0) {
+		return spec->outer_margin = parse_directional(value, &style->outer_margin);
 	} else if (strcmp(name, "margin") == 0) {
 		return spec->margin = parse_directional(value, &style->margin);
 	} else if (strcmp(name, "padding") == 0) {
@@ -815,6 +833,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"text-color", required_argument, 0, 0},
 		{"width", required_argument, 0, 0},
 		{"height", required_argument, 0, 0},
+		{"outer-margin", required_argument, 0, 0},
 		{"margin", required_argument, 0, 0},
 		{"padding", required_argument, 0, 0},
 		{"border-size", required_argument, 0, 0},
