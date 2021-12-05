@@ -64,9 +64,13 @@ static const struct wl_output_listener output_listener = {
 	.scale = output_handle_scale,
 };
 
+static void send_frame(struct mako_surface *surface);
+
 static void create_output(struct mako_state *state,
 		struct wl_output *wl_output, uint32_t global_name) {
 	struct mako_output *output = calloc(1, sizeof(struct mako_output));
+	struct mako_surface *surface;
+	bool recreate_surface = false;
 	if (output == NULL) {
 		fprintf(stderr, "allocation failed\n");
 		return;
@@ -75,11 +79,20 @@ static void create_output(struct mako_state *state,
 	output->global_name = global_name;
 	output->wl_output = wl_output;
 	output->scale = 1;
+
+	recreate_surface = wl_list_empty(&state->outputs);
+
 	wl_list_insert(&state->outputs, &output->link);
 
 	wl_output_set_user_data(wl_output, output);
 	wl_output_add_listener(wl_output, &output_listener, output);
 	get_xdg_output(output);
+	if (recreate_surface) {
+		// We had no outputs, force our surfaces to redraw
+		wl_list_for_each(surface, &output->state->surfaces, link) {
+			set_dirty(surface);
+		}
+	}
 }
 
 static void destroy_output(struct mako_output *output) {
@@ -306,7 +319,6 @@ static const struct wl_surface_listener surface_listener = {
 
 
 static void schedule_frame_and_commit(struct mako_surface *state);
-static void send_frame(struct mako_surface *surface);
 
 static void layer_surface_handle_configure(void *data,
 		struct zwlr_layer_surface_v1 *surface,
