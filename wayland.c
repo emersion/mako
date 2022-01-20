@@ -621,21 +621,24 @@ static void send_frame(struct mako_surface *surface) {
 		return;
 	}
 
-	int scale = 1;
+	// if we know what output we are rending on, update our
+	// cached version of the scale
 	if (surface->surface_output != NULL) {
-		scale = surface->surface_output->scale;
+		surface->scale = surface->surface_output->scale;
 	}
 
-	surface->current_buffer =
-		get_next_buffer(state->shm, surface->buffers,
-		surface->width * scale, surface->height * scale);
+	surface->current_buffer = get_next_buffer(
+		state->shm, surface->buffers,
+		surface->width * surface->scale,
+		surface->height * surface->scale);
+
 	if (surface->current_buffer == NULL) {
 		fprintf(stderr, "no buffer available\n");
 		return;
 	}
 
 	struct mako_output *output = get_configured_output(surface);
-	int height = render(surface, surface->current_buffer, scale);
+	int height = render(surface, surface->current_buffer, surface->scale);
 
 	// There are two cases where we want to tear down the surface: zero
 	// notifications (height = 0) or moving between outputs.
@@ -727,7 +730,7 @@ static void send_frame(struct mako_surface *surface) {
 	wl_surface_set_input_region(surface->surface, input_region);
 	wl_region_destroy(input_region);
 
-	wl_surface_set_buffer_scale(surface->surface, scale);
+	wl_surface_set_buffer_scale(surface->surface, surface->scale);
 	wl_surface_damage_buffer(surface->surface, 0, 0, INT32_MAX, INT32_MAX);
 	wl_surface_attach(surface->surface, surface->current_buffer->buffer, 0, 0);
 	surface->current_buffer->busy = true;

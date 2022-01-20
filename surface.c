@@ -33,6 +33,7 @@ struct mako_surface *create_surface(struct mako_state *state, const char *output
 	surface->layer = layer;
 	surface->anchor = anchor;
 	surface->state = state;
+	surface->scale = 1;
 
 	wl_list_insert(&state->surfaces, &surface->link);
 	return surface;

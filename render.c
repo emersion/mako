@@ -91,7 +91,7 @@ static void set_font_options(cairo_t *cairo, struct mako_surface *surface) {
 }
 
 static int render_notification(cairo_t *cairo, struct mako_state *state, struct mako_surface *surface,
-		struct mako_style *style, const char *text, struct mako_icon *icon, int offset_y, int scale,
+		struct mako_style *style, const char *text, struct mako_icon *icon, int offset_y, uint32_t scale,
 		struct mako_hotspot *hotspot, int progress) {
 	int border_size = 2 * style->border_size;
 	int padding_height = style->padding.top + style->padding.bottom;
@@ -319,7 +319,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	return notif_height;
 }
 
-int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) {
+int render(struct mako_surface *surface, struct pool_buffer *buffer, uint32_t scale) {
 	struct mako_state *state = surface->state;
 	cairo_t *cairo = buffer->cairo;
 
