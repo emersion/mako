@@ -176,6 +176,45 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
 	seat->touch.pts[id].surface = NULL;
 }
 
+static void load_cursor(struct mako_state *state, uint32_t scale) {
+	const char *cursor_name = "left_ptr";
+
+	//don't reload the cursor if what we have already can be used
+	if (state->cursor.theme != NULL && state->cursor.scale == scale) {
+		return;
+	}
+
+	if (state->cursor.theme != NULL) {
+		wl_cursor_theme_destroy(state->cursor.theme);
+	}
+
+	if (state->cursor.surface == NULL) {
+		state->cursor.surface = wl_compositor_create_surface(state->compositor);
+	}
+
+	const char *xcursor_theme = getenv("XCURSOR_THEME");
+	state->cursor.theme = wl_cursor_theme_load(xcursor_theme, state->cursor.size * scale, state->shm);
+	if (state->cursor.theme == NULL) {
+		fprintf(stderr, "couldn't find a cursor theme\n");
+		return;
+	}
+	struct wl_cursor *cursor = wl_cursor_theme_get_cursor(state->cursor.theme, cursor_name);
+	if (cursor == NULL) {
+		fprintf(stderr, "couldn't find cursor icon \"%s\"\n", cursor_name);
+		wl_cursor_theme_destroy(state->cursor.theme);
+		// Set to NULL so it doesn't get free'd again
+		state->cursor.theme = NULL;
+		return;
+	}
+
+	state->cursor.scale = scale;
+	state->cursor.image = cursor->images[0];
+	struct wl_buffer *cursor_buffer = wl_cursor_image_get_buffer(cursor->images[0]);
+	wl_surface_attach(state->cursor.surface, cursor_buffer, 0, 0);
+	wl_surface_set_buffer_scale(state->cursor.surface, scale);
+	wl_surface_commit(state->cursor.surface);
+}
+
 static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
 		uint32_t serial, struct wl_surface *wl_surface,
 		wl_fixed_t surface_x, wl_fixed_t surface_y) {
@@ -186,10 +225,22 @@ static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
 	seat->pointer.y = wl_fixed_to_int(surface_y);
 	seat->pointer.surface = get_surface(state, wl_surface);
 
+	int scale = 1;
+
+	struct mako_surface *surface;
+	wl_list_for_each(surface, &state->surfaces, link) {
+		if (surface->surface_output->scale > scale) {
+			scale = surface->surface_output->scale;
+		}
+	}
+
 	// Change the mouse cursor to "left_ptr"
-	if (state->cursor_theme != NULL) {
-		wl_pointer_set_cursor(wl_pointer, serial, state->cursor_surface,
-			state->cursor_image->hotspot_x, state->cursor_image->hotspot_y);
+	load_cursor(state, scale);
+
+	if (state->cursor.theme != NULL) {
+		wl_pointer_set_cursor(wl_pointer, serial, state->cursor.surface,
+			state->cursor.image->hotspot_x / state->cursor.scale,
+			state->cursor.image->hotspot_y / state->cursor.scale);
 	}
 }
 
@@ -478,25 +529,8 @@ bool init_wayland(struct mako_state *state) {
 			fprintf(stderr, "Error: XCURSOR_SIZE is invalid\n");
 		}
 	}
-	const char *xcursor_theme = getenv("XCURSOR_THEME");
-	state->cursor_theme = wl_cursor_theme_load(xcursor_theme, cursor_size, state->shm);
-	if (state->cursor_theme == NULL) {
-		fprintf(stderr, "couldn't find a cursor theme\n");
-		return true;
-	}
-	struct wl_cursor *cursor = wl_cursor_theme_get_cursor(state->cursor_theme, "left_ptr");
-	if (cursor == NULL) {
-		fprintf(stderr, "couldn't find cursor icon \"left_ptr\"\n");
-		wl_cursor_theme_destroy(state->cursor_theme);
-		// Set to NULL so it doesn't get free'd again
-		state->cursor_theme = NULL;
-		return true;
-	}
-	state->cursor_image = cursor->images[0];
-	struct wl_buffer *cursor_buffer = wl_cursor_image_get_buffer(cursor->images[0]);
-	state->cursor_surface = wl_compositor_create_surface(state->compositor);
-	wl_surface_attach(state->cursor_surface, cursor_buffer, 0, 0);
-	wl_surface_commit(state->cursor_surface);
+
+	state->cursor.size = cursor_size;
 
 	return true;
 }
@@ -524,9 +558,9 @@ void finish_wayland(struct mako_state *state) {
 		zxdg_output_manager_v1_destroy(state->xdg_output_manager);
 	}
 
-	if (state->cursor_theme != NULL) {
-		wl_cursor_theme_destroy(state->cursor_theme);
-		wl_surface_destroy(state->cursor_surface);
+	if (state->cursor.theme != NULL) {
+		wl_cursor_theme_destroy(state->cursor.theme);
+		wl_surface_destroy(state->cursor.surface);
 	}
 
 	zwlr_layer_shell_v1_destroy(state->layer_shell);
