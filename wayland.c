@@ -376,11 +376,19 @@ static void layer_surface_handle_configure(void *data,
 		uint32_t serial, uint32_t width, uint32_t height) {
 	struct mako_surface *msurface = data;
 
+	zwlr_layer_surface_v1_ack_configure(surface, serial);
+
+	if (msurface->configured &&
+			msurface->width == (int32_t) width &&
+			msurface->height == (int32_t) height) {
+		wl_surface_commit(msurface->surface);
+		return;
+	}
+
 	msurface->configured = true;
 	msurface->width = width;
 	msurface->height = height;
 
-	zwlr_layer_surface_v1_ack_configure(surface, serial);
 	send_frame(msurface);
 }
 
