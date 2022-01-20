@@ -60,9 +60,14 @@ struct mako_state {
 	struct xdg_activation_v1 *xdg_activation;
 	struct wl_list outputs; // mako_output::link
 	struct wl_list seats; // mako_seat::link
-	struct wl_cursor_theme *cursor_theme;
-	const struct wl_cursor_image *cursor_image;
-	struct wl_surface *cursor_surface;
+
+	struct {
+		uint32_t size;
+		uint32_t scale;
+		struct wl_cursor_theme *theme;
+		const struct wl_cursor_image *image;
+		struct wl_surface *surface;
+	} cursor;
 
 	struct wl_list surfaces; // mako_surface::link
 
