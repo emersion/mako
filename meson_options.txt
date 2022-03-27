@@ -3,3 +3,4 @@ option('icons', type: 'feature', value: 'auto', description: 'Enable icon suppor
 option('man-pages', type: 'feature', value: 'auto', description: 'Generate and install man pages')
 option('fish-completions', type: 'boolean', value: false, description: 'Install fish completions')
 option('zsh-completions', type: 'boolean', value: false, description: 'Install zsh completions')
+option('bash-completions', type: 'boolean', value: false, description: 'Install bash completions')

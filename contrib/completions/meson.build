@@ -20,3 +20,17 @@ if get_option('fish-completions')
 	install_data(fish_files, install_dir: fish_install_dir)
 
 endif
+
+if get_option('bash-completions')
+	bash_files = files('bash/mako', 'bash/makoctl')
+	bash_comp = dependency('bash-completion', required: false)
+	if bash_comp.found()
+		bash_install_dir = bash_comp.get_variable(
+			pkgconfig: 'completionsdir',
+			pkgconfig_define: ['datadir', datadir]
+		)
+	else
+		bash_install_dir = datadir + '/bash-completion/completions'
+	endif
+	install_data(bash_files, install_dir: bash_install_dir)
+endif

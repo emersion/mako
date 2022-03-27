@@ -1,0 +1,85 @@
+# mako(1) completion
+
+_mako()
+{
+  local cur prev opts
+  _get_comp_words_by_ref cur prev
+
+  opts=(
+    '--help'
+    '-h'
+    '--config'
+    '-c'
+    '--background-color'
+    '--text-color'
+    '--width'
+    '--height'
+    '--margin'
+    '--padding'
+    '--border-size'
+    '--border-color'
+    '--border-radius'
+    '--progress-color'
+    '--icons'
+    '--icon-path'
+    '--max-icon-size'
+    '--markup'
+    '--actions'
+    '--format'
+    '--hidden-format'
+    '--max-visible'
+    '--max-history'
+    '--history'
+    '--sort'
+    '--default-timeout'
+    '--ignore-timeout'
+    '--output'
+    '--layer'
+    '--anchor'
+  )
+
+  case $prev in
+    -c|--config)
+      COMPREPLY=($(compgen -f -- "$cur"))
+      return
+      ;;
+    --icons|--markup|--actions|--history|--ignore-timeout)
+      COMPREPLY=($(compgen -W "0 1" -- "$cur"))
+      return
+      ;;
+    --output)
+      local outputs
+      outputs="$(swaymsg -t get_outputs 2>/dev/null | \
+              jq -r '.[] | select(.active) | "\(.name)\t\(.make) \(.model)"' 2>/dev/null)"
+      COMPREPLY=($(compgen -W "$outputs" -- "$cur"))
+      return
+      ;;
+    --layer)
+      COMPREPLY=($(compgen -W "background bottom top overlay" -- "$cur"))
+      return
+      ;;
+    --anchor)
+      local pos
+      pos=(
+        'top-right'
+        'top-center'
+        'top-left'
+        'bottom-right'
+        'bottom-center'
+        'bottom-left'
+        'center-right'
+        'center-left'
+        'center'
+      )
+      COMPREPLY=($(compgen -W "${pos[*]}" -- "$cur"))
+      return
+      ;;
+  esac
+
+  if [[ "$prev" != -* ]]; then
+    COMPREPLY=($(compgen -W "${opts[*]}" -- "$cur"))
+    return
+  fi
+
+} &&
+complete -F _mako mako
