@@ -1,0 +1,47 @@
+# makoctl(1) completion
+
+_makoctl()
+{
+  local cur prev cmds
+  _get_comp_words_by_ref cur prev
+
+  cmds=(
+    'dismiss'
+    'restore'
+    'invoke'
+    'menu'
+    'list'
+    'reload'
+    'set-mode'
+    'help'
+    '-h'
+    '--help'
+  )
+
+  if [[ "$COMP_CWORD" == "1" ]]; then
+    COMPREPLY=($(compgen -W "${cmds[*]}" -- "$cur"))
+    return
+  fi
+
+  case $prev in
+    dismiss)
+      COMPREPLY=($(compgen -W "-a --all -g --group -n" -- "$cur"))
+      return
+      ;;
+    invoke)
+      COMPREPLY=($(compgen -W "-n" -- "$cur"))
+      return
+      ;;
+    menu)
+      COMPREPLY=($(compgen -c -W "-n" -- "$cur"))
+      return
+      ;;
+  esac
+
+  if [[ "${COMP_WORDS[COMP_CWORD-3]}" == "menu" ]]; then
+    COMPREPLY=($(compgen -c -- "$cur"))
+    return
+  fi
+
+} &&
+complete -F _makoctl makoctl
