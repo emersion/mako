@@ -312,8 +312,86 @@ static int handle_set_mode(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	free(state->current_mode);
-	state->current_mode = strdup(mode);
+	if (!strncmp(mode, "+", 1)) {
+		mode++;
+
+		int current_mode_cnt = 0;
+		char **cp = state->current_mode;
+		while (*cp++) {
+			current_mode_cnt++;
+		}
+
+		// Copy current list into a new list
+		char **new_mode = calloc(sizeof(char*),current_mode_cnt+2);
+		char **np = new_mode;
+		cp = state->current_mode;
+		while (*cp) {
+			// *np = strdup(*cp);
+			*np = *cp;
+			np++; cp++;
+		}
+		// Add the new mode to the list
+		*np = strdup(mode);
+		free(state->current_mode);
+		state->current_mode = new_mode;
+	} else if (!strncmp(mode, "-", 1)) {
+		mode++;
+
+		int current_mode_cnt = 0;
+		char **cp = state->current_mode;
+		bool key_in_list = false;
+		while (*cp) {
+			current_mode_cnt++;
+			if (strcmp(*cp, mode)==0 && !key_in_list) {
+				key_in_list = true;
+			}
+			cp++;
+		}
+		if (!key_in_list) {
+			return sd_bus_reply_method_return(msg, "");
+		}
+
+		cp = state->current_mode;
+		char **new_mode = calloc(sizeof(char*),current_mode_cnt);
+		char **np = new_mode;
+		while (*cp) {
+			if (strcmp(*cp, mode) != 0) {
+				*np = strdup(*cp);
+				np++;
+			}
+			cp++;
+		}
+		state->current_mode = new_mode;
+	} else {
+		int current_mode_cnt = 0;
+		char *mp = strchr(mode, ',');
+		while (mp) {
+			current_mode_cnt++;
+			mp = strchr(mp+1, ',');
+		}
+
+		char **cp = state->current_mode;
+		while (*cp) {
+			free(*cp++);
+		}
+		free(state->current_mode);
+
+		char **new_mode;
+		if (current_mode_cnt) {
+			new_mode = calloc(sizeof(char*),current_mode_cnt+2);
+			char **np = new_mode;
+			char *mode_list = strdup(mode);
+			char *lp = strtok(mode_list, ",");
+			while (lp) {
+				*np++ = strdup(lp);
+				lp = strtok(NULL, ",");
+			}
+			state->current_mode = new_mode;
+		} else {
+			state->current_mode = calloc(sizeof(char*), 2);
+			*state->current_mode = strdup(mode);
+		}
+	}
 
 	reapply_config(state);
 

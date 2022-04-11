@@ -58,6 +58,18 @@ static bool match_regex_criteria(regex_t *pattern, char *value) {
 	return true;
 }
 
+bool check_in_list(const char *key, char **const list) {
+	char **lp = list;
+	while (*lp) {
+		if (strcmp(key, *lp) == 0) {
+			fprintf(stderr, "check_in_list: found matching mode %s\n", *lp);
+			return true;
+		}
+		lp++;
+	}
+	return false;
+}
+
 bool match_criteria(struct mako_criteria *criteria,
 		struct mako_notification *notif) {
 	struct mako_criteria_spec spec = criteria->spec;
@@ -152,7 +164,7 @@ bool match_criteria(struct mako_criteria *criteria,
 		return false;
 	}
 
-	if (spec.mode && strcmp(criteria->mode, notif->state->current_mode) != 0) {
+	if (spec.mode && !check_in_list(criteria->mode, notif->state->current_mode)) {
 		return false;
 	}
 

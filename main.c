@@ -72,11 +72,16 @@ static bool init(struct mako_state *state) {
 	}
 	wl_list_init(&state->notifications);
 	wl_list_init(&state->history);
-	state->current_mode = strdup("default");
+	state->current_mode = calloc(sizeof(char*), 2);
+	*state->current_mode = strdup("default");
 	return true;
 }
 
 static void finish(struct mako_state *state) {
+	char **cp = state->current_mode;
+	while (*cp) {
+		free(*cp++);
+	}
 	free(state->current_mode);
 
 	struct mako_notification *notif, *tmp;
