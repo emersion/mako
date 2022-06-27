@@ -75,6 +75,9 @@ Sends IPC commands to the running mako daemon via dbus.
 
 	See the _MODES_ section in **mako**(5) for more information about modes.
 
+*mode*
+	Retrieve a list of current modes.
+
 *help, -h, --help*
 	Show help message and quit.
 

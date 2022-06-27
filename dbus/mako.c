@@ -336,6 +336,43 @@ static int handle_reload(sd_bus_message *msg, void *data,
 	return sd_bus_reply_method_return(msg, "");
 }
 
+static int handle_list_modes(sd_bus_message *msg, void *data,
+		sd_bus_error *ret_error) {
+	struct mako_state *state = data;
+
+	sd_bus_message *reply = NULL;
+	int ret = sd_bus_message_new_method_return(msg, &reply);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_open_container(reply, 'a', "s");
+	if (ret < 0) {
+		return ret;
+	}
+
+	const char **mode_ptr;
+	wl_array_for_each(mode_ptr, &state->current_modes) {
+		ret = sd_bus_message_append_basic(reply, 's', *mode_ptr);
+		if (ret < 0) {
+			return ret;
+		}
+	}
+
+	ret = sd_bus_message_close_container(reply);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_send(NULL, reply, NULL);
+	if (ret < 0) {
+		return ret;
+	}
+
+	sd_bus_message_unref(reply);
+	return 0;
+}
+
 static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_VTABLE_START(0),
 	SD_BUS_METHOD("DismissAllNotifications", "", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
@@ -347,6 +384,7 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_METHOD("ListNotifications", "", "aa{sv}", handle_list_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("Reload", "", "", handle_reload, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("SetMode", "s", "", handle_set_mode, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("ListModes", "", "as", handle_list_modes, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_VTABLE_END
 };
 
