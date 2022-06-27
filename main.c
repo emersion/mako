@@ -7,6 +7,7 @@
 #include "config.h"
 #include "dbus.h"
 #include "mako.h"
+#include "mode.h"
 #include "notification.h"
 #include "render.h"
 #include "surface.h"
@@ -72,12 +73,18 @@ static bool init(struct mako_state *state) {
 	}
 	wl_list_init(&state->notifications);
 	wl_list_init(&state->history);
-	state->current_mode = strdup("default");
+	wl_array_init(&state->current_modes);
+	const char *mode = "default";
+	set_modes(state, &mode, 1);
 	return true;
 }
 
 static void finish(struct mako_state *state) {
-	free(state->current_mode);
+	char **mode_ptr;
+	wl_array_for_each(mode_ptr, &state->current_modes) {
+		free(*mode_ptr);
+	}
+	wl_array_release(&state->current_modes);
 
 	struct mako_notification *notif, *tmp;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
