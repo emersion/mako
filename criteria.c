@@ -11,6 +11,7 @@
 #include "mako.h"
 #include "config.h"
 #include "criteria.h"
+#include "mode.h"
 #include "notification.h"
 #include "surface.h"
 #include "wayland.h"
@@ -152,7 +153,7 @@ bool match_criteria(struct mako_criteria *criteria,
 		return false;
 	}
 
-	if (spec.mode && strcmp(criteria->mode, notif->state->current_mode) != 0) {
+	if (spec.mode && has_mode(notif->state, criteria->mode)) {
 		return false;
 	}
 

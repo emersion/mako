@@ -9,6 +9,7 @@
 #include "surface.h"
 #include "dbus.h"
 #include "mako.h"
+#include "mode.h"
 #include "notification.h"
 #include "wayland.h"
 
@@ -312,8 +313,7 @@ static int handle_set_mode(sd_bus_message *msg, void *data,
 		return ret;
 	}
 
-	free(state->current_mode);
-	state->current_mode = strdup(mode);
+	set_modes(state, &mode, 1);
 
 	reapply_config(state);
 

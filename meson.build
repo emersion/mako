@@ -61,6 +61,7 @@ src_files = [
 	'dbus/mako.c',
 	'dbus/xdg.c',
 	'main.c',
+	'mode.c',
 	'notification.c',
 	'pool-buffer.c',
 	'render.c',
