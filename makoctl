@@ -21,8 +21,9 @@ usage() {
 	echo "                                 notification if none is given"
 	echo "  list                           List notifications"
 	echo "  reload                         Reload the configuration file"
-	echo "  set-mode <name>                Switch the current mode"
 	echo "  mode                           List modes"
+	echo "  mode [-a mode]... [-r mode]... Add/remove modes"
+	echo "  mode -s mode...                Set modes"
 	echo "  help                           Show this help"
 }
 
@@ -135,12 +136,49 @@ case "$1" in
 "reload")
 	call Reload
 	;;
-"set-mode")
+"set-mode") # deprecated
 	call SetMode "s" "$2"
 	;;
 "mode")
+	shift 1
 	require_jq
-	call ListModes | jq -r '.data[0][]'
+	modes="$(call ListModes | jq '.data[0]')"
+	add_remove_flag=0
+	set_flag=0
+	while getopts a:r:s name; do
+		case "$name" in
+		a)
+			add_remove_flag=1
+			modes="$(echo "$modes" | jq --arg mode "$OPTARG" '. += [$mode]')"
+			;;
+		r)
+			add_remove_flag=1
+			modes="$(echo "$modes" | jq --arg mode "$OPTARG" 'del(.[] | select(. == $mode))')"
+			;;
+		s)
+			set_flag=1
+			;;
+		?)
+			exit 1
+		esac
+	done
+	if [ "$add_remove_flag" = 1 ] && [ "$set_flag" = 1 ]; then
+		echo >&2 "makoctl: -a/-r and -s cannot be used together"
+		exit 1
+	fi
+	if [ "$set_flag" = 1 ]; then
+		shift $(($OPTIND - 1))
+		modes="$(jq -n '$ARGS.positional' --args "$@")"
+	fi
+	if [ "$add_remove_flag" = 1 ] || [ "$set_flag" = 1 ]; then
+		modes="$(echo "$modes" | jq '. | unique')"
+		modes_len="$(echo "$modes" | jq '. | length')"
+		modes_args=$(echo "$modes" | jq -r '@sh')
+		# Required to behave properly when mode names contain spaces
+		eval set -- $modes_args
+		call SetModes "as" "$modes_len" "$@"
+	fi
+	echo "$modes" | jq -r '.[]'
 	;;
 "help"|"--help"|"-h")
 	usage
