@@ -24,6 +24,18 @@ void set_modes(struct mako_state *state, const char **modes, size_t modes_len) {
 	state->current_modes.size = 0;
 
 	for (size_t i = 0; i < modes_len; i++) {
+		// Drop duplicate entries
+		bool dup = false;
+		for (size_t j = 0; j < i; j++) {
+			if (strcmp(modes[i], modes[j]) == 0) {
+				dup = true;
+				break;
+			}
+		}
+		if (dup) {
+			continue;
+		}
+
 		char **dst = wl_array_add(&state->current_modes, sizeof(char *));
 		*dst = strdup(modes[i]);
 	}
