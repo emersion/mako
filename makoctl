@@ -22,6 +22,7 @@ usage() {
 	echo "  list                           List notifications"
 	echo "  reload                         Reload the configuration file"
 	echo "  set-mode <name>                Switch the current mode"
+	echo "  mode                           List modes"
 	echo "  help                           Show this help"
 }
 
@@ -37,6 +38,13 @@ fi
 call() {
 	$BUSCTL -j --user call org.freedesktop.Notifications /fr/emersion/Mako \
 		fr.emersion.Mako -- "$@"
+}
+
+require_jq() {
+	if ! type jq >/dev/null 2>&1; then
+		echo >&2 "$0: jq is required to use this command"
+		exit 1
+	fi
 }
 
 if [ $# -eq 0 ]; then
@@ -98,10 +106,7 @@ case "$1" in
 	;;
 "menu")
 	shift 1
-	if ! type jq >/dev/null 2>&1; then
-		echo >&2 "$0: jq is required to use 'menu'"
-		exit 1
-	fi
+	require_jq
 	if [ $# -gt 1 ] && [ "$1" = "-n" ]; then
 		id="$2"
 		actions="$(call ListNotifications | jq --arg id "$id" -re '.data[0][] | select(.id.data==($id | tonumber)) | .actions.data')"
@@ -132,6 +137,10 @@ case "$1" in
 	;;
 "set-mode")
 	call SetMode "s" "$2"
+	;;
+"mode")
+	require_jq
+	call ListModes | jq -r '.data[0][]'
 	;;
 "help"|"--help"|"-h")
 	usage
