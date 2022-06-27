@@ -437,8 +437,8 @@ enabled:
 invisible=1
 ```
 
-_makoctl set-mode do-not-disturb_ will hide all notifications,
-_makoctl set-mode default_ will show them again.
+_makoctl mode -a do-not-disturb_ will hide all notifications,
+_makoctl mode -r do-not-disturb_ will show them again.
 
 # AUTHORS
 
