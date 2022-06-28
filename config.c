@@ -722,21 +722,10 @@ static char *get_config_path(void) {
 	return NULL;
 }
 
-int load_config_file(struct mako_config *config, char *config_arg) {
-	char *path = NULL;
-	if (config_arg == NULL) {
-		path = get_config_path();
-		if (!path) {
-			return 0;
-		}
-	} else {
-		path = config_arg;
-	}
-
+static int load_config_file(struct mako_config *config, char *path) {
 	FILE *f = fopen(path, "r");
 	if (!f) {
 		fprintf(stderr, "Unable to open %s for reading\n", path);
-		free(path);
 		return -1;
 	}
 	const char *base = basename(path);
@@ -800,7 +789,6 @@ int load_config_file(struct mako_config *config, char *config_arg) {
 			valid_option = apply_config_option(config, line, eq + 1);
 		}
 
-
 		if (!valid_option) {
 			fprintf(stderr, "[%s:%d] Failed to parse option '%s'\n",
 				base, lineno, line);
@@ -820,7 +808,6 @@ int load_config_file(struct mako_config *config, char *config_arg) {
 	free(section);
 	free(line);
 	fclose(f);
-	free(path);
 	return ret;
 }
 
@@ -865,7 +852,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 	};
 
 	optind = 1;
-	char *config_arg = NULL;
+	const char *config_arg = NULL;
 	int opt_status = 0;
 	while (1) {
 		int option_index = -1;
@@ -876,8 +863,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 			opt_status = 1;
 			break;
 		} else if (c == 'c') {
-			free(config_arg);
-			config_arg = strdup(optarg);
+			config_arg = optarg;
 		} else if (c != 0) {
 			opt_status = -1;
 			break;
@@ -885,14 +871,24 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 	}
 
 	if (opt_status != 0) {
-		free(config_arg);
 		return opt_status;
 	}
 
-	int config_status = load_config_file(config, config_arg);
+	char *config_path = NULL;
+	if (config_arg == NULL) {
+		config_path = get_config_path();
+	} else {
+		config_path = strdup(config_arg);
+	}
+	if (!config_path) {
+		return -1;
+	}
+
+	int config_status = load_config_file(config, config_path);
 	if (config_status < 0) {
 		return -1;
 	}
+	free(config_path);
 
 	optind = 1;
 	while (1) {
