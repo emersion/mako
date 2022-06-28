@@ -104,7 +104,7 @@ install_data(
 )
 
 conf_data = configuration_data()
-conf_data.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
+conf_data.set('bindir', get_option('prefix') / get_option('bindir'))
 
 configure_file(
 	configuration: conf_data,
