@@ -107,14 +107,10 @@ int main(int argc, char *argv[]) {
 	wl_list_init(&state.surfaces);
 
 	// This is a bit wasteful, but easier than special-casing the reload.
-	init_default_config(&state.config);
 	int ret = reload_config(&state.config, argc, argv);
-
 	if (ret < 0) {
-		finish_config(&state.config);
 		return EXIT_FAILURE;
 	} else if (ret > 0) {
-		finish_config(&state.config);
 		printf("%s", usage);
 		return EXIT_SUCCESS;
 	}

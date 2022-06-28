@@ -109,10 +109,8 @@ struct mako_config {
 	struct mako_style superstyle;
 };
 
-void init_default_config(struct mako_config *config);
 void finish_config(struct mako_config *config);
 
-void init_default_style(struct mako_style *style);
 void init_empty_style(struct mako_style *style);
 void finish_style(struct mako_style *style);
 bool apply_style(struct mako_style *target, const struct mako_style *style);

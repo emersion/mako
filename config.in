@@ -1,0 +1,37 @@
+width=300
+height=100
+margin=10
+padding=5
+border-size=2
+icons=@icons@
+max-icon-size=64
+font=monospace 10
+markup=1
+actions=1
+history=1
+format=<b>%s</b>\n%b
+text-alignment=left
+layer=top
+max-visible=5
+anchor=top-right
+
+on-button-left=invoke-default-action
+on-button-right=dismiss
+on-touch=dismiss
+
+max-history=5
+sort=-time
+
+# Hide grouped notifications by default, and put the group count in
+# their format...
+[grouped]
+invisible=1
+format=(%g) <b>%s</b>\n%b
+
+# ...but make the first one in the group visible.
+[group_index=0]
+invisible=0
+
+# Define the default format for the hidden placeholder notification.
+[hidden]
+format=(%h more)

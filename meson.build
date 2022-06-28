@@ -38,6 +38,8 @@ if (not cc.has_function('timerfd_create', prefix: '#include <sys/timerfd.h>') or
 	epoll = dependency('epoll-shim')
 endif
 
+add_project_arguments('-DSYSCONFDIR="@0@"'.format(get_option('sysconfdir')), language: 'c')
+
 if get_option('sd-bus-provider') == 'auto'
 	assert(get_option('auto_features').auto(), 'sd-bus-provider must not be set to auto since auto_features != auto')
 	sdbus = dependency('libsystemd', 'libelogind', 'basu')
@@ -105,12 +107,20 @@ install_data(
 
 conf_data = configuration_data()
 conf_data.set('bindir', get_option('prefix') / get_option('bindir'))
+conf_data.set('icons', gdk_pixbuf.found().to_int())
 
 configure_file(
 	configuration: conf_data,
 	input: 'fr.emersion.mako.service.in',
 	output: '@BASENAME@',
 	install_dir: get_option('datadir') + '/dbus-1/services',
+)
+
+configure_file(
+	configuration: conf_data,
+	input: 'config.in',
+	output: '@BASENAME@',
+	install_dir: get_option('sysconfdir') + '/mako/config',
 )
 
 scdoc = dependency('scdoc', required: get_option('man-pages'), version: '>= 1.9.7', native: true)
