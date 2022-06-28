@@ -34,7 +34,7 @@ wayland_cursor = dependency('wayland-cursor')
 
 epoll = dependency('', required: false)
 if (not cc.has_function('timerfd_create', prefix: '#include <sys/timerfd.h>') or
-    not cc.has_function('signalfd', prefix: '#include <sys/signalfd.h>'))
+		not cc.has_function('signalfd', prefix: '#include <sys/signalfd.h>'))
 	epoll = dependency('epoll-shim')
 endif
 
