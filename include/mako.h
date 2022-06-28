@@ -4,11 +4,11 @@
 #include <stdbool.h>
 #include <wayland-client.h>
 #include <wayland-cursor.h>
-#ifdef HAVE_LIBSYSTEMD
+#if defined(HAVE_LIBSYSTEMD)
 #include <systemd/sd-bus.h>
-#elif HAVE_LIBELOGIND
+#elif defined(HAVE_LIBELOGIND)
 #include <elogind/sd-bus.h>
-#elif HAVE_BASU
+#elif defined(HAVE_BASU)
 #include <basu/sd-bus.h>
 #endif
 
