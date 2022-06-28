@@ -135,3 +135,9 @@ if scdoc.found()
 		)
 	endforeach
 endif
+
+summary({
+	'sd-bus provider': sdbus.name(),
+	'Icons': gdk_pixbuf.found(),
+	'Man pages': scdoc.found(),
+}, bool_yn: true)
