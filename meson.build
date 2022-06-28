@@ -18,8 +18,6 @@ add_project_arguments([
 	'-Wno-missing-braces',
 ], language: 'c')
 
-datadir = get_option('datadir')
-
 mako_inc = include_directories('include')
 
 cc = meson.get_compiler('c')
@@ -112,7 +110,7 @@ configure_file(
 	configuration: conf_data,
 	input: 'fr.emersion.mako.service.in',
 	output: '@BASENAME@',
-	install_dir: datadir + '/dbus-1/services',
+	install_dir: get_option('datadir') + '/dbus-1/services',
 )
 
 scdoc = dependency('scdoc', required: get_option('man-pages'), version: '>= 1.9.7', native: true)
