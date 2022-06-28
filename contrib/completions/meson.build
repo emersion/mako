@@ -4,7 +4,7 @@ if get_option('zsh-completions')
 			'zsh/_makoctl',
 			'zsh/_mako',
 		),
-		install_dir: datadir + '/zsh/site-functions',
+		install_dir: get_option('datadir') / 'zsh/site-functions',
 		install_mode: 'rw-r--r--',
 	)
 endif
@@ -15,7 +15,7 @@ if get_option('fish-completions')
 	if fish_comp.found()
 		fish_install_dir = fish_comp.get_variable('completionsdir')
 	else
-		fish_install_dir = datadir + '/fish/vendor_completions.d'
+		fish_install_dir = get_option('datadir') / 'fish/vendor_completions.d'
 	endif
 	install_data(fish_files, install_dir: fish_install_dir)
 
@@ -27,10 +27,10 @@ if get_option('bash-completions')
 	if bash_comp.found()
 		bash_install_dir = bash_comp.get_variable(
 			pkgconfig: 'completionsdir',
-			pkgconfig_define: ['datadir', datadir]
+			pkgconfig_define: ['datadir', get_option('datadir')]
 		)
 	else
-		bash_install_dir = datadir + '/bash-completion/completions'
+		bash_install_dir = get_option('datadir') / 'bash-completion/completions'
 	endif
 	install_data(bash_files, install_dir: bash_install_dir)
 endif
