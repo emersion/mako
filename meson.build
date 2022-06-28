@@ -12,6 +12,8 @@ project(
 )
 
 add_project_arguments([
+	'-Wundef',
+
 	'-Wno-unused-parameter',
 	'-Wno-missing-braces',
 ], language: 'c')
