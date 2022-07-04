@@ -427,7 +427,8 @@ mako supports applying style options conditionally via modes. A configuration
 section with a _mode_ criteria will only be applied if the current mode
 matches. **makoctl**(1) can be used to change the current mode.
 
-The default mode is named "default".
+The initial list of modes contains a single mode called "default". This is
+deprecated, in a future version the initial list of modes will be empty.
 
 For example, to hide all notifications if the mode "do-not-disturb" is
 enabled:
