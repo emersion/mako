@@ -70,8 +70,8 @@ Sends IPC commands to the running mako daemon via dbus.
 *reload*
 	Reloads the configuration file.
 
-*mode*
-*mode* -s <mode>...
+*mode* ++
+*mode* -s <mode>... ++
 *mode* [-a mode]... [-r mode]...
 	When run without any option, retrieves a list of current modes.
 
