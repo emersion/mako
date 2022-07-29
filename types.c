@@ -238,6 +238,7 @@ bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out) {
 bool mako_criteria_spec_any(const struct mako_criteria_spec *spec) {
 	return
 		spec->app_name ||
+		spec->app_name_pattern ||
 		spec->app_icon ||
 		spec->actionable ||
 		spec->expiring ||

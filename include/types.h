@@ -44,6 +44,7 @@ bool parse_directional(const char *string, struct mako_directional *out);
 // notifications to group with each other.
 struct mako_criteria_spec {
 	bool app_name;
+	bool app_name_pattern;
 	bool app_icon;
 	bool actionable;
 	bool expiring;

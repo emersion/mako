@@ -22,6 +22,7 @@ struct mako_criteria {
 
 	// Fields that can be matched:
 	char *app_name;
+	regex_t app_name_pattern;
 	char *app_icon;
 	bool actionable;  // Whether mako_notification.actions is nonempty
 	bool expiring;  // Whether mako_notification.requested_timeout is non-zero

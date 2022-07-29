@@ -32,6 +32,7 @@ void destroy_criteria(struct mako_criteria *criteria) {
 
 	finish_style(&criteria->style);
 	free(criteria->app_name);
+	regfree(&criteria->app_name_pattern);
 	free(criteria->app_icon);
 	free(criteria->category);
 	free(criteria->desktop_entry);
@@ -76,6 +77,12 @@ bool match_criteria(struct mako_criteria *criteria,
 	if (spec.app_name &&
 			strcmp(criteria->app_name, notif->app_name) != 0) {
 		return false;
+	}
+	if (spec.app_name_pattern) {
+		bool ret = match_regex_criteria(&criteria->app_name_pattern, notif->app_name);
+		if (!ret) {
+			return false;
+		}
 	}
 
 	if (spec.app_icon &&
@@ -299,6 +306,14 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 		if (strcmp(key, "app-name") == 0) {
 			criteria->app_name = strdup(value);
 			criteria->spec.app_name = true;
+			return true;
+		} else if (strcmp(key, "app-name~") == 0) {
+			if (regcomp(&criteria->app_name_pattern, value,
+					REG_EXTENDED | REG_NOSUB)) {
+				fprintf(stderr, "Invalid app-name~ regex '%s'\n", value);
+				return false;
+			}
+			criteria->spec.app_name_pattern = true;
 			return true;
 		} else if (strcmp(key, "app-icon") == 0) {
 			criteria->app_icon = strdup(value);
@@ -537,6 +552,11 @@ bool validate_criteria(struct mako_criteria *criteria) {
 	if (criteria->hidden && any_but_surface) {
 		fprintf(stderr, "Can only set `hidden` along with `output` "
 				"and/or `anchor`\n");
+		return false;
+	}
+
+	if (criteria->spec.app_name && criteria->spec.app_name_pattern) {
+		fprintf(stderr, "Cannot set both `app-name` and `app-name~`\n");
 		return false;
 	}
 
