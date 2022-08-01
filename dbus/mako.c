@@ -180,6 +180,12 @@ static int handle_list_notifications(sd_bus_message *msg, void *data,
 			return ret;
 		}
 
+		ret = sd_bus_message_append(reply, "{sv}", "desktop-entry",
+			"s", notif->desktop_entry);
+		if (ret < 0) {
+			return ret;
+		}
+
 		ret = sd_bus_message_append(reply, "{sv}", "summary",
 			"s", notif->summary);
 		if (ret < 0) {
