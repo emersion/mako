@@ -229,6 +229,9 @@ static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
 
 	struct mako_surface *surface;
 	wl_list_for_each(surface, &state->surfaces, link) {
+		if (!surface->surface_output) {
+			continue;
+		}
 		if (surface->surface_output->scale > scale) {
 			scale = surface->surface_output->scale;
 		}
