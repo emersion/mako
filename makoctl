@@ -20,6 +20,7 @@ usage() {
 	echo "                                 with the given id, or the last"
 	echo "                                 notification if none is given"
 	echo "  list                           List notifications"
+	echo "  history                        List history"
 	echo "  reload                         Reload the configuration file"
 	echo "  mode                           List modes"
 	echo "  mode [-a mode]... [-r mode]... Add/remove modes"
@@ -132,6 +133,9 @@ case "$1" in
 	;;
 "list")
 	call ListNotifications
+	;;
+"history")
+	call ListHistory
 	;;
 "reload")
 	call Reload

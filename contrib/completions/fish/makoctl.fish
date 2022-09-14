@@ -12,6 +12,7 @@ complete -c makoctl -n '__fish_makoctl_complete_no_subcommand' -a restore -d 'Re
 complete -c makoctl -n '__fish_makoctl_complete_no_subcommand' -a invoke -d 'Invoke an action on the notification (the last one if none is given)' -x
 complete -c makoctl -n '__fish_makoctl_complete_no_subcommand' -a menu -d 'Use a program to select one action to be invoked on the notification (the last one if none is given)' -x
 complete -c makoctl -n '__fish_makoctl_complete_no_subcommand' -a list -d 'List notifications' -x
+complete -c makoctl -n '__fish_makoctl_complete_no_subcommand' -a history -d 'List history' -x
 complete -c makoctl -n '__fish_makoctl_complete_no_subcommand' -a reload -d 'Reload the configuration file' -x
 complete -c makoctl -n '__fish_makoctl_complete_no_subcommand' -a help -d 'Show help message and quit' -x
 

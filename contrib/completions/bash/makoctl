@@ -11,6 +11,7 @@ _makoctl()
     'invoke'
     'menu'
     'list'
+    'history'
     'reload'
     'set-mode'
     'help'
