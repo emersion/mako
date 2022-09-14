@@ -7,6 +7,7 @@ makoctl_cmds=(
 	'restore:Restore the most recently expired notification from the history buffer'
 	'invoke:Invoke an action on the first notification. If action is not specified, invoke the default action'
 	'list:Retrieve a list of current notifications'
+	'history:Retrieve a list of dismissed notifications'
 	'reload:Reload the configuration file'
 	'help:Show help message and quit'
 )
