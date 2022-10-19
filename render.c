@@ -271,21 +271,23 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 		switch (style->icon_location) {
 		case MAKO_ICON_LOCATION_LEFT:
 			xpos = offset_x + style->border_size +
-				(text_x - icon->width) / 2;
+				style->padding.left;
 			ypos = ypos_center;
 			break;
 		case MAKO_ICON_LOCATION_RIGHT:
 			xpos = offset_x + notif_width - style->border_size -
-				icon->width - style->margin.right;
+				style->padding.right - icon->width;
 			ypos = ypos_center;
 			break;
 		case MAKO_ICON_LOCATION_TOP:
 			xpos = xpos_center;
-			ypos = offset_y + style->border_size;
+			ypos = offset_y + style->border_size +
+				style->padding.top;
 			break;
 		case MAKO_ICON_LOCATION_BOTTOM:
 			xpos = xpos_center;
-			ypos = offset_y + text_y + text_height + style->margin.bottom;
+			ypos = offset_y + notif_height - style->border_size -
+				style->padding.bottom - icon->height;
 			break;
 		}
 		draw_icon(cairo, icon, xpos, ypos, scale);
