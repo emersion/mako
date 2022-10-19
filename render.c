@@ -294,9 +294,9 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	}
 
 	if (icon_vertical) {
-		text_x = (notif_width - text_width) / 2;
+		text_x = (notif_width - text_width - border_size) / 2;
 	} else {
-		text_y = (notif_height - text_height) / 2;
+		text_y = (notif_height - text_height - border_size) / 2;
 	}
 
 	// Render text
