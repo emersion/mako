@@ -17,47 +17,9 @@ static int32_t max(int32_t a, int32_t b) {
 	return (a > b) ? a : b;
 }
 
-void init_default_config(struct mako_config *config) {
+static void init_config(struct mako_config *config) {
+	memset(config, 0, sizeof(struct mako_config));
 	wl_list_init(&config->criteria);
-	struct mako_criteria *new_criteria = create_criteria(config);
-	init_default_style(&new_criteria->style);
-	new_criteria->raw_string = strdup("(root)");
-
-	// Hide grouped notifications by default, and put the group count in
-	// their format...
-	new_criteria = create_criteria(config);
-	init_empty_style(&new_criteria->style);
-	new_criteria->grouped = true;
-	new_criteria->spec.grouped = true;
-	new_criteria->style.invisible = true;
-	new_criteria->style.spec.invisible = true;
-	new_criteria->style.format = strdup("(%g) <b>%s</b>\n%b");
-	new_criteria->style.spec.format = true;
-	new_criteria->raw_string = strdup("(default grouped)");
-
-	// ...but make the first one in the group visible.
-	new_criteria = create_criteria(config);
-	init_empty_style(&new_criteria->style);
-	new_criteria->group_index = 0;
-	new_criteria->spec.group_index = true;
-	new_criteria->style.invisible = false;
-	new_criteria->style.spec.invisible = true;
-	new_criteria->raw_string = strdup("(default group-index=0)");
-
-	// Define the default format for the hidden placeholder notification.
-	new_criteria = create_criteria(config);
-	init_empty_style(&new_criteria->style);
-	new_criteria->hidden = true;
-	new_criteria->spec.hidden = true;
-	new_criteria->style.format = strdup("(%h more)");
-	new_criteria->style.spec.format = true;
-	new_criteria->raw_string = strdup("(default hidden)");
-
-	init_empty_style(&config->superstyle);
-
-	config->max_history = 5;
-	config->sort_criteria = MAKO_SORT_CRITERIA_TIME;
-	config->sort_asc = 0;
 }
 
 void finish_config(struct mako_config *config) {
@@ -67,72 +29,6 @@ void finish_config(struct mako_config *config) {
 	}
 
 	finish_style(&config->superstyle);
-}
-
-void init_default_style(struct mako_style *style) {
-	style->width = 300;
-	style->height = 100;
-
-	style->outer_margin.top = 0;
-	style->outer_margin.right = 0;
-	style->outer_margin.bottom = 0;
-	style->outer_margin.left = 0;
-
-	style->margin.top = 10;
-	style->margin.right = 10;
-	style->margin.bottom = 10;
-	style->margin.left = 10;
-
-	style->padding.top = 5;
-	style->padding.right = 5;
-	style->padding.bottom = 5;
-	style->padding.left = 5;
-
-	style->border_size = 2;
-	style->border_radius = 0;
-
-#ifdef HAVE_ICONS
-	style->icons = true;
-#else
-	style->icons = false;
-#endif
-	style->max_icon_size = 64;
-	style->icon_path = strdup("");  // hicolor and pixmaps are implicit.
-
-	style->font = strdup("monospace 10");
-	style->markup = true;
-	style->format = strdup("<b>%s</b>\n%b");
-	style->text_alignment = PANGO_ALIGN_LEFT;
-
-	style->actions = true;
-	style->default_timeout = 0;
-	style->ignore_timeout = false;
-
-	style->colors.background = 0x285577FF;
-	style->colors.text = 0xFFFFFFFF;
-	style->colors.border = 0x4C7899FF;
-	style->colors.progress.value = 0x5588AAFF;
-	style->colors.progress.operator = CAIRO_OPERATOR_OVER;
-
-	style->group_criteria_spec.none = true;
-	style->invisible = false;
-	style->history = true;
-	style->icon_location = MAKO_ICON_LOCATION_LEFT;
-
-	style->output = strdup("");
-	style->layer = ZWLR_LAYER_SHELL_V1_LAYER_TOP;
-	style->max_visible = 5;
-
-	style->anchor =
-		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
-
-	style->button_bindings.left.action = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
-	style->button_bindings.right.action = MAKO_BINDING_DISMISS;
-	style->button_bindings.middle.action = MAKO_BINDING_NONE;
-	style->touch_binding.action = MAKO_BINDING_DISMISS;
-
-	// Everything in the default config is explicitly specified.
-	memset(&style->spec, true, sizeof(struct mako_style_spec));
 }
 
 void init_empty_style(struct mako_style *style) {
@@ -722,21 +618,10 @@ static char *get_config_path(void) {
 	return NULL;
 }
 
-int load_config_file(struct mako_config *config, char *config_arg) {
-	char *path = NULL;
-	if (config_arg == NULL) {
-		path = get_config_path();
-		if (!path) {
-			return 0;
-		}
-	} else {
-		path = config_arg;
-	}
-
+static int load_config_file(struct mako_config *config, char *path) {
 	FILE *f = fopen(path, "r");
 	if (!f) {
 		fprintf(stderr, "Unable to open %s for reading\n", path);
-		free(path);
 		return -1;
 	}
 	const char *base = basename(path);
@@ -800,7 +685,6 @@ int load_config_file(struct mako_config *config, char *config_arg) {
 			valid_option = apply_config_option(config, line, eq + 1);
 		}
 
-
 		if (!valid_option) {
 			fprintf(stderr, "[%s:%d] Failed to parse option '%s'\n",
 				base, lineno, line);
@@ -820,7 +704,6 @@ int load_config_file(struct mako_config *config, char *config_arg) {
 	free(section);
 	free(line);
 	fclose(f);
-	free(path);
 	return ret;
 }
 
@@ -865,7 +748,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 	};
 
 	optind = 1;
-	char *config_arg = NULL;
+	const char *config_arg = NULL;
 	int opt_status = 0;
 	while (1) {
 		int option_index = -1;
@@ -876,8 +759,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 			opt_status = 1;
 			break;
 		} else if (c == 'c') {
-			free(config_arg);
-			config_arg = strdup(optarg);
+			config_arg = optarg;
 		} else if (c != 0) {
 			opt_status = -1;
 			break;
@@ -885,14 +767,24 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 	}
 
 	if (opt_status != 0) {
-		free(config_arg);
 		return opt_status;
 	}
 
-	int config_status = load_config_file(config, config_arg);
+	char *config_path = NULL;
+	if (config_arg == NULL) {
+		config_path = get_config_path();
+	} else {
+		config_path = strdup(config_arg);
+	}
+	if (!config_path) {
+		return -1;
+	}
+
+	int config_status = load_config_file(config, config_path);
 	if (config_status < 0) {
 		return -1;
 	}
+	free(config_path);
 
 	optind = 1;
 	while (1) {
@@ -920,7 +812,13 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 // immediately due to something the user asked for (like help).
 int reload_config(struct mako_config *config, int argc, char **argv) {
 	struct mako_config new_config = {0};
-	init_default_config(&new_config);
+	init_config(&new_config);
+
+	int ret = load_config_file(&new_config, SYSCONFDIR "/mako/config");
+	if (ret != 0) {
+		fprintf(stderr, "Failed to parse default config\n");
+		return ret;
+	}
 
 	int args_status = parse_config_arguments(&new_config, argc, argv);
 
