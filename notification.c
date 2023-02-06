@@ -349,6 +349,25 @@ static const struct mako_binding *get_button_binding(struct mako_style *style,
 	return NULL;
 }
 
+static void try_invoke_action(struct mako_notification *notif,
+		const char *target_action,
+		const struct mako_binding_context *ctx) {
+	struct mako_action *action;
+	wl_list_for_each(action, &notif->actions, link) {
+		if (strcmp(action->key, target_action) == 0) {
+			char *activation_token = NULL;
+			if (ctx != NULL) {
+				activation_token = create_xdg_activation_token(
+					ctx->surface, ctx->seat, ctx->serial);
+			}
+			notify_action_invoked(action, activation_token);
+			free(activation_token);
+			break;
+		}
+	}
+	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+}
+
 void notification_execute_binding(struct mako_notification *notif,
 		const struct mako_binding *binding,
 		const struct mako_binding_context *ctx) {
@@ -364,21 +383,9 @@ void notification_execute_binding(struct mako_notification *notif,
 	case MAKO_BINDING_DISMISS_ALL:
 		close_all_notifications(notif->state, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 		break;
-	case MAKO_BINDING_INVOKE_DEFAULT_ACTION:;
-		struct mako_action *action;
-		wl_list_for_each(action, &notif->actions, link) {
-			if (strcmp(action->key, DEFAULT_ACTION_KEY) == 0) {
-				char *activation_token = NULL;
-				if (ctx != NULL) {
-					activation_token = create_xdg_activation_token(ctx->surface,
-						ctx->seat, ctx->serial);
-				}
-				notify_action_invoked(action, activation_token);
-				free(activation_token);
-				break;
-			}
-		}
-		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+	case MAKO_BINDING_INVOKE_ACTION:
+		assert(binding->action_name != NULL);
+		try_invoke_action(notif, binding->action_name, ctx);
 		break;
 	case MAKO_BINDING_EXEC:
 		assert(binding->command != NULL);

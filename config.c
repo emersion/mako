@@ -126,7 +126,8 @@ void init_default_style(struct mako_style *style) {
 	style->anchor =
 		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
 
-	style->button_bindings.left.action = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
+	style->button_bindings.left.action = MAKO_BINDING_INVOKE_ACTION;
+	style->button_bindings.left.action_name = strdup(DEFAULT_ACTION_KEY);
 	style->button_bindings.right.action = MAKO_BINDING_DISMISS;
 	style->button_bindings.middle.action = MAKO_BINDING_NONE;
 	style->touch_binding.action = MAKO_BINDING_DISMISS;
@@ -141,6 +142,7 @@ void init_empty_style(struct mako_style *style) {
 
 static void finish_binding(struct mako_binding *binding) {
 	free(binding->command);
+	free(binding->action_name);
 }
 
 void finish_style(struct mako_style *style) {
@@ -162,6 +164,9 @@ static void copy_binding(struct mako_binding *dst,
 	*dst = *src;
 	if (src->command != NULL) {
 		dst->command = strdup(src->command);
+	}
+	if (src->action_name != NULL) {
+		dst->action_name = strdup(src->action_name);
 	}
 }
 
@@ -646,7 +651,11 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		} else if (strcmp(value, "dismiss-group") == 0) {
 			binding.action = MAKO_BINDING_DISMISS_GROUP;
 		} else if (strcmp(value, "invoke-default-action") == 0) {
-			binding.action = MAKO_BINDING_INVOKE_DEFAULT_ACTION;
+			binding.action = MAKO_BINDING_INVOKE_ACTION;
+			binding.action_name = strdup(DEFAULT_ACTION_KEY);
+		} else if (has_prefix(value, "invoke-action ")) {
+			binding.action = MAKO_BINDING_INVOKE_ACTION;
+			binding.action_name = strdup(value + strlen("invoke-action "));
 		} else if (has_prefix(value, "exec ")) {
 			binding.action = MAKO_BINDING_EXEC;
 			binding.command = strdup(value + strlen("exec "));
