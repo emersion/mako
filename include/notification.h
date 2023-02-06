@@ -76,8 +76,6 @@ struct mako_binding_context {
 	uint32_t serial;
 };
 
-#define DEFAULT_ACTION_KEY "default"
-
 typedef char *(*mako_format_func_t)(char variable, bool *markup, void *data);
 
 bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y);

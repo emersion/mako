@@ -33,7 +33,7 @@ Empty lines and lines that begin with # are ignored.
 
 Bindings allow one to perform an action when an event is triggered. Supported
 values are _none_, _dismiss_, _dismiss-all_, _dismiss-group_,
-_invoke-default-action_ and _exec <command>_.
+_invoke-action <action>_, _invoke-default-action_ and _exec <command>_.
 
 *on-button-left*=_action_
 	Default: invoke-default-action
@@ -62,6 +62,16 @@ The following option will play a sound when a new notification is opened:
 
 ```
 on-notify=exec mpv /usr/share/sounds/freedesktop/stereo/message.oga
+```
+
+When using _invoke-action_ or _invoke-default-action_ a xdg-activation
+token will be sent to the client, allowing the client to request focus
+from the compositor. The compositor must support the xdg_activation_v1
+protocol and allow the focus request for the example to work correctly:
+
+```
+[app-name="some-app-id" actionable]
+on-button-left=invoke-action mail-reply-sender
 ```
 
 # STYLE OPTIONS
