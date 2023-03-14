@@ -61,7 +61,7 @@ on-button-middle=exec makoctl menu -n "$id" dmenu -p 'Select action: '
 The following option will play a sound when a new notification is opened:
 
 ```
-on-notify=exec mpv /usr/share/sounds/freedesktop/stereo/message.oga
+on-notify=exec mpv --keep-open=no /usr/share/sounds/freedesktop/stereo/message.oga
 ```
 
 When using _invoke-action_ or _invoke-default-action_ a xdg-activation
