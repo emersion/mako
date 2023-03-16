@@ -20,6 +20,27 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include "cairo-pixbuf.h"
 
+static bool validate_icon_name(const char* icon_name) {
+	int icon_len = strlen(icon_name);
+	if (icon_len > 1024) {
+		return false;
+	}
+	int index;
+	for (index = 0; index < icon_len; index ++) {
+		bool is_number = icon_name[index] >= '0' && icon_name[index] <= '9';
+		bool is_abc = (icon_name[index] >= 'A' && icon_name[index] <= 'Z') ||
+				(icon_name[index] >= 'a' && icon_name[index] <= 'z');
+		bool is_other = icon_name[index] == '-'
+				|| icon_name[index] == '.' || icon_name[index] == '_';
+
+		bool is_legal = is_number || is_abc || is_other;
+		if (!is_legal) {
+			return false;
+		}
+	}
+	return true;
+}
+
 static GdkPixbuf *load_image(const char *path) {
 	if (strlen(path) == 0) {
 		return NULL;
@@ -124,6 +145,11 @@ static char *resolve_icon(struct mako_notification *notif) {
 
 	char *icon_path = NULL;
 	int32_t last_icon_size = 0;
+
+	if (!validate_icon_name(icon_name)) {
+		return NULL;
+	}
+
 	while (theme_path) {
 		if (strlen(theme_path) == 0) {
 			continue;
