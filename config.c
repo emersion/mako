@@ -834,7 +834,8 @@ int load_config_file(struct mako_config *config, char *config_arg) {
 }
 
 enum mako_parse_args_status
-parse_config_arguments(struct mako_config *config, int argc, char **argv) {
+	parse_config_arguments(struct mako_config *config, int argc, char **argv) {
+
 	static const struct option long_options[] = {
 		{"help", no_argument, 0, 'h'},
 		{"version", no_argument, 0, 'v'},
