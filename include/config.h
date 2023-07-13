@@ -7,6 +7,13 @@
 #include <pango/pango.h>
 #include "types.h"
 
+enum mako_parse_args_status {
+	MAKO_ARGS_FAILURE = -1,
+	MAKO_ARGS_SUCCESS = 0,
+	MAKO_ARGS_SHOW_HELP,
+	MAKO_ARGS_SHOW_VERSION
+};
+
 enum mako_binding_action {
 	MAKO_BINDING_NONE,
 	MAKO_BINDING_DISMISS,
