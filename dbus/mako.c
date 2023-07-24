@@ -208,6 +208,12 @@ static int handle_list(sd_bus_message *msg, struct wl_list *list) {
 			return ret;
 		}
 
+		ret = sd_bus_message_append(reply, "{sv}", "sound-file",
+			"s", notif->sound_file);
+		if (ret < 0) {
+			return ret;
+		}
+
 		ret = sd_bus_message_open_container(reply, 'e', "sv");
 		if (ret < 0) {
 			return ret;
