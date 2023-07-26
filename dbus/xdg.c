@@ -237,6 +237,14 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			}
 			free(notif->sound_file);
 			notif->sound_file = strdup(sound_file);
+		} else if (strcmp(hint, "sound-name") == 0) {
+			const char *sound_name = NULL;
+			ret = sd_bus_message_read(msg, "v", "s", &sound_name);
+			if (ret < 0) {
+				return ret;
+			}
+			free(notif->sound_name);
+			notif->sound_name = strdup(sound_name);
 		} else if (strcmp(hint, "value") == 0) {
 			int32_t progress = 0;
 			ret = sd_bus_message_read(msg, "v", "i", &progress);

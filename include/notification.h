@@ -35,6 +35,7 @@ struct mako_notification {
 	char *app_name;
 	char *app_icon;
 	char *sound_file;
+	char *sound_name;
 	char *summary;
 	char *body;
 	int32_t requested_timeout;
