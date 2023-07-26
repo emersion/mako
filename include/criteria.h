@@ -28,6 +28,7 @@ struct mako_criteria {
 	enum mako_notification_urgency urgency;
 	char *category;
 	char *desktop_entry;
+	char *sound_name;
 	char *summary;
 	regex_t summary_pattern;
 	char *body;

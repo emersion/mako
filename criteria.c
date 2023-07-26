@@ -35,6 +35,7 @@ void destroy_criteria(struct mako_criteria *criteria) {
 	free(criteria->app_icon);
 	free(criteria->category);
 	free(criteria->desktop_entry);
+	free(criteria->sound_name);
 	free(criteria->summary);
 	regfree(&criteria->summary_pattern);
 	free(criteria->body);
@@ -105,6 +106,11 @@ bool match_criteria(struct mako_criteria *criteria,
 
 	if (spec.desktop_entry &&
 			strcmp(criteria->desktop_entry, notif->desktop_entry) != 0) {
+		return false;
+	}
+
+	if (spec.sound_name &&
+			strcmp(criteria->sound_name, notif->sound_name) != 0) {
 		return false;
 	}
 
@@ -325,6 +331,10 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 				return false;
 			}
 			criteria->spec.group_index = true;
+			return true;
+		} else if (strcmp(key, "sound-name") == 0) {
+			criteria->sound_name = strdup(value);
+			criteria->spec.sound_name = true;
 			return true;
 		} else if (strcmp(key, "summary") == 0) {
 			criteria->summary = strdup(value);
