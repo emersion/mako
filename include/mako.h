@@ -44,6 +44,13 @@ struct mako_surface {
 	struct pool_buffer *current_buffer;
 };
 
+struct cursor_surface {
+	uint32_t scale;
+	struct wl_cursor_theme *theme;
+	const struct wl_cursor_image *image;
+	struct wl_surface *surface;
+};
+
 struct mako_state {
 	struct mako_config config;
 	struct mako_event_loop event_loop;
@@ -61,13 +68,8 @@ struct mako_state {
 	struct wl_list outputs; // mako_output::link
 	struct wl_list seats; // mako_seat::link
 
-	struct {
-		uint32_t size;
-		uint32_t scale;
-		struct wl_cursor_theme *theme;
-		const struct wl_cursor_image *image;
-		struct wl_surface *surface;
-	} cursor;
+	uint32_t cursor_size;
+	struct cursor_surface *cursor;
 
 	struct wl_list surfaces; // mako_surface::link
 

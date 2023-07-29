@@ -176,43 +176,72 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
 	seat->touch.pts[id].surface = NULL;
 }
 
+static void destroy_cursor(struct cursor_surface *cursor) {
+	if (!cursor) {
+		return;
+	}
+
+	wl_surface_destroy(cursor->surface);
+
+	if (cursor->theme) {
+		wl_cursor_theme_destroy(cursor->theme);
+	}
+
+	free(cursor);
+}
+
 static void load_cursor(struct mako_state *state, uint32_t scale) {
 	const char *cursor_name = "left_ptr";
 
-	//don't reload the cursor if what we have already can be used
-	if (state->cursor.theme != NULL && state->cursor.scale == scale) {
-		return;
+	struct cursor_surface *cursor = state->cursor;
+	if (cursor) {
+		// don't reload the cursor if what we have already can be used
+		if (cursor->theme != NULL && cursor->scale == scale) {
+			return;
+		}
+	} else {
+		cursor = calloc(1, sizeof(*cursor));
+		if (!cursor) {
+			fprintf(stderr, "couldn't allocate cursor\n");
+			return;
+		}
+
+		state->cursor = cursor;
 	}
 
-	if (state->cursor.theme != NULL) {
-		wl_cursor_theme_destroy(state->cursor.theme);
+	if (cursor->surface == NULL) {
+		cursor->surface = wl_compositor_create_surface(state->compositor);
 	}
 
-	if (state->cursor.surface == NULL) {
-		state->cursor.surface = wl_compositor_create_surface(state->compositor);
+	if (cursor->theme != NULL) {
+		wl_cursor_theme_destroy(cursor->theme);
 	}
 
 	const char *xcursor_theme = getenv("XCURSOR_THEME");
-	state->cursor.theme = wl_cursor_theme_load(xcursor_theme, state->cursor.size * scale, state->shm);
-	if (state->cursor.theme == NULL) {
+	cursor->theme = wl_cursor_theme_load(xcursor_theme, state->cursor_size * scale, state->shm);
+	if (cursor->theme == NULL) {
 		fprintf(stderr, "couldn't find a cursor theme\n");
-		return;
-	}
-	struct wl_cursor *cursor = wl_cursor_theme_get_cursor(state->cursor.theme, cursor_name);
-	if (cursor == NULL) {
-		fprintf(stderr, "couldn't find cursor icon \"%s\"\n", cursor_name);
-		wl_cursor_theme_destroy(state->cursor.theme);
-		// Set to NULL so it doesn't get free'd again
-		state->cursor.theme = NULL;
-		return;
+		goto err;
 	}
 
-	state->cursor.scale = scale;
-	state->cursor.image = cursor->images[0];
-	struct wl_buffer *cursor_buffer = wl_cursor_image_get_buffer(cursor->images[0]);
-	wl_surface_attach(state->cursor.surface, cursor_buffer, 0, 0);
-	wl_surface_set_buffer_scale(state->cursor.surface, scale);
-	wl_surface_commit(state->cursor.surface);
+	struct wl_cursor *wl_cursor = wl_cursor_theme_get_cursor(cursor->theme, cursor_name);
+	if (wl_cursor == NULL) {
+		fprintf(stderr, "couldn't find cursor icon \"%s\"\n", cursor_name);
+		goto err;
+	}
+
+	cursor->scale = scale;
+	cursor->image = wl_cursor->images[0];
+	struct wl_buffer *cursor_buffer = wl_cursor_image_get_buffer(wl_cursor->images[0]);
+	wl_surface_attach(cursor->surface, cursor_buffer, 0, 0);
+	wl_surface_set_buffer_scale(cursor->surface, scale);
+	wl_surface_commit(cursor->surface);
+
+	return;
+
+err:
+	destroy_cursor(cursor);
+	state->cursor = NULL;
 }
 
 static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
@@ -240,10 +269,10 @@ static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
 	// Change the mouse cursor to "left_ptr"
 	load_cursor(state, scale);
 
-	if (state->cursor.theme != NULL) {
-		wl_pointer_set_cursor(wl_pointer, serial, state->cursor.surface,
-			state->cursor.image->hotspot_x / state->cursor.scale,
-			state->cursor.image->hotspot_y / state->cursor.scale);
+	if (state->cursor) {
+		wl_pointer_set_cursor(wl_pointer, serial, state->cursor->surface,
+			state->cursor->image->hotspot_x / state->cursor->scale,
+			state->cursor->image->hotspot_y / state->cursor->scale);
 	}
 }
 
@@ -541,7 +570,7 @@ bool init_wayland(struct mako_state *state) {
 		}
 	}
 
-	state->cursor.size = cursor_size;
+	state->cursor_size = cursor_size;
 
 	return true;
 }
@@ -569,10 +598,7 @@ void finish_wayland(struct mako_state *state) {
 		zxdg_output_manager_v1_destroy(state->xdg_output_manager);
 	}
 
-	if (state->cursor.theme != NULL) {
-		wl_cursor_theme_destroy(state->cursor.theme);
-		wl_surface_destroy(state->cursor.surface);
-	}
+	destroy_cursor(state->cursor);
 
 	zwlr_layer_shell_v1_destroy(state->layer_shell);
 	wl_compositor_destroy(state->compositor);
