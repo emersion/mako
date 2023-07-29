@@ -348,26 +348,34 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 	// Otherwise, anything is fair game. This helps to return a better error
 	// message.
 
-	if (!bare_key) {
-		if (strcmp(key, "app-name") == 0) {
-			criteria->spec.app_name = true;
-			return assign_condition(&criteria->app_name, op, value);
-		} else if (strcmp(key, "app-icon") == 0) {
-			criteria->spec.app_icon = true;
-			return assign_condition(&criteria->app_icon, op, value);
-		} else if (strcmp(key, "urgency") == 0) {
+	// String fields can have bare_key, or not bare_key
+
+	if (strcmp(key, "app-name") == 0) {
+		criteria->spec.app_name = true;
+		return assign_condition(&criteria->app_name, op, value);
+	} else if (strcmp(key, "app-icon") == 0) {
+		criteria->spec.app_icon = true;
+		return assign_condition(&criteria->app_icon, op, value);
+	} else if (strcmp(key, "category") == 0) {
+		criteria->spec.category = true;
+		return assign_condition(&criteria->category, op, value);
+	} else if (strcmp(key, "desktop-entry") == 0) {
+		criteria->spec.desktop_entry = true;
+		return assign_condition(&criteria->desktop_entry, op, value);
+	} else if (strcmp(key, "summary") == 0) {
+		criteria->spec.summary = true;
+		return assign_condition(&criteria->summary, op, value);
+	} else if (strcmp(key, "body") == 0) {
+		criteria->spec.body = true;
+		return assign_condition(&criteria->body, op, value);
+	} else if (!bare_key) {
+		if (strcmp(key, "urgency") == 0) {
 			if (!parse_urgency(value, &criteria->urgency)) {
 				fprintf(stderr, "Invalid urgency value '%s'", value);
 				return false;
 			}
 			criteria->spec.urgency = true;
 			return true;
-		} else if (strcmp(key, "category") == 0) {
-			criteria->spec.category = true;
-			return assign_condition(&criteria->category, op, value);
-		} else if (strcmp(key, "desktop-entry") == 0) {
-			criteria->spec.desktop_entry = true;
-			return assign_condition(&criteria->desktop_entry, op, value);
 		} else if (strcmp(key, "group-index") == 0) {
 			if (!parse_int(value, &criteria->group_index)) {
 				fprintf(stderr, "Invalid group-index value '%s'", value);
@@ -375,12 +383,6 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			}
 			criteria->spec.group_index = true;
 			return true;
-		} else if (strcmp(key, "summary") == 0) {
-			criteria->spec.summary = true;
-			return assign_condition(&criteria->summary, op, value);
-		} else if (strcmp(key, "body") == 0) {
-			criteria->spec.body = true;
-			return assign_condition(&criteria->body, op, value);
 		} else if (strcmp(key, "anchor") == 0) {
 			return criteria->spec.anchor =
 				parse_anchor(value, &criteria->anchor);
