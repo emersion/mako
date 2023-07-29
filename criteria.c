@@ -26,18 +26,33 @@ struct mako_criteria *create_criteria(struct mako_config *config) {
 	return criteria;
 }
 
+void free_cond(struct mako_condition *cond) {
+	switch (cond->operator) {
+	case OP_EQUALS:
+	case OP_NOT_EQUALS:
+		free(cond->value);
+		return;
+	case OP_REGEX_MATCHES:
+		regfree(&cond->pattern);
+		return;
+	case OP_NONE:
+	case OP_TRUTHY:
+	case OP_FALSEY:
+		// Nothing to free.
+		return;
+	}
+}
+
 void destroy_criteria(struct mako_criteria *criteria) {
 	wl_list_remove(&criteria->link);
 
 	finish_style(&criteria->style);
-	free(criteria->app_name);
-	free(criteria->app_icon);
-	free(criteria->category);
-	free(criteria->desktop_entry);
-	free(criteria->summary);
-	regfree(&criteria->summary_pattern);
-	free(criteria->body);
-	regfree(&criteria->body_pattern);
+	free_cond(&criteria->app_name);
+	free_cond(&criteria->app_icon);
+	free_cond(&criteria->category);
+	free_cond(&criteria->desktop_entry);
+	free_cond(&criteria->summary);
+	free_cond(&criteria->body);
 	free(criteria->raw_string);
 	free(criteria->output);
 	free(criteria->mode);
@@ -58,6 +73,24 @@ static bool match_regex_criteria(regex_t *pattern, char *value) {
 	return true;
 }
 
+bool match_condition(struct mako_condition *cond, char *value) {
+	switch(cond->operator) {
+	case OP_EQUALS:
+		return strcmp(cond->value, value) == 0;
+	case OP_NOT_EQUALS:
+		return strcmp(cond->value, value) != 0;
+	case OP_REGEX_MATCHES:
+		return match_regex_criteria(&cond->pattern, value);
+	case OP_TRUTHY:
+		return strcmp("", value) != 0;
+	case OP_FALSEY:
+		return strcmp("", value) == 0;
+	case OP_NONE:
+		return true;
+	}
+	abort();
+}
+
 bool match_criteria(struct mako_criteria *criteria,
 		struct mako_notification *notif) {
 	struct mako_criteria_spec spec = criteria->spec;
@@ -73,12 +106,12 @@ bool match_criteria(struct mako_criteria *criteria,
 	}
 
 	if (spec.app_name &&
-			strcmp(criteria->app_name, notif->app_name) != 0) {
+			!match_condition(&criteria->app_name, notif->app_name)) {
 		return false;
 	}
 
 	if (spec.app_icon &&
-			strcmp(criteria->app_icon, notif->app_icon) != 0) {
+			!match_condition(&criteria->app_icon, notif->app_icon)) {
 		return false;
 	}
 
@@ -98,37 +131,23 @@ bool match_criteria(struct mako_criteria *criteria,
 	}
 
 	if (spec.category &&
-			strcmp(criteria->category, notif->category) != 0) {
+			!match_condition(&criteria->category, notif->category)) {
 		return false;
 	}
 
 	if (spec.desktop_entry &&
-			strcmp(criteria->desktop_entry, notif->desktop_entry) != 0) {
+			!match_condition(&criteria->desktop_entry, notif->desktop_entry)) {
 		return false;
 	}
 
 	if (spec.summary &&
-			strcmp(criteria->summary, notif->summary) != 0) {
+			!match_condition(&criteria->summary, notif->summary)) {
 		return false;
-	}
-
-	if (spec.summary_pattern) {
-		bool ret = match_regex_criteria(&criteria->summary_pattern, notif->summary);
-		if (!ret) {
-			return false;
-		}
 	}
 
 	if (spec.body &&
-			strcmp(criteria->body, notif->body) != 0) {
+			!match_condition(&criteria->body, notif->body)) {
 		return false;
-	}
-
-	if (spec.body_pattern) {
-		bool ret = match_regex_criteria(&criteria->body_pattern, notif->body);
-		if (!ret) {
-			return false;
-		}
 	}
 
 	if (spec.group_index &&
@@ -257,14 +276,38 @@ bool parse_criteria(const char *string, struct mako_criteria *criteria) {
 	return true;
 }
 
-// Takes a token from the criteria string that looks like "key=value", figures
-// out which field of the criteria "key" refers to, and sets it to "value".
+bool assign_condition(struct mako_condition *cond, enum operator op, char *value) {
+	cond->operator = op;
+	switch (op) {
+		case OP_REGEX_MATCHES:
+			if (regcomp(&cond->pattern, value, REG_EXTENDED | REG_NOSUB)) {
+				fprintf(stderr, "Invalid regex '%s'\n", value);
+				return false;
+			}
+			return true;
+		case OP_EQUALS:
+		case OP_NOT_EQUALS:
+			cond->value = strdup(value);
+			// fall-thru
+		case OP_FALSEY:
+		case OP_TRUTHY:
+		case OP_NONE:
+		default:
+			return true;
+	}
+	return true;
+}
+
+// Takes a token from the criteria string that looks like
+// "key=value", "key!=value", or "key~=value"; and figures
+// out which field of the criteria "key" refers to, and sets it to the condition.
 // Any further equal signs are assumed to be part of the value. If there is no .
 // equal sign present, the field is treated as a boolean, with a leading
 // exclamation point signifying negation.
 //
 // Note that the token will be consumed.
 bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
+	enum operator op = OP_EQUALS;
 	char *key = token;
 	char *value = strstr(key, "=");
 	bool bare_key = !value;
@@ -274,6 +317,15 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 	}
 
 	if (value) {
+		if(value[-1] == '~') {
+			op = OP_REGEX_MATCHES;
+			// shorten the key.
+			value[-1] = '\0';
+		} else if (value[-1] == '!') {
+			op = OP_NOT_EQUALS;
+			// shorten the key.
+			value[-1] = '\0';
+		}
 		// Skip past the equal sign to the value itself.
 		*value = '\0';
 		++value;
@@ -283,8 +335,10 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 		if (*key == '!') {
 			// Negated boolean, skip past the exclamation point.
 			++key;
+			op = OP_FALSEY;
 			value = "false";
 		} else {
+			op = OP_TRUTHY;
 			value = "true";
 		}
 	}
@@ -296,13 +350,11 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 
 	if (!bare_key) {
 		if (strcmp(key, "app-name") == 0) {
-			criteria->app_name = strdup(value);
 			criteria->spec.app_name = true;
-			return true;
+			return assign_condition(&criteria->app_name, op, value);
 		} else if (strcmp(key, "app-icon") == 0) {
-			criteria->app_icon = strdup(value);
 			criteria->spec.app_icon = true;
-			return true;
+			return assign_condition(&criteria->app_icon, op, value);
 		} else if (strcmp(key, "urgency") == 0) {
 			if (!parse_urgency(value, &criteria->urgency)) {
 				fprintf(stderr, "Invalid urgency value '%s'", value);
@@ -311,13 +363,11 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			criteria->spec.urgency = true;
 			return true;
 		} else if (strcmp(key, "category") == 0) {
-			criteria->category = strdup(value);
 			criteria->spec.category = true;
-			return true;
+			return assign_condition(&criteria->category, op, value);
 		} else if (strcmp(key, "desktop-entry") == 0) {
-			criteria->desktop_entry = strdup(value);
 			criteria->spec.desktop_entry = true;
-			return true;
+			return assign_condition(&criteria->desktop_entry, op, value);
 		} else if (strcmp(key, "group-index") == 0) {
 			if (!parse_int(value, &criteria->group_index)) {
 				fprintf(stderr, "Invalid group-index value '%s'", value);
@@ -326,29 +376,11 @@ bool apply_criteria_field(struct mako_criteria *criteria, char *token) {
 			criteria->spec.group_index = true;
 			return true;
 		} else if (strcmp(key, "summary") == 0) {
-			criteria->summary = strdup(value);
 			criteria->spec.summary = true;
-			return true;
-		} else if (strcmp(key, "summary~") == 0) {
-			if (regcomp(&criteria->summary_pattern, value,
-					REG_EXTENDED | REG_NOSUB)) {
-				fprintf(stderr, "Invalid summary~ regex '%s'\n", value);
-				return false;
-			}
-			criteria->spec.summary_pattern = true;
-			return true;
+			return assign_condition(&criteria->summary, op, value);
 		} else if (strcmp(key, "body") == 0) {
-			criteria->body = strdup(value);
 			criteria->spec.body = true;
-			return true;
-		} else if (strcmp(key, "body~") == 0) {
-			if (regcomp(&criteria->body_pattern, value,
-					REG_EXTENDED | REG_NOSUB)) {
-				fprintf(stderr, "Invalid body~ regex '%s'\n", value);
-				return false;
-			}
-			criteria->spec.body_pattern = true;
-			return true;
+			return assign_condition(&criteria->body, op, value);
 		} else if (strcmp(key, "anchor") == 0) {
 			return criteria->spec.anchor =
 				parse_anchor(value, &criteria->anchor);
@@ -476,15 +508,21 @@ struct mako_criteria *create_criteria_from_notification(
 	// We only really need to copy the ones that are in the spec, but it
 	// doesn't hurt anything to do the rest and it makes this code much nicer
 	// to look at.
-	criteria->app_name = strdup(notif->app_name);
-	criteria->app_icon = strdup(notif->app_icon);
+	criteria->app_name.operator = OP_EQUALS;
+	criteria->app_name.value = strdup(notif->app_name);
+	criteria->app_icon.operator = OP_EQUALS;
+	criteria->app_icon.value = strdup(notif->app_icon);
 	criteria->actionable = !wl_list_empty(&notif->actions);
 	criteria->expiring = (notif->requested_timeout != 0);
 	criteria->urgency = notif->urgency;
-	criteria->category = strdup(notif->category);
-	criteria->desktop_entry = strdup(notif->desktop_entry);
-	criteria->summary = strdup(notif->summary);
-	criteria->body = strdup(notif->body);
+	criteria->category.operator = OP_EQUALS;
+	criteria->category.value = strdup(notif->category);
+	criteria->desktop_entry.operator = OP_EQUALS;
+	criteria->desktop_entry.value = strdup(notif->desktop_entry);
+	criteria->summary.operator = OP_EQUALS;
+	criteria->summary.value = strdup(notif->summary);
+	criteria->body.operator = OP_EQUALS;
+	criteria->body.value = strdup(notif->body);
 	criteria->group_index = notif->group_index;
 	criteria->grouped = (notif->group_index >= 0);
 	criteria->hidden = notif->hidden;
@@ -536,16 +574,6 @@ bool validate_criteria(struct mako_criteria *criteria) {
 	if (criteria->hidden && any_but_surface) {
 		fprintf(stderr, "Can only set `hidden` along with `output` "
 				"and/or `anchor`\n");
-		return false;
-	}
-
-	if (criteria->spec.summary && criteria->spec.summary_pattern) {
-		fprintf(stderr, "Cannot set both `summary` and `summary~`\n");
-		return false;
-	}
-
-	if (criteria->spec.body && criteria->spec.body_pattern) {
-		fprintf(stderr, "Cannot set both `body` and `body~`\n");
 		return false;
 	}
 
