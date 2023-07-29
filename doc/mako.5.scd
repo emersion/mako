@@ -334,14 +334,8 @@ The following fields are available in criteria:
 
 - _app-name_ (string)
 - _app-icon_ (string)
-- _summary_ (string): exact match on the summary of the notification. This
-  field conflicts with _summary~_.
-- _summary~_ (string): a POSIX extended regular expression match on the summary
-  of the notification. This field conflicts with _summary_.
-- _body_ (string): an exact match on the body of the notification. This field
-  conflicts with _body~_.
-- _body~_ (string): a POSIX extended regular expression match on the body of
-  the notification. This field conflicts with _body_.
+- _summary_ (string)
+- _body_ (string)
 - _urgency_ (one of "low", "normal", "critical")
 - _category_ (string)
 - _desktop-entry_ (string)
@@ -378,7 +372,19 @@ Quotes within quotes may also be escaped, and a literal backslash may be
 specified as \\\\. No spaces are allowed around the equal sign. Escaping equal
 signs within values is unnecessary.
 
-Additionally, boolean values may be specified using any of true/false, 0/1, or
+All string fields except mode and output support additional operators != and ~=
+
+- != indicates a non-match
+- ~= indicates a POSIX extended regular expression match
+
+These string fields can also be specified as a bare word, which is equivalent to
+comparisons with the empty string:
+
+	\[summary\] \[summary!=""\]
+
+	\[!summary\] \[summary=""\]
+
+Boolean values may be specified using any of true/false, 0/1, or
 as bare words:
 
 	\[actionable=true\] \[actionable=1\] \[actionable\]
