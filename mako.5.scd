@@ -31,48 +31,81 @@ Empty lines and lines that begin with # are ignored.
 
 # BINDING OPTIONS
 
-Bindings allow one to perform an action when an event is triggered. Supported
-values are _none_, _dismiss_, _dismiss-all_, _dismiss-group_,
-_invoke-action <action>_, _invoke-default-action_ and _exec <command>_.
+Bindings allow one to perform an action when an event is triggered.
+
+Supported options:
 
 *on-button-left*=_action_
+	Performs the action when the left pointer button is pressed.
+
 	Default: invoke-default-action
 
 *on-button-middle*=_action_
+	Performs the action when the middle pointer button is pressed.
+
 	Default: none
 
 *on-button-right*=_action_
+	Performs the action when the right pointer button is pressed.
+
 	Default: dismiss
 
 *on-touch*=_action_
+	Performs the action when tapped via a touch device.
+
 	Default: dismiss
 
-*on-notify* = _action_
+*on-notify*=_action_
+	Performs the action when the notification is opened.
+
 	Default: none
 
-When _exec_ is used, the command will be executed in a POSIX shell. The
-shell variable _id_ will be set to the notification ID. For example, the
-following option will display an interactive action menu on middle click:
+Supported actions:
 
-```
-on-button-middle=exec makoctl menu -n "$id" dmenu -p 'Select action: '
-```
+*none*
+	Do nothing.
 
-The following option will play a sound when a new notification is opened:
+*dismiss*
+	Dismiss the current notification.
 
-```
-on-notify=exec mpv /usr/share/sounds/freedesktop/stereo/message.oga
-```
+*dismiss-all*
+	Dismiss all notifications.
 
-When using _invoke-action_ or _invoke-default-action_ a xdg-activation
-token will be sent to the client, allowing the client to request focus
-from the compositor. The compositor must support the xdg_activation_v1
-protocol and allow the focus request for the example to work correctly:
+*dismiss-group*
+	Dismiss notifications in the current group.
 
-```
-[app-name="some-app-id" actionable]
-on-button-left=invoke-action mail-reply-sender
-```
+*invoke-action* <action>
+	Invoke the named action on the notification.
+
+	An xdg-activation token will be sent to the client, allowing the client to
+	request focus from the compositor. The compositor must support the
+	xdg_activation_v1 protocol and allow the focus request for the following
+	example to work correctly:
+
+	```
+	[app-name="some-app-id" actionable]
+	on-button-left=invoke-action mail-reply-sender
+	```
+
+*invoke-default-action*
+	Invoke the default action on the notification.
+
+*exec* <command>
+	Execute a shell command.
+
+	The command will be executed in a POSIX shell. The shell variable _id_ will
+	be set to the notification ID. For example, the following option will
+	display an interactive action menu on middle click:
+
+	```
+	on-button-middle=exec makoctl menu -n "$id" dmenu -p 'Select action: '
+	```
+
+	The following option will play a sound when a new notification is opened:
+
+	```
+	on-notify=exec mpv /usr/share/sounds/freedesktop/stereo/message.oga
+	```
 
 # STYLE OPTIONS
 
