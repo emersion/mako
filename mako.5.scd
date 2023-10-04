@@ -319,47 +319,35 @@ The following fields are available in criteria:
 
 - _app-name_ (string)
 - _app-icon_ (string)
-- _summary_ (string)
-	- An exact match on the summary of the notification.
-	- This field conflicts with _summary~_.
-- _summary~_ (string)
-	- A POSIX extended regular expression match on the summary of the
-	  notification.
-	- This field conflicts with _summary_.
-- _body_ (string)
-	- An exact match on the body of the notification.
-	- This field conflicts with _body~_.
-- _body~_ (string)
-	- A POSIX extended regular expression match on the body of the
-	notification.
-	- This field conflicts with _body_.
+- _summary_ (string): exact match on the summary of the notification. This
+  field conflicts with _summary~_.
+- _summary~_ (string): a POSIX extended regular expression match on the summary
+  of the notification. This field conflicts with _summary_.
+- _body_ (string): an exact match on the body of the notification. This field
+  conflicts with _body~_.
+- _body~_ (string): a POSIX extended regular expression match on the body of
+  the notification. This field conflicts with _body_.
 - _urgency_ (one of "low", "normal", "critical")
 - _category_ (string)
 - _desktop-entry_ (string)
 - _actionable_ (boolean)
 - _expiring_ (boolean)
-- _mode_ (string)
-	- Only apply style options in this section if the provided mode is
-	  currently enabled. For more information about modes, see the _MODES_
-	  section.
+- _mode_ (string): only apply style options in this section if the provided
+  mode is currently enabled. For more information about modes, see the _MODES_
+  section.
 
 The following fields are also available to match on a second pass based on
 where previous style options decided to place each notification:
 
-- _grouped_ (boolean)
-	- Whether the notification is grouped with any others (its group-index is
-	  not -1).
-- _group-index_ (int)
-	- The notification's index within its group, or -1 if it is not grouped.
-- _hidden_ (boolean)
-	- _hidden_ is special, it defines the style for the placeholder shown when
-	  the number of notifications or groups exceeds _max-visible_.
-- _output_ (string)
-    - Which output the notification was sorted onto. See the output style
-	  option for possible values.
-- _anchor_ (string)
-	- Which position on the output the notification was assigned to. See the
-      anchor style option for possible values.
+- _grouped_ (boolean): whether the notification is grouped with any others.
+- _group-index_ (int): the notification's index within its group, or -1 if it
+  is not grouped.
+- _hidden_ (boolean): special field which defines the style for the placeholder
+  shown when the number of notifications or groups exceeds _max-visible_.
+- _output_ (string): which output the notification was sorted onto. See the
+  _output_ style option for possible values.
+- _anchor_ (string): which position on the output the notification was assigned
+  to. See the _anchor_ style option for possible values.
 
 There are only two passes performed on each notification, so the second-pass
 criteria are not allowed to reposition the notification.
@@ -393,12 +381,10 @@ These options can be overridden by simply defining the criteria yourself and
 overriding them.
 
 There are some rules restricting what can be configured depending on what is
-being matched by a given criteria:
-
-- Criteria matching _grouped_ or _group-index_ are not allowed to change the
-  _anchor_, _output_, or _group-by_, as this would invalidate the grouping.
-  Grouping is only performed once rather than recursively, to avoid the
-  potential for infinite loops.
+being matched by a given criteria. Criteria matching _grouped_ or _group-index_
+are not allowed to change the _anchor_, _output_, or _group-by_, as this would
+invalidate the grouping. Grouping is only performed once rather than
+recursively, to avoid the potential for infinite loops.
 
 # CRITERIA-ONLY STYLE OPTIONS
 
