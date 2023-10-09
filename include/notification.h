@@ -85,7 +85,8 @@ struct mako_notification *create_notification(struct mako_state *state);
 void destroy_notification(struct mako_notification *notif);
 
 void close_notification(struct mako_notification *notif,
-	enum mako_notification_close_reason reason);
+	enum mako_notification_close_reason reason,
+	bool add_to_history);
 void close_group_notifications(struct mako_notification *notif,
 	enum mako_notification_close_reason reason);
 void close_all_notifications(struct mako_state *state,

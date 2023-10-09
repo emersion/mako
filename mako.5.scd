@@ -65,8 +65,9 @@ Supported actions:
 *none*
 	Do nothing.
 
-*dismiss*
-	Dismiss the current notification.
+*dismiss [--no-history]*
+	Dismiss the current notification. If *--no-history* is passed, the notification
+	won't be added to history.
 
 *dismiss-all*
 	Dismiss all notifications.

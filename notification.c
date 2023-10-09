@@ -108,7 +108,8 @@ void destroy_notification(struct mako_notification *notif) {
 }
 
 void close_notification(struct mako_notification *notif,
-		enum mako_notification_close_reason reason) {
+		enum mako_notification_close_reason reason,
+		bool add_to_history) {
 	notify_notification_closed(notif, reason);
 	wl_list_remove(&notif->link);  // Remove so regrouping works...
 	wl_list_init(&notif->link);  // ...but destroy will remove again.
@@ -129,12 +130,16 @@ void close_notification(struct mako_notification *notif,
 	destroy_timer(notif->timer);
 	notif->timer = NULL;
 
-	wl_list_insert(&notif->state->history, &notif->link);
-	while (wl_list_length(&notif->state->history) >
-		notif->state->config.max_history) {
-		struct mako_notification *n =
-			wl_container_of(notif->state->history.prev, n, link);
-		destroy_notification(n);
+	if (add_to_history) {
+		wl_list_insert(&notif->state->history, &notif->link);
+		while (wl_list_length(&notif->state->history) >
+			notif->state->config.max_history) {
+			struct mako_notification *n =
+				wl_container_of(notif->state->history.prev, n, link);
+			destroy_notification(n);
+		}
+	} else {
+		destroy_notification(notif);
 	}
 }
 
@@ -168,7 +173,7 @@ void close_group_notifications(struct mako_notification *top_notif,
 
 	if (top_notif->style.group_criteria_spec.none) {
 		// No grouping, just close the notification
-		close_notification(top_notif, reason);
+		close_notification(top_notif, reason, true);
 		return;
 	}
 
@@ -178,7 +183,7 @@ void close_group_notifications(struct mako_notification *top_notif,
 	struct mako_notification *notif, *tmp;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
 		if (match_criteria(notif_criteria, notif)) {
-			close_notification(notif, reason);
+			close_notification(notif, reason, true);
 		}
 	}
 
@@ -189,7 +194,7 @@ void close_all_notifications(struct mako_state *state,
 		enum mako_notification_close_reason reason) {
 	struct mako_notification *notif, *tmp;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
-		close_notification(notif, reason);
+		close_notification(notif, reason, true);
 	}
 }
 
@@ -365,7 +370,7 @@ static void try_invoke_action(struct mako_notification *notif,
 			break;
 		}
 	}
-	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, true);
 }
 
 void notification_execute_binding(struct mako_notification *notif,
@@ -375,7 +380,10 @@ void notification_execute_binding(struct mako_notification *notif,
 	case MAKO_BINDING_NONE:
 		break;
 	case MAKO_BINDING_DISMISS:
-		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, true);
+		break;
+	case MAKO_BINDING_DISMISS_NO_HISTORY:
+		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, false);
 		break;
 	case MAKO_BINDING_DISMISS_GROUP:
 		close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
