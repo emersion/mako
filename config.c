@@ -646,6 +646,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 			binding.action = MAKO_BINDING_NONE;
 		} else if (strcmp(value, "dismiss") == 0) {
 			binding.action = MAKO_BINDING_DISMISS;
+		} else if (strcmp(value, "dismiss --no-history") == 0) {
+			binding.action = MAKO_BINDING_DISMISS_NO_HISTORY;
 		} else if (strcmp(value, "dismiss-all") == 0) {
 			binding.action = MAKO_BINDING_DISMISS_ALL;
 		} else if (strcmp(value, "dismiss-group") == 0) {
