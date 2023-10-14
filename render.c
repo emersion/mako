@@ -446,10 +446,10 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 		int hidden_height = render_notification(
 			cairo, state, surface, style, text, NULL, total_height, scale, NULL, 0);
 		free(text);
-		destroy_notification(hidden_notif);
 
 		total_height += hidden_height;
 		pending_bottom_margin = style->margin.bottom;
+		destroy_notification(hidden_notif);
 	}
 
 	return total_height + pending_bottom_margin;
