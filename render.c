@@ -321,12 +321,13 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	return notif_height;
 }
 
-int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) {
+void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) {
 	struct mako_state *state = surface->state;
 	cairo_t *cairo = buffer->cairo;
 
 	if (wl_list_empty(&state->notifications)) {
-		return 0;
+		surface->rendered_width = 0;
+		surface->rendered_height = 0;
 	}
 
 	// Clear
@@ -339,6 +340,7 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 	size_t visible_count = 0;
 	size_t hidden_count = 0;
 	int total_height = 0;
+	int max_width = 0;
 	int pending_bottom_margin = 0;
 	struct mako_notification *notif;
 	size_t total_notifications = 0;
@@ -400,8 +402,12 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 			cairo, state, surface, style, text, icon, total_height, scale,
 			&notif->hotspot, notif->progress);
 		free(text);
+		int notif_width =
+			style->width + style->margin.left + style->margin.right;
 
 		total_height += notif_height;
+		if (max_width < notif_width)
+			max_width = notif_width;
 		pending_bottom_margin = style->margin.bottom;
 
 		if (notif->group_index < 1) {
@@ -438,7 +444,8 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 		char *text = malloc(text_ln + 1);
 		if (text == NULL) {
 			fprintf(stderr, "allocation failed");
-			return 0;
+			surface->rendered_width = 0;
+			surface->rendered_height = 0;
 		}
 
 		format_text(style->format, text, format_hidden_text, &data);
@@ -452,5 +459,6 @@ int render(struct mako_surface *surface, struct pool_buffer *buffer, int scale) 
 		destroy_notification(hidden_notif);
 	}
 
-	return total_height + pending_bottom_margin;
+	surface->rendered_height = total_height;
+	surface->rendered_width = max_width;
 }
