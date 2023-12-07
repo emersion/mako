@@ -609,7 +609,8 @@ static void send_frame(struct mako_surface *surface) {
 	}
 
 	struct mako_output *output = get_configured_output(surface);
-	int height = render(surface, surface->current_buffer, scale);
+	int width = 0, height = 0;
+	render(surface, surface->current_buffer, scale, &width, &height);
 
 	// There are two cases where we want to tear down the surface: zero
 	// notifications (height = 0) or moving between outputs.
@@ -669,14 +670,11 @@ static void send_frame(struct mako_surface *surface) {
 	// surface is brand new, it doesn't even have a size yet. If it already
 	// exists, we might need to resize if the list of notifications has changed
 	// since the last time we drew.
-	if (surface->height != height) {
+	if (surface->height != height || surface->width != width) {
 		struct mako_style *style = &state->config.superstyle;
 
-		zwlr_layer_surface_v1_set_size(surface->layer_surface,
-				style->width + style->margin.left + style->margin.right,
-				height);
-		zwlr_layer_surface_v1_set_anchor(surface->layer_surface,
-				surface->anchor);
+		zwlr_layer_surface_v1_set_size(surface->layer_surface, width, height);
+		zwlr_layer_surface_v1_set_anchor(surface->layer_surface, surface->anchor);
 		zwlr_layer_surface_v1_set_margin(surface->layer_surface,
 			style->outer_margin.top, style->outer_margin.right,
 			style->outer_margin.bottom, style->outer_margin.left);
