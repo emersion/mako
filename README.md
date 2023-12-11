@@ -23,7 +23,7 @@ explicitly start this one. Some ways of achieving this is:
 - If you're using Sway you can start mako on launch by putting `exec mako` in
   your configuration file.
 
-- If you are using elogind, you might need to manually start a dbus user
+- If you are not using systemd, you might need to manually start a dbus user
   session: `dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus`
 
 ## Configuration
