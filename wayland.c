@@ -427,7 +427,6 @@ static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
 	.closed = layer_surface_handle_closed,
 };
 
-
 static void handle_global(void *data, struct wl_registry *registry,
 		uint32_t name, const char *interface, uint32_t version) {
 	struct mako_state *state = data;
@@ -457,6 +456,9 @@ static void handle_global(void *data, struct wl_registry *registry,
 	} else if (strcmp(interface, xdg_activation_v1_interface.name) == 0) {
 		state->xdg_activation = wl_registry_bind(registry, name,
 			&xdg_activation_v1_interface, 1);
+	} else if (strcmp(interface, wp_surface_invalidation_manager_v1_interface.name)) {
+		state->surface_invalidation_manager = wl_registry_bind(registry, name,
+			&wp_surface_invalidation_manager_v1_interface, 1);
 	}
 }
 
@@ -613,7 +615,20 @@ static struct mako_output *get_configured_output(struct mako_surface *surface) {
 	return NULL;
 }
 
+static void send_frame(struct mako_surface *surface);
 static void schedule_frame_and_commit(struct mako_surface *surface);
+
+static void surface_invalidation_handle_invalidated(void *data,
+		struct wp_surface_invalidation_v1 *wp_surface_invalidation_v1, uint32_t serial) {
+	struct mako_surface *surface = data;
+
+	wp_surface_invalidation_v1_ack(wp_surface_invalidation_v1, serial);
+	send_frame(surface);
+}
+
+static struct wp_surface_invalidation_v1_listener surface_invalidation_listener = {
+	.invalidated = surface_invalidation_handle_invalidated,
+};
 
 // Draw and commit a new frame.
 static void send_frame(struct mako_surface *surface) {
@@ -675,6 +690,14 @@ static void send_frame(struct mako_surface *surface) {
 
 		surface->surface = wl_compositor_create_surface(state->compositor);
 		wl_surface_add_listener(surface->surface, &surface_listener, surface);
+
+		if (state->surface_invalidation_manager) {
+			struct wp_surface_invalidation_v1 *surface_invalidation =
+				wp_surface_invalidation_manager_v1_get_surface_invalidation(
+					state->surface_invalidation_manager, surface->surface);
+			wp_surface_invalidation_v1_add_listener(surface_invalidation,
+				&surface_invalidation_listener, surface);
+		}
 
 		surface->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
 			state->layer_shell, surface->surface, wl_output,
