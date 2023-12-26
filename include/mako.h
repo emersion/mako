@@ -15,6 +15,7 @@
 #include "config.h"
 #include "event-loop.h"
 #include "pool-buffer.h"
+#include "cursor-shape-v1-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "xdg-activation-v1-client-protocol.h"
 
@@ -56,6 +57,7 @@ struct mako_state {
 	struct wl_shm *shm;
 	struct zwlr_layer_shell_v1 *layer_shell;
 	struct xdg_activation_v1 *xdg_activation;
+	struct wp_cursor_shape_manager_v1 *cursor_shape_manager;
 	struct wl_list outputs; // mako_output::link
 	struct wl_list seats; // mako_seat::link
 

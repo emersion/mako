@@ -18,7 +18,9 @@ wayland_scanner_client = generator(
 
 protocols = [
 	wl_protocol_dir / 'stable/xdg-shell/xdg-shell.xml',
+	wl_protocol_dir / 'staging/cursor-shape/cursor-shape-v1.xml',
 	wl_protocol_dir / 'staging/xdg-activation/xdg-activation-v1.xml',
+	wl_protocol_dir / 'unstable/tablet/tablet-unstable-v2.xml',
 	'wlr-layer-shell-unstable-v1.xml',
 ]
 

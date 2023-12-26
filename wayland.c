@@ -154,7 +154,7 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
 	seat->touch.pts[id].surface = NULL;
 }
 
-static void load_cursor(struct mako_state *state, uint32_t scale) {
+static void load_default_cursor(struct mako_state *state, uint32_t scale) {
 	const char *cursor_name = "left_ptr";
 
 	//don't reload the cursor if what we have already can be used
@@ -215,13 +215,20 @@ static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
 		}
 	}
 
-	// Change the mouse cursor to "left_ptr"
-	load_cursor(state, scale);
+	if (state->cursor_shape_manager != NULL) {
+		struct wp_cursor_shape_device_v1 *device =
+			wp_cursor_shape_manager_v1_get_pointer(state->cursor_shape_manager, wl_pointer);
+		wp_cursor_shape_device_v1_set_shape(device, serial,
+			WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_DEFAULT);
+		wp_cursor_shape_device_v1_destroy(device);
+	} else {
+		load_default_cursor(state, scale);
 
-	if (state->cursor.theme != NULL) {
-		wl_pointer_set_cursor(wl_pointer, serial, state->cursor.surface,
-			state->cursor.image->hotspot_x / state->cursor.scale,
-			state->cursor.image->hotspot_y / state->cursor.scale);
+		if (state->cursor.theme != NULL) {
+			wl_pointer_set_cursor(wl_pointer, serial, state->cursor.surface,
+				state->cursor.image->hotspot_x / state->cursor.scale,
+				state->cursor.image->hotspot_y / state->cursor.scale);
+		}
 	}
 }
 
@@ -430,6 +437,9 @@ static void handle_global(void *data, struct wl_registry *registry,
 	} else if (strcmp(interface, xdg_activation_v1_interface.name) == 0) {
 		state->xdg_activation = wl_registry_bind(registry, name,
 			&xdg_activation_v1_interface, 1);
+	} else if (strcmp(interface, wp_cursor_shape_manager_v1_interface.name) == 0) {
+		state->cursor_shape_manager = wl_registry_bind(registry, name,
+			&wp_cursor_shape_manager_v1_interface, 1);
 	}
 }
 
@@ -526,6 +536,9 @@ void finish_wayland(struct mako_state *state) {
 
 	if (state->xdg_activation != NULL) {
 		xdg_activation_v1_destroy(state->xdg_activation);
+	}
+	if (state->cursor_shape_manager != NULL) {
+		wp_cursor_shape_manager_v1_destroy(state->cursor_shape_manager);
 	}
 
 	if (state->cursor.theme != NULL) {
