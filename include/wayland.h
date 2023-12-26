@@ -13,7 +13,6 @@ struct mako_output {
 	struct mako_state *state;
 	uint32_t global_name;
 	struct wl_output *wl_output;
-	struct zxdg_output_v1 *xdg_output;
 	struct wl_list link; // mako_state::outputs
 
 	char *name;

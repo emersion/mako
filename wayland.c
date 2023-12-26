@@ -17,32 +17,6 @@ static void noop() {
 }
 
 
-static void xdg_output_handle_name(void *data, struct zxdg_output_v1 *xdg_output,
-		const char *name) {
-	struct mako_output *output = data;
-	output->name = strdup(name);
-}
-
-static const struct zxdg_output_v1_listener xdg_output_listener = {
-	.logical_position = noop,
-	.logical_size = noop,
-	.done = noop,
-	.name = xdg_output_handle_name,
-	.description = noop,
-};
-
-static void get_xdg_output(struct mako_output *output) {
-	if (output->state->xdg_output_manager == NULL ||
-			output->xdg_output != NULL) {
-		return;
-	}
-
-	output->xdg_output = zxdg_output_manager_v1_get_xdg_output(
-		output->state->xdg_output_manager, output->wl_output);
-	zxdg_output_v1_add_listener(output->xdg_output, &xdg_output_listener,
-		output);
-}
-
 static void output_handle_geometry(void *data, struct wl_output *wl_output,
 		int32_t x, int32_t y, int32_t phy_width, int32_t phy_height,
 		int32_t subpixel, const char *make, const char *model,
@@ -57,11 +31,19 @@ static void output_handle_scale(void *data, struct wl_output *wl_output,
 	output->scale = factor;
 }
 
+static void output_handle_name(void *data, struct wl_output *wl_output,
+		const char *name) {
+	struct mako_output *output = data;
+	output->name = strdup(name);
+}
+
 static const struct wl_output_listener output_listener = {
 	.geometry = output_handle_geometry,
 	.mode = noop,
 	.done = noop,
 	.scale = output_handle_scale,
+	.name = output_handle_name,
+	.description = noop,
 };
 
 static void send_frame(struct mako_surface *surface);
@@ -86,7 +68,6 @@ static void create_output(struct mako_state *state,
 
 	wl_output_set_user_data(wl_output, output);
 	wl_output_add_listener(wl_output, &output_listener, output);
-	get_xdg_output(output);
 	if (recreate_surface) {
 		// We had no outputs, force our surfaces to redraw
 		wl_list_for_each(surface, &output->state->surfaces, link) {
@@ -106,9 +87,6 @@ static void destroy_output(struct mako_output *output) {
 		}
 	}
 	wl_list_remove(&output->link);
-	if (output->xdg_output != NULL) {
-		zxdg_output_v1_destroy(output->xdg_output);
-	}
 	wl_output_destroy(output->wl_output);
 	free(output->name);
 	free(output);
@@ -447,13 +425,8 @@ static void handle_global(void *data, struct wl_registry *registry,
 		create_seat(state, seat);
 	} else if (strcmp(interface, wl_output_interface.name) == 0) {
 		struct wl_output *output =
-			wl_registry_bind(registry, name, &wl_output_interface, 3);
+			wl_registry_bind(registry, name, &wl_output_interface, 4);
 		create_output(state, output, name);
-	} else if (strcmp(interface, zxdg_output_manager_v1_interface.name) == 0 &&
-			version >= ZXDG_OUTPUT_V1_NAME_SINCE_VERSION) {
-		state->xdg_output_manager = wl_registry_bind(registry, name,
-			&zxdg_output_manager_v1_interface,
-			ZXDG_OUTPUT_V1_NAME_SINCE_VERSION);
 	} else if (strcmp(interface, xdg_activation_v1_interface.name) == 0) {
 		state->xdg_activation = wl_registry_bind(registry, name,
 			&xdg_activation_v1_interface, 1);
@@ -506,25 +479,8 @@ bool init_wayland(struct mako_state *state) {
 		return false;
 	}
 
-	if (state->xdg_output_manager != NULL) {
-		struct mako_output *output;
-		wl_list_for_each(output, &state->outputs, link) {
-			get_xdg_output(output);
-		}
-		wl_display_roundtrip(state->display);
-	}
-	if (state->xdg_output_manager == NULL) {
-		struct mako_criteria *criteria;
-		wl_list_for_each(criteria, &state->config.criteria, link) {
-			if (criteria->style.spec.output &&
-					strcmp(criteria->style.output, "") != 0) {
-				fprintf(stderr, "warning: configured an output "
-					"but compositor doesn't support "
-					"xdg-output-unstable-v1 version 2\n");
-				break;
-			}
-		}
-	}
+	// Second roundtrip to get output metadata
+	wl_display_roundtrip(state->display);
 
 	// Set up the cursor. It needs a wl_surface with the cursor loaded into it.
 	// If one of these fail, mako will work fine without the cursor being able to change.
@@ -564,9 +520,6 @@ void finish_wayland(struct mako_state *state) {
 
 	if (state->xdg_activation != NULL) {
 		xdg_activation_v1_destroy(state->xdg_activation);
-	}
-	if (state->xdg_output_manager != NULL) {
-		zxdg_output_manager_v1_destroy(state->xdg_output_manager);
 	}
 
 	if (state->cursor.theme != NULL) {
