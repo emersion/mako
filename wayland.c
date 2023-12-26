@@ -456,7 +456,6 @@ bool init_wayland(struct mako_state *state) {
 	wl_list_init(&state->seats);
 
 	state->display = wl_display_connect(NULL);
-
 	if (state->display == NULL) {
 		fprintf(stderr, "failed to create display\n");
 		return false;
@@ -464,7 +463,11 @@ bool init_wayland(struct mako_state *state) {
 
 	state->registry = wl_display_get_registry(state->display);
 	wl_registry_add_listener(state->registry, &registry_listener, state);
-	wl_display_roundtrip(state->display);
+
+	if (wl_display_roundtrip(state->display) < 0) {
+		fprintf(stderr, "wl_display_roundtrip() failed\n");
+		return false;
+	}
 
 	if (state->compositor == NULL) {
 		fprintf(stderr, "compositor doesn't support wl_compositor\n");
@@ -480,7 +483,10 @@ bool init_wayland(struct mako_state *state) {
 	}
 
 	// Second roundtrip to get output metadata
-	wl_display_roundtrip(state->display);
+	if (wl_display_roundtrip(state->display) < 0) {
+		fprintf(stderr, "wl_display_roundtrip() failed\n");
+		return false;
+	}
 
 	// Set up the cursor. It needs a wl_surface with the cursor loaded into it.
 	// If one of these fail, mako will work fine without the cursor being able to change.
