@@ -79,10 +79,9 @@ endif
 
 executable(
 	'mako',
-	files(src_files),
+	files(src_files) + protocols_src,
 	dependencies: [
 		cairo,
-		client_protos,
 		epoll,
 		gdk_pixbuf,
 		sdbus,

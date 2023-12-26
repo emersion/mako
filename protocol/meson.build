@@ -21,28 +21,15 @@ wayland_scanner_client = generator(
 	arguments: ['client-header', '@INPUT@', '@OUTPUT@'],
 )
 
-client_protocols = [
+protocols = [
 	wl_protocol_dir / 'stable/xdg-shell/xdg-shell.xml',
 	wl_protocol_dir / 'staging/xdg-activation/xdg-activation-v1.xml',
 	wl_protocol_dir / 'unstable/xdg-output/xdg-output-unstable-v1.xml',
 	'wlr-layer-shell-unstable-v1.xml',
 ]
 
-client_protos_src = []
-client_protos_headers = []
-
-foreach p : client_protocols
-	client_protos_src += wayland_scanner_code.process(p)
-	client_protos_headers += wayland_scanner_client.process(p)
+protocols_src = []
+foreach p : protocols
+	protocols_src += wayland_scanner_code.process(p)
+	protocols_src += wayland_scanner_client.process(p)
 endforeach
-
-lib_client_protos = static_library(
-	'client_protos',
-	client_protos_src + client_protos_headers,
-	dependencies: [wayland_client]
-) # for the include directory
-
-client_protos = declare_dependency(
-	link_with: lib_client_protos,
-	sources: client_protos_headers,
-)
