@@ -48,7 +48,7 @@ add_project_arguments('-DHAVE_' + sdbus.name().to_upper(), language: 'c')
 
 gdk_pixbuf = dependency('gdk-pixbuf-2.0', required: get_option('icons'))
 if gdk_pixbuf.found()
-	add_global_arguments('-DHAVE_ICONS', language: 'c')
+	add_project_arguments('-DHAVE_ICONS', language: 'c')
 endif
 
 subdir('contrib/completions')
