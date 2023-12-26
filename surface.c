@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "config.h"
 #include "mako.h"
 #include "surface.h"
 
