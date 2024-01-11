@@ -720,8 +720,10 @@ static void frame_handle_done(void *data, struct wl_callback *callback,
 		uint32_t time) {
 	struct mako_surface *surface = data;
 
-	wl_callback_destroy(surface->frame_callback);
-	surface->frame_callback = NULL;
+	if (surface->frame_callback) {
+		wl_callback_destroy(surface->frame_callback);
+		surface->frame_callback = NULL;
+	}
 
 	// Only draw again if we need to
 	if (surface->dirty) {
