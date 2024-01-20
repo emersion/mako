@@ -170,6 +170,13 @@ static char *resolve_icon(struct mako_notification *notif) {
 		for (size_t i = 0; i < found_count; ++i) {
 			char *relative_path = icon_glob.gl_pathv[i];
 
+			if (!strcmp(relative_path+strlen(relative_path)-4, ".svg")) {
+				// Assume icon is scalable
+				free(icon_path);
+				icon_path = strdup(icon_glob.gl_pathv[i]);
+				break;
+			}
+
 			// Find the end of the current search path and walk to the next
 			// path component. Hopefully this will be the icon resolution
 			// subdirectory.
