@@ -60,6 +60,11 @@ Supported options:
 
 	Default: none
 
+*on-timeout*=_action_
+	Performs the action when the notification times out.
+
+	Default: none
+
 Supported actions:
 
 *none*

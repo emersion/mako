@@ -149,6 +149,7 @@ void finish_style(struct mako_style *style) {
 	finish_binding(&style->button_bindings.right);
 	finish_binding(&style->touch_binding);
 	finish_binding(&style->notify_binding);
+	finish_binding(&style->timeout_binding);
 	free(style->icon_path);
 	free(style->font);
 	free(style->format);
@@ -388,6 +389,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.notify_binding) {
 		copy_binding(&target->notify_binding, &style->notify_binding);
 		target->spec.notify_binding = true;
+	}
+
+	if (style->spec.timeout_binding) {
+		copy_binding(&target->timeout_binding, &style->timeout_binding);
+		target->spec.timeout_binding = true;
 	}
 
 	return true;
@@ -678,6 +684,9 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		} else if (strcmp(name, "on-notify") == 0) {
 			copy_binding(&style->notify_binding, &binding);
 			style->spec.notify_binding = true;
+		} else if (strcmp(name, "on-timeout") == 0) {
+			copy_binding(&style->timeout_binding, &binding);
+			style->spec.timeout_binding = true;
 		} else {
 			return false;
 		}

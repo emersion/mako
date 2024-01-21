@@ -88,6 +88,7 @@ static void handle_notification_timer(void *data) {
 	notif->timer = NULL;
 
 	close_notification(notif, MAKO_NOTIFICATION_CLOSE_EXPIRED, true);
+	notification_execute_binding(notif, &notif->style.timeout_binding, NULL);
 	set_dirty(surface);
 }
 
