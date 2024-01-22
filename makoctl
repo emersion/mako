@@ -8,8 +8,8 @@ usage() {
 	echo "                                 given id, or the last notification"
 	echo "                                 if none is given"
 	echo "          [-a|--all]             Dismiss all notifications"
-	echo "          [-g|--group]           Dismiss all the notifications"
-	echo "                                 in the last notification's group"
+	echo "          [-g|--group]           Dismiss all the notifications in the"
+	echo "                                 last or given notification's group"
 	echo "  restore                        Restore the most recently expired"
 	echo "                                 notification from the history buffer"
 	echo "  invoke [-n id] [action]        Invoke an action on the notification"
@@ -85,8 +85,10 @@ case "$1" in
 
 	if [ $all -eq 1 ]; then
 		call DismissAllNotifications
+	elif [ $group -eq 1 ]; then
+		call DismissGroupNotifications "u" "$id"
 	else
-		call DismissNotification "ub" "$id" "$group"
+		call DismissNotification "u" "$id"
 	fi
 	;;
 "invoke")
