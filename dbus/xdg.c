@@ -440,7 +440,8 @@ static int handle_close_notification(sd_bus_message *msg, void *data,
 	struct mako_state *state = data;
 
 	uint32_t id;
-	int ret = sd_bus_message_read(msg, "u", &id);
+	bool add_to_history = true;
+	int ret = sd_bus_message_read(msg, "ub", &id, &add_to_history);
 	if (ret < 0) {
 		return ret;
 	}
@@ -449,7 +450,7 @@ static int handle_close_notification(sd_bus_message *msg, void *data,
 	struct mako_notification *notif = get_notification(state, id);
 	if (notif) {
 		struct mako_surface *surface = notif->surface;
-		close_notification(notif, MAKO_NOTIFICATION_CLOSE_REQUEST, true);
+		close_notification(notif, MAKO_NOTIFICATION_CLOSE_REQUEST, add_to_history);
 		set_dirty(surface);
 	}
 

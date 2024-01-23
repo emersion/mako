@@ -9,6 +9,7 @@ usage() {
 	echo "                                 if none is given"
 	echo "          [-a|--all]             Dismiss all notifications"
 	echo "          [-g|--group]           Dismiss all the notifications in the"
+	echo "          [--no-history]         Dismiss without adding the history"
 	echo "                                 last or given notification's group"
 	echo "  restore                        Restore the most recently expired"
 	echo "                                 notification from the history buffer"
@@ -58,6 +59,7 @@ case "$1" in
 "dismiss")
 	all=0
 	group=0
+	add_to_history=1
 	id=0
 	while [ $# -gt 1 ]; do
 		case "$2" in
@@ -66,6 +68,9 @@ case "$1" in
 			;;
 		"-g"|"--group")
 			group=1
+			;;
+		"--no-history")
+			add_to_history=0
 			;;
 		"-n")
 			if [ $# -lt 3 ]; then
@@ -84,11 +89,11 @@ case "$1" in
 	done
 
 	if [ $all -eq 1 ]; then
-		call DismissAllNotifications
+		call DismissAllNotifications "b" "$add_to_history"
 	elif [ $group -eq 1 ]; then
-		call DismissGroupNotifications "u" "$id"
+		call DismissGroupNotifications "ub" "$id" "$add_to_history"
 	else
-		call DismissNotification "u" "$id"
+		call DismissNotification "ub" "$id" "$add_to_history"
 	fi
 	;;
 "invoke")

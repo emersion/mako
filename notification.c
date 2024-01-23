@@ -168,12 +168,13 @@ struct mako_notification *get_tagged_notification(struct mako_state *state,
 }
 
 void close_group_notifications(struct mako_notification *top_notif,
-	       enum mako_notification_close_reason reason) {
+		enum mako_notification_close_reason reason,
+		bool add_to_history) {
 	struct mako_state *state = top_notif->state;
 
 	if (top_notif->style.group_criteria_spec.none) {
 		// No grouping, just close the notification
-		close_notification(top_notif, reason, true);
+		close_notification(top_notif, reason, add_to_history);
 		return;
 	}
 
@@ -183,7 +184,7 @@ void close_group_notifications(struct mako_notification *top_notif,
 	struct mako_notification *notif, *tmp;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
 		if (match_criteria(notif_criteria, notif)) {
-			close_notification(notif, reason, true);
+			close_notification(notif, reason, add_to_history);
 		}
 	}
 
@@ -191,10 +192,11 @@ void close_group_notifications(struct mako_notification *top_notif,
 }
 
 void close_all_notifications(struct mako_state *state,
-		enum mako_notification_close_reason reason) {
+		enum mako_notification_close_reason reason,
+		bool add_to_history) {
 	struct mako_notification *notif, *tmp;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
-		close_notification(notif, reason, true);
+		close_notification(notif, reason, add_to_history);
 	}
 }
 
@@ -386,10 +388,10 @@ void notification_execute_binding(struct mako_notification *notif,
 		close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, false);
 		break;
 	case MAKO_BINDING_DISMISS_GROUP:
-		close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+		close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, true);
 		break;
 	case MAKO_BINDING_DISMISS_ALL:
-		close_all_notifications(notif->state, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+		close_all_notifications(notif->state, MAKO_NOTIFICATION_CLOSE_DISMISSED, true);
 		break;
 	case MAKO_BINDING_INVOKE_ACTION:
 		assert(binding->action_name != NULL);

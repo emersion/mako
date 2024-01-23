@@ -19,7 +19,13 @@ static int handle_dismiss_all_notifications(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
 
-	close_all_notifications(state, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+	int add_to_history = 1;
+	int ret = sd_bus_message_read(msg, "b", &add_to_history);
+	if (ret < 0) {
+		return ret;
+	}
+
+	close_all_notifications(state, MAKO_NOTIFICATION_CLOSE_DISMISSED, add_to_history);
 	struct mako_surface *surface;
 
 	wl_list_for_each(surface, &state->surfaces, link) {
@@ -37,11 +43,17 @@ static int handle_dismiss_last_group_notifications(sd_bus_message *msg, void *da
 		goto done;
 	}
 
+	int add_to_history = 1;
+	int ret = sd_bus_message_read(msg, "b", &add_to_history);
+	if (ret < 0) {
+		return ret;
+	}
+
 	struct mako_notification *notif =
 		wl_container_of(state->notifications.next, notif, link);
 
 	struct mako_surface *surface = notif->surface;
-	close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
+	close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, add_to_history);
 	set_dirty(surface);
 
 done:
@@ -56,10 +68,19 @@ static int handle_dismiss_last_notification(sd_bus_message *msg, void *data,
 		goto done;
 	}
 
+	int add_to_history = 1;
+	int ret = sd_bus_message_read(msg, "b", &add_to_history);
+	if (ret < 0) {
+		return ret;
+	}
+
 	struct mako_notification *notif =
 		wl_container_of(state->notifications.next, notif, link);
-	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, true);
-	set_dirty(notif->surface);
+
+	struct mako_surface *surface = notif->surface;
+	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, add_to_history);
+
+	set_dirty(surface);
 
 done:
 	return sd_bus_reply_method_return(msg, "");
@@ -70,7 +91,8 @@ static int handle_dismiss_group_notifications(sd_bus_message *msg, void *data,
 	struct mako_state *state = data;
 
 	uint32_t id = 0;
-	int ret = sd_bus_message_read(msg, "u", &id);
+	int add_to_history = 1;
+	int ret = sd_bus_message_read(msg, "ub", &id, &add_to_history);
 	if (ret < 0) {
 		return ret;
 	}
@@ -78,8 +100,9 @@ static int handle_dismiss_group_notifications(sd_bus_message *msg, void *data,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (notif->id == id || id == 0) {
-			close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
-			set_dirty(notif->surface);
+			struct mako_surface *surface = notif->surface;
+			close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, add_to_history);
+			set_dirty(surface);
 			break;
 		}
 	}
@@ -92,7 +115,8 @@ static int handle_dismiss_notification(sd_bus_message *msg, void *data,
 	struct mako_state *state = data;
 
 	uint32_t id = 0;
-	int ret = sd_bus_message_read(msg, "u", &id);
+	int add_to_history = 1;
+	int ret = sd_bus_message_read(msg, "ub", &id, &add_to_history);
 	if (ret < 0) {
 		return ret;
 	}
@@ -100,8 +124,9 @@ static int handle_dismiss_notification(sd_bus_message *msg, void *data,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (notif->id == id || id == 0) {
-			close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, true);
-			set_dirty(notif->surface);
+			struct mako_surface *surface = notif->surface;
+			close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, add_to_history);
+			set_dirty(surface);
 			break;
 		}
 	}
@@ -453,11 +478,11 @@ static int handle_set_modes(sd_bus_message *msg, void *data,
 
 static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_VTABLE_START(0),
-	SD_BUS_METHOD("DismissAllNotifications", "", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
-	SD_BUS_METHOD("DismissLastGroupNotifications", "", "", handle_dismiss_last_group_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
-	SD_BUS_METHOD("DismissLastNotification", "", "", handle_dismiss_last_notification, SD_BUS_VTABLE_UNPRIVILEGED),
-	SD_BUS_METHOD("DismissGroupNotifications", "u", "", handle_dismiss_group_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
-	SD_BUS_METHOD("DismissNotification", "u", "", handle_dismiss_notification, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("DismissAllNotifications", "b", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("DismissLastGroupNotifications", "b", "", handle_dismiss_last_group_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("DismissLastNotification", "b", "", handle_dismiss_last_notification, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("DismissGroupNotifications", "ub", "", handle_dismiss_group_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("DismissNotification", "ub", "", handle_dismiss_notification, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("InvokeAction", "us", "", handle_invoke_action, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("RestoreNotification", "", "", handle_restore_action, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("ListNotifications", "", "aa{sv}", handle_list_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
