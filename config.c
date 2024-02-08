@@ -9,6 +9,7 @@
 
 #include "config.h"
 #include "criteria.h"
+#include "string-util.h"
 #include "types.h"
 
 static int32_t max(int32_t a, int32_t b) {
@@ -700,35 +701,40 @@ static bool file_exists(const char *path) {
 }
 
 static char *get_config_path(void) {
-	static const char *config_paths[] = {
-		"$HOME/.mako/config",
-		"$XDG_CONFIG_HOME/mako/config",
+	const char *home = getenv("HOME");
+	if (home == NULL) {
+		fprintf(stderr, "HOME env var not set\n");
+		return NULL;
+	}
+
+	const char *config_home = getenv("XDG_CONFIG_HOME");
+	char *config_home_fallback = NULL;
+	if (config_home == NULL || config_home[0] == '\0') {
+		config_home_fallback = mako_asprintf("%s/.config", home);
+		config_home = config_home_fallback;
+	}
+
+	char *config_paths[] = {
+		mako_asprintf("%s/.mako/config", home),
+		mako_asprintf("%s/mako/config", config_home),
 	};
 
-	if (!getenv("XDG_CONFIG_HOME")) {
-		char *home = getenv("HOME");
-		if (!home) {
-			return NULL;
-		}
-		char config_home[strlen(home) + strlen("/.config") + 1];
-		strcpy(config_home, home);
-		strcat(config_home, "/.config");
-		setenv("XDG_CONFIG_HOME", config_home, 1);
-	}
-
-	for (size_t i = 0; i < sizeof(config_paths) / sizeof(char *); ++i) {
-		wordexp_t p;
-		if (wordexp(config_paths[i], &p, 0) == 0) {
-			char *path = strdup(p.we_wordv[0]);
-			wordfree(&p);
-			if (file_exists(path)) {
-				return path;
-			}
-			free(path);
+	size_t config_paths_len = sizeof(config_paths) / sizeof(config_paths[0]);
+	char *found_path = NULL;
+	for (size_t i = 0; i < config_paths_len; ++i) {
+		char *path = config_paths[i];
+		if (file_exists(path)) {
+			found_path = strdup(path);
+			break;
 		}
 	}
 
-	return NULL;
+	for (size_t i = 0; i < config_paths_len; ++i) {
+		free(config_paths[i]);
+	}
+	free(config_home_fallback);
+
+	return found_path;
 }
 
 int load_config_file(struct mako_config *config, char *config_arg) {
