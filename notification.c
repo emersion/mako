@@ -413,9 +413,7 @@ void notification_execute_binding(struct mako_notification *notif,
 				// preamble before the user's command.
 				const char setup_vars[] = "id=\"$1\"\n";
 
-				size_t cmd_size = strlen(setup_vars) + strlen(binding->command) + 1;
-				char *cmd = malloc(cmd_size);
-				snprintf(cmd, cmd_size, "%s%s", setup_vars, binding->command);
+				char *cmd = mako_asprintf("%s%s", setup_vars, binding->command);
 
 				char id_str[32];
 				snprintf(id_str, sizeof(id_str), "%" PRIu32, notif->id);
