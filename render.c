@@ -1,8 +1,6 @@
-#define _XOPEN_SOURCE 700
 #include <stdlib.h>
 #include <cairo/cairo.h>
 #include <pango/pangocairo.h>
-#include <math.h>
 
 #include "config.h"
 #include "criteria.h"
@@ -12,6 +10,8 @@
 #include "wayland.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "icon.h"
+
+#define M_PI 3.14159265358979323846
 
 // HiDPI conventions: local variables are in surface-local coordinates, unless
 // they have a "buffer_" prefix, in which case they are in buffer-local
