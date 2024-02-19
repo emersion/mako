@@ -15,6 +15,7 @@ static const char usage[] =
 	"Usage: mako [options...]\n"
 	"\n"
 	"  -h, --help                          Show help message and quit.\n"
+	"  -v, --version                       Show mako's version and quit.\n"
 	"  -c, --config <path>                 Path to config file.\n"
 	"      --font <font>                   Font family and size.\n"
 	"      --background-color <color>      Background color.\n"
@@ -115,12 +116,16 @@ int main(int argc, char *argv[]) {
 	init_default_config(&state.config);
 	int ret = reload_config(&state.config, argc, argv);
 
-	if (ret < 0) {
+	if (ret == MAKO_ARGS_FAILURE) {
 		finish_config(&state.config);
 		return EXIT_FAILURE;
-	} else if (ret > 0) {
+	} else if (ret == MAKO_ARGS_SHOW_HELP) {
 		finish_config(&state.config);
 		printf("%s", usage);
+		return EXIT_SUCCESS;
+	} else if (ret == MAKO_ARGS_SHOW_VERSION) {
+		finish_config(&state.config);
+		printf("mako %s\n", MAKO_VERSION);
 		return EXIT_SUCCESS;
 	}
 

@@ -19,6 +19,9 @@ dismissed with a click or via *makoctl*(1).
 *-h, --help*
 	Show help message and quit.
 
+*-v, --version*
+	Show mako's version message and quit.
+
 *-c, --config*
 	Custom path to the config file.
 

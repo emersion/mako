@@ -7,6 +7,13 @@
 #include <pango/pango.h>
 #include "types.h"
 
+enum mako_parse_args_status {
+	MAKO_ARGS_FAILURE = -1,
+	MAKO_ARGS_SUCCESS = 0,
+	MAKO_ARGS_SHOW_HELP,
+	MAKO_ARGS_SHOW_VERSION
+};
+
 enum mako_binding_action {
 	MAKO_BINDING_NONE,
 	MAKO_BINDING_DISMISS,
@@ -123,7 +130,8 @@ bool apply_style(struct mako_style *target, const struct mako_style *style);
 bool apply_superset_style(
 		struct mako_style *target, struct mako_config *config);
 
-int parse_config_arguments(struct mako_config *config, int argc, char **argv);
+enum mako_parse_args_status
+	parse_config_arguments(struct mako_config *config, int argc, char **argv);
 int load_config_file(struct mako_config *config, char *config_arg);
 int reload_config(struct mako_config *config, int argc, char **argv);
 bool apply_global_option(struct mako_config *config, const char *name,

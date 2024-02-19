@@ -53,6 +53,8 @@ if gdk_pixbuf.found()
 	add_project_arguments('-DHAVE_ICONS', language: 'c')
 endif
 
+add_project_arguments('-DMAKO_VERSION="@0@"'.format(meson.project_version()), language: 'c')
+
 subdir('contrib/completions')
 subdir('protocol')
 
