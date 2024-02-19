@@ -203,6 +203,8 @@ bool parse_criteria_spec(const char *string, struct mako_criteria_spec *out) {
 			out->category = true;
 		} else if (strcmp(token, "desktop-entry") == 0) {
 			out->desktop_entry = true;
+		} else if (strcmp(token, "sound-name") == 0) {
+			out->sound_name = true;
 		} else if (strcmp(token, "summary") == 0) {
 			out->summary = true;
 		} else if (strcmp(token, "body") == 0) {

@@ -331,6 +331,7 @@ The following fields are available in criteria:
 - _urgency_ (one of "low", "normal", "critical")
 - _category_ (string)
 - _desktop-entry_ (string)
+- _sound-name_ (string)
 - _actionable_ (boolean)
 - _expiring_ (boolean)
 - _mode_ (string): only apply style options in this section if the provided

@@ -50,6 +50,7 @@ struct mako_criteria_spec {
 	bool urgency;
 	bool category;
 	bool desktop_entry;
+	bool sound_name;
 	bool summary;
 	bool summary_pattern;
 	bool body;
