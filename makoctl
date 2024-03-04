@@ -24,6 +24,7 @@ usage() {
 	echo "  reload                         Reload the configuration file"
 	echo "  mode                           List modes"
 	echo "  mode [-a mode]... [-r mode]... Add/remove modes"
+	echo "  mode [-t mode]...              Toggle modes (add if not present, remove if present)"
 	echo "  mode -s mode...                Set modes"
 	echo "  help                           Show this help"
 }
@@ -147,17 +148,21 @@ case "$1" in
 	shift 1
 	require_jq
 	modes="$(call ListModes | jq '.data[0]')"
-	add_remove_flag=0
+	add_remove_toggle_flag=0
 	set_flag=0
-	while getopts a:r:s name; do
+	while getopts a:r:t:s name; do
 		case "$name" in
 		a)
-			add_remove_flag=1
+			add_remove_toggle_flag=1
 			modes="$(echo "$modes" | jq --arg mode "$OPTARG" '. += [$mode]')"
 			;;
 		r)
-			add_remove_flag=1
+			add_remove_toggle_flag=1
 			modes="$(echo "$modes" | jq --arg mode "$OPTARG" 'del(.[] | select(. == $mode))')"
+			;;
+		t)
+			add_remove_toggle_flag=1
+			modes="$(echo "$modes" | jq --arg mode "$OPTARG" '. |= if any(.[]; . == $mode) then map(select(. != $mode)) else . + [$mode] end')"
 			;;
 		s)
 			set_flag=1
@@ -166,7 +171,7 @@ case "$1" in
 			exit 1
 		esac
 	done
-	if [ "$add_remove_flag" = 1 ] && [ "$set_flag" = 1 ]; then
+	if [ "$add_remove_toggle_flag" = 1 ] && [ "$set_flag" = 1 ]; then
 		echo >&2 "makoctl: -a/-r and -s cannot be used together"
 		exit 1
 	fi
@@ -174,7 +179,7 @@ case "$1" in
 		shift $(($OPTIND - 1))
 		modes="$(jq -n '$ARGS.positional' --args "$@")"
 	fi
-	if [ "$add_remove_flag" = 1 ] || [ "$set_flag" = 1 ]; then
+	if [ "$add_remove_toggle_flag" = 1 ] || [ "$set_flag" = 1 ]; then
 		modes="$(echo "$modes" | jq '. | unique')"
 		modes_len="$(echo "$modes" | jq '. | length')"
 		modes_args=$(echo "$modes" | jq -r '@sh')
