@@ -75,7 +75,7 @@ Sends IPC commands to the running mako daemon via dbus.
 
 *mode* ++
 *mode* -s <mode>... ++
-*mode* [-a mode]... [-r mode]...
+*mode* [-a mode]... [-r mode]... [-t mode]... +++
 	When run without any option, retrieves a list of current modes.
 
 	When run with the _-s_ option, replaces the current modes with the provided
@@ -83,6 +83,9 @@ Sends IPC commands to the running mako daemon via dbus.
 
 	When run with the _-a_ or _-r_ options, adds or removes the provided mode
 	from the current modes.
+
+	When run with the _-t_ option, toggle the mode by removing it when present
+	and otherwise adding it.
 
 	See the _MODES_ section in **mako**(5) for more information about modes.
 
