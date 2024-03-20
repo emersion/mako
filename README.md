@@ -12,11 +12,9 @@ Feel free to join the IRC channel: #emersion on irc.libera.chat.
 
 ## Running
 
-`mako` requires an active session bus to function properly. 
-
-If you are using SystemD `mako` will run automatically when a notification is emitted.
-This happens via D-Bus activation, so you don't really need to explicitly 
-start it up (this also allows delaying its startup time and speed up system startup).
+`mako` targets the FreeDesktop notification specification.
+This means, that it assumes that there is a D-Bus session available at it's runtime.
+Systemd sets up a session bus by default so if you are using it, you are golden.
 
 If you are not using systemd, you might need to manually start a dbus user session
 with the compositor of your choice from the display manager. The command run should
