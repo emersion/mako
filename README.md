@@ -12,8 +12,7 @@ Feel free to join the IRC channel: #emersion on irc.libera.chat.
 
 ## Running
 
-`mako` targets the FreeDesktop notification specification.
-This means, that it assumes that there is a D-Bus session available at it's runtime.
+`mako` assumes that there is a D-Bus session available at it's runtime.
 Systemd sets up a session bus by default so if you are using it, you are golden.
 
 If you are not using systemd, you might need to manually start a dbus user session
