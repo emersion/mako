@@ -39,7 +39,7 @@ if ! type $BUSCTL >/dev/null 2>&1; then
 fi
 
 call() {
-	$BUSCTL -j --user call org.freedesktop.Notifications /fr/emersion/Mako \
+	$BUSCTL --json=short --user call org.freedesktop.Notifications /fr/emersion/Mako \
 		fr.emersion.Mako -- "$@"
 }
 
