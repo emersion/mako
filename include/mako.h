@@ -40,6 +40,7 @@ struct mako_surface {
 	uint32_t anchor;
 
 	int32_t width, height;
+	int32_t rendered_width, rendered_height;
 	struct pool_buffer buffers[2];
 	struct pool_buffer *current_buffer;
 };
