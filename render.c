@@ -113,16 +113,6 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	int notif_width =
 		(style->width <= surface->width) ? style->width : surface->width;
 
-	// offset_x is for the entire draw operation inside the surface
-	int offset_x;
-	if (surface->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT) {
-		offset_x = surface->width - notif_width - style->margin.right;
-	} else if (surface->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT) {
-		offset_x = style->margin.left;
-	} else { // CENTER has nothing to & with, so it's the else case
-		offset_x = (surface->width - notif_width) / 2;
-	}
-
 	// text_x is the offset of the text inside our draw operation
 	double text_x = style->padding.left;
 	if (icon != NULL && style->icon_location == MAKO_ICON_LOCATION_LEFT) {
@@ -190,6 +180,27 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	}
 	int text_height = buffer_text_height / scale;
 	int text_width = buffer_text_width / scale;
+
+	if (style->min_width > 0) {
+		int min_width = text_width + border_size + padding_width;
+		if (icon && ! icon_vertical) {
+			min_width += icon->width;
+			min_width += style->icon_location == MAKO_ICON_LOCATION_LEFT ?
+				style->padding.left : style->padding.right;
+		}
+	
+		notif_width = MAX(style->min_width, min_width);
+	}
+	
+	// offset_x is for the entire draw operation inside the surface
+	int offset_x;
+	if (surface->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT) {
+		offset_x = surface->width - notif_width - style->margin.right;
+	} else if (surface->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT) {
+		offset_x = style->margin.left;
+	} else { // CENTER has nothing to & with, so it's the else case
+		offset_x = (surface->width - notif_width) / 2;
+	}
 
 	if (text_height > text_layout_height) {
 		text_height = text_layout_height;
