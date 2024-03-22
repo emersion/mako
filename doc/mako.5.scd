@@ -127,6 +127,11 @@ Supported actions:
 
 	Default: #FFFFFFFF
 
+*min-width*=_px_
+	Set mininum (dynamic) width of notification popups.
+
+	Default: 300
+
 *width*=_px_
 	Set width of notification popups.
 
