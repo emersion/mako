@@ -111,7 +111,9 @@ Supported actions:
 # STYLE OPTIONS
 
 *font*=_font_
-	Set font to _font_, in Pango format.
+	Set font to _font_, as a Pango font description. For more information on
+	Pango font descriptions, see:
+	https://docs.gtk.org/Pango/type_func.FontDescription.from_string.html#description
 
 	Default: monospace 10
 
