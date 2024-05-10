@@ -171,13 +171,16 @@ case "$1" in
 			exit 1
 		esac
 	done
+	shift $(($OPTIND - 1))
 	if [ "$add_remove_toggle_flag" = 1 ] && [ "$set_flag" = 1 ]; then
-		echo >&2 "makoctl: -a/-r and -s cannot be used together"
+		echo >&2 "makoctl: -a/-r/-t and -s cannot be used together"
 		exit 1
 	fi
 	if [ "$set_flag" = 1 ]; then
-		shift $(($OPTIND - 1))
 		modes="$(jq -n '$ARGS.positional' --args "$@")"
+	elif [ $# -gt 0 ]; then
+		echo >&2 "makoctl: positional arguments can only be used with -s"
+		exit 1
 	fi
 	if [ "$add_remove_toggle_flag" = 1 ] || [ "$set_flag" = 1 ]; then
 		modes="$(echo "$modes" | jq '. | unique')"
