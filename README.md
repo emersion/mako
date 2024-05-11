@@ -35,6 +35,7 @@ For control of mako during runtime, `makoctl` can be used; see `man makoctl`
 <details>
 <summary>Variable Explanation</summary>
 <br>
+
 | Variable            | Explanation                                                                                                 | Example Value            |
 |---------------------|-------------------------------------------------------------------------------------------------------------|--------------------------|
 | `max-history`       | Maximum number of notifications to keep in the history buffer.                                              | `5`                      |
