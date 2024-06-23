@@ -29,6 +29,12 @@ Empty lines and lines that begin with # are ignored.
 
 	Default: -time
 
+*include*=_config path_
+	Includes a config at the specified path. The path must be absolute
+	or otherwise start with ~/.
+
+	Default: none
+
 # BINDING OPTIONS
 
 Bindings allow one to perform an action when an event is triggered.
