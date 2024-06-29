@@ -100,4 +100,4 @@ https://github.com/emersion/mako.
 
 # SEE ALSO
 
-*mako*(1)
+*mako*(1) *notify-send*(1)

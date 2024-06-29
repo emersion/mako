@@ -487,4 +487,4 @@ https://github.com/emersion/mako.
 
 # SEE ALSO
 
-*mako*(1) *makoctl*(1)
+*mako*(1) *makoctl*(1) *notify-send*(1)
