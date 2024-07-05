@@ -778,17 +778,38 @@ int load_config_file(struct mako_config *config, char *path) {
 		wl_container_of(config->criteria.next, criteria, link);
 
 	size_t n = 0;
-	while (getline(&line, &n, f) > 0) {
+	ssize_t len = 0;
+	while ((len = getline(&line, &n, f)) != -1) {
 		++lineno;
-		if (line[0] == '\0' || line[0] == '\n' || line[0] == '#') {
+
+		// We can't operate on `line` because we need to free it, so
+		// make a copy
+		char *stripped_line = line;
+
+		// Strip leading whitespace
+		while (stripped_line[0] == ' ' || stripped_line[0] == '\t') {
+			++stripped_line;
+			--len;
+		}
+
+		if (stripped_line[0] == '\0' || stripped_line[0] == '\n' ||
+				stripped_line[0] == '#') {
 			continue;
 		}
 
-		if (line[strlen(line) - 1] == '\n') {
-			line[strlen(line) - 1] = '\0';
+		if (stripped_line[len - 1] == '\n') {
+			stripped_line[--len] = '\0';
 		}
 
-		if (line[0] == '[' && line[strlen(line) - 1] == ']') {
+		// Strip trailing whitespace
+		while (stripped_line[len - 1] == ' ' ||
+				stripped_line[len - 1] == '\t') {
+			--len;
+		}
+		stripped_line[len] = '\0';
+
+
+		if (stripped_line[0] == '[' && stripped_line[len - 1] == ']') {
 			// Since we hit the end of the previous criteria section, validate
 			// that it doesn't break any rules before moving on.
 			if (criteria != NULL && !validate_criteria(criteria)) {
@@ -799,7 +820,7 @@ int load_config_file(struct mako_config *config, char *path) {
 			}
 
 			free(section);
-			section = strndup(line + 1, strlen(line) - 2);
+			section = strndup(stripped_line + 1, len - 2);
 			criteria = create_criteria(config);
 			if (!parse_criteria(section, criteria)) {
 				fprintf(stderr, "[%s:%d] Invalid criteria definition\n", base,
@@ -810,7 +831,7 @@ int load_config_file(struct mako_config *config, char *path) {
 			continue;
 		}
 
-		char *eq = strchr(line, '=');
+		char *eq = strchr(stripped_line, '=');
 		if (!eq) {
 			fprintf(stderr, "[%s:%d] Expected key=value\n", base, lineno);
 			ret = -1;
@@ -820,15 +841,18 @@ int load_config_file(struct mako_config *config, char *path) {
 		bool valid_option = false;
 		eq[0] = '\0';
 
-		valid_option = apply_style_option(&criteria->style, line, eq + 1);
+		valid_option = apply_style_option(&criteria->style,
+				stripped_line, eq + 1);
 
 		if (!valid_option && section == NULL) {
-			valid_option = apply_config_option(config, line, eq + 1);
+			valid_option = apply_config_option(config,
+					stripped_line, eq + 1);
 		}
 
 		if (!valid_option) {
+			eq[0] = '=';
 			fprintf(stderr, "[%s:%d] Failed to parse option '%s'\n",
-				base, lineno, line);
+				base, lineno, stripped_line);
 			ret = -1;
 			break;
 		}
