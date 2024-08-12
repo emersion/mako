@@ -295,6 +295,9 @@ struct mako_icon *create_icon(struct mako_notification *notif) {
 
 void rounded_square(cairo_t *cairo, double xpos, double ypos, double size, double corner_radius) {
 	double degrees = 3.14 / 180.0;
+	if (corner_radius > size / 2) {
+		corner_radius = size / 2; // To prevent obliterating smaller icons
+	}
 
 	cairo_new_sub_path (cairo);
 	cairo_arc (cairo, xpos + size - corner_radius, ypos + corner_radius, corner_radius, -90 * degrees, 0 * degrees);
