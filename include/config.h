@@ -41,7 +41,7 @@ enum mako_icon_location {
 struct mako_style_spec {
 	bool width, height, outer_margin, margin, padding, border_size, border_radius, font,
 		markup, format, text_alignment, actions, default_timeout, ignore_timeout,
-		icons, max_icon_size, icon_path, group_criteria_spec, invisible, history,
+		icons, max_icon_size, icon_path, icon_border_radius, group_criteria_spec, invisible, history,
 		icon_location, max_visible, layer, output, anchor;
 	struct {
 		bool background, text, border, progress;
@@ -67,6 +67,7 @@ struct mako_style {
 	bool icons;
 	int32_t max_icon_size;
 	char *icon_path;
+	int32_t icon_border_radius;
 
 	char *font;
 	bool markup;

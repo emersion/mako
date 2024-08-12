@@ -97,6 +97,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	int padding_height = style->padding.top + style->padding.bottom;
 	int padding_width = style->padding.left + style->padding.right;
 	int radius = style->border_radius;
+	int icon_radius = style->icon_border_radius;
 	bool icon_vertical = style->icon_location == MAKO_ICON_LOCATION_TOP ||
 		style->icon_location == MAKO_ICON_LOCATION_BOTTOM;
 
@@ -290,7 +291,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 				style->padding.bottom - icon->height;
 			break;
 		}
-		draw_icon(cairo, icon, xpos, ypos, scale);
+		draw_icon(cairo, icon, xpos, ypos, scale, icon_radius);
 	}
 
 	if (icon_vertical) {
