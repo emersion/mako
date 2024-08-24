@@ -120,10 +120,23 @@ static void touch_handle_down(void *data, struct wl_touch *wl_touch,
 	if (id >= MAX_TOUCHPOINTS) {
 		return;
 	}
+	struct mako_state *state = seat->state;
 	seat->touch.pts[id].x = wl_fixed_to_int(surface_x);
 	seat->touch.pts[id].y = wl_fixed_to_int(surface_y);
 	seat->touch.pts[id].time = time;
-	seat->touch.pts[id].surface = get_surface(seat->state, wl_surface);
+	seat->touch.pts[id].surface = get_surface(state, wl_surface);
+
+	struct mako_notification *notif;
+	const struct mako_binding_context ctx = {
+		.surface = seat->touch.pts[id].surface,
+		.seat = seat,
+		.serial = serial,
+	};
+	wl_list_for_each(notif, &state->notifications, link) {
+		if (hotspot_at(&notif->hotspot, seat->touch.pts[id].x, seat->touch.pts[id].y)) {
+			notification_handle_touch_start(notif, &ctx);
+		}
+	}
 }
 
 static void touch_handle_up(void *data, struct wl_touch *wl_touch,

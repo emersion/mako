@@ -19,6 +19,12 @@ struct mako_hotspot {
 	int32_t width, height;
 };
 
+struct mako_binding_context {
+	struct mako_surface *surface;
+	struct mako_seat *seat;
+	uint32_t serial;
+};
+
 struct mako_notification {
 	struct mako_state *state;
 	struct mako_surface *surface;
@@ -38,6 +44,8 @@ struct mako_notification {
 	char *body;
 	int32_t requested_timeout;
 	struct wl_list actions; // mako_action::link
+	struct mako_timer *long_press_timer;
+	struct mako_binding_context long_press_ctx;
 
 	enum mako_notification_urgency urgency;
 	char *category;
@@ -70,12 +78,6 @@ struct mako_hidden_format_data {
 	size_t count;
 };
 
-struct mako_binding_context {
-	struct mako_surface *surface;
-	struct mako_seat *seat;
-	uint32_t serial;
-};
-
 typedef char *(*mako_format_func_t)(char variable, bool *markup, void *data);
 
 bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y);
@@ -100,6 +102,8 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 	char *buf);
 void notification_handle_button(struct mako_notification *notif, uint32_t button,
 	enum wl_pointer_button_state state, const struct mako_binding_context *ctx);
+void notification_handle_touch_start(struct mako_notification *notif,
+	const struct mako_binding_context *ctx);
 void notification_handle_touch(struct mako_notification *notif,
 	const struct mako_binding_context *ctx, int32_t duration_ms);
 void notification_execute_binding(struct mako_notification *notif,

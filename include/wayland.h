@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <wayland-client-protocol.h>
+#include "mako.h"
 
 #define MAX_TOUCHPOINTS 10
 

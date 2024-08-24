@@ -41,6 +41,8 @@ void reset_notification(struct mako_notification *notif) {
 
 	destroy_timer(notif->timer);
 	notif->timer = NULL;
+	destroy_timer(notif->long_press_timer);
+	notif->long_press_timer = NULL;
 
 	free(notif->app_name);
 	free(notif->app_icon);
@@ -447,11 +449,31 @@ void notification_handle_button(struct mako_notification *notif, uint32_t button
 
 void notification_handle_touch(struct mako_notification *notif,
 		const struct mako_binding_context *ctx, int32_t duration_ms) {
+	destroy_timer(notif->long_press_timer);
+	notif->long_press_timer = NULL;
 	if (duration_ms >= notif->style.long_press_duration) {
 		notification_execute_binding(notif, &notif->style.long_touch_binding, ctx);
 	} else {
 		notification_execute_binding(notif, &notif->style.touch_binding, ctx);
 	}
+}
+
+void handle_notification_touch_timer(void *data) {
+	struct mako_notification *notif = data;
+	notif->long_press_timer = NULL;
+	struct mako_binding_context ctx = notif->long_press_ctx;
+	notification_execute_binding(notif, &notif->style.long_touch_binding, &ctx);
+	set_dirty(ctx.surface);
+}
+
+void notification_handle_touch_start(struct mako_notification *notif,
+		const struct mako_binding_context *ctx) {
+	if (notif->long_press_timer) {
+		return;
+	}
+	notif->long_press_ctx = *ctx;
+	notif->long_press_timer = add_event_loop_timer(&notif->state->event_loop, 500,
+			handle_notification_touch_timer, notif);
 }
 
 /*
