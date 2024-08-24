@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <wayland-client-protocol.h>
+#include "mako.h"
 
 #define MAX_TOUCHPOINTS 10
 
@@ -35,6 +36,7 @@ struct mako_seat {
 		struct wl_touch *wl_touch;
 		struct {
 			int32_t x, y;
+			uint32_t time;
 			struct mako_surface *surface;
 		} pts[MAX_TOUCHPOINTS];
 	} touch;

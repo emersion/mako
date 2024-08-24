@@ -42,14 +42,14 @@ struct mako_style_spec {
 	bool width, height, outer_margin, margin, padding, border_size, border_radius, font,
 		markup, format, text_alignment, actions, default_timeout, ignore_timeout,
 		icons, max_icon_size, icon_path, group_criteria_spec, invisible, history,
-		icon_location, max_visible, layer, output, anchor;
+		icon_location, max_visible, layer, output, anchor, long_press_duration;
 	struct {
 		bool background, text, border, progress;
 	} colors;
 	struct {
 		bool left, right, middle;
 	} button_bindings;
-	bool touch_binding, notify_binding;
+	bool touch_binding, long_touch_binding, notify_binding;
 };
 
 
@@ -98,7 +98,8 @@ struct mako_style {
 	struct {
 		struct mako_binding left, right, middle;
 	} button_bindings;
-	struct mako_binding touch_binding, notify_binding;
+	struct mako_binding touch_binding, long_touch_binding, notify_binding;
+	int32_t long_press_duration;
 };
 
 struct mako_config {
