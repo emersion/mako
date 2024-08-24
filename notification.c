@@ -68,6 +68,7 @@ void reset_notification(struct mako_notification *notif) {
 	notif->icon = NULL;
 
 	clock_gettime(CLOCK_MONOTONIC, &notif->at);
+	notif->frozen = false;
 }
 
 struct mako_notification *create_notification(struct mako_state *state) {

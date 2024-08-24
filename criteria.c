@@ -418,18 +418,36 @@ struct mako_criteria *global_criteria(struct mako_config *config) {
 	return criteria;
 }
 
-static void timespec_add(struct timespec *t, int delta_ms) {
-	static const long ms = 1000000, s = 1000000000;
+static void timespec_from_ms(struct timespec *t, long time_ms) {
+	static const long ms = 1000000;
 
-	int delta_ms_low = delta_ms % 1000;
-	int delta_s_high = delta_ms / 1000;
+	t->tv_sec = time_ms / 1000;
+	t->tv_nsec = (time_ms % 1000) * ms;
+}
 
-	t->tv_sec += delta_s_high;
+static void timespec_add(struct timespec *t, struct timespec *u) {
+	static const long s = 1000000000;
 
-	t->tv_nsec += (long)delta_ms_low * ms;
+	t->tv_sec += u->tv_sec;
+	t->tv_nsec += u->tv_nsec;
+
 	if (t->tv_nsec >= s) {
 		t->tv_nsec -= s;
 		++t->tv_sec;
+	}
+}
+
+static void timespec_sub(struct timespec *t, struct timespec *u) {
+	static const long s = 1000000000;
+
+	t->tv_sec -= u->tv_sec;
+	t->tv_nsec += s;
+	t->tv_nsec -= u->tv_nsec;
+
+	if (t->tv_nsec >= s) {
+		t->tv_nsec -= s;
+	} else {
+		--t->tv_sec;
 	}
 }
 
@@ -474,10 +492,25 @@ ssize_t apply_each_criteria(struct mako_state *state, struct mako_notification *
 	if (expire_timeout < 0 || notif->style.ignore_timeout) {
 		expire_timeout = notif->style.default_timeout;
 	}
+	if (notif->frozen != notif->style.freeze) {
+		struct timespec now;
+		clock_gettime(CLOCK_MONOTONIC, &now);
+		if (notif->style.freeze) {
+			notif->froze_at = now;
+		} else {
+			timespec_sub(&now, &notif->froze_at);
+			timespec_add(&notif->at, &now);
+		}
+		notif->frozen = notif->style.freeze;
+	}
+	if (notif->frozen) {
+		expire_timeout = 0;
+	}
 
 	if (expire_timeout > 0) {
-		struct timespec at = notif->at;
-		timespec_add(&at, expire_timeout);
+		struct timespec at = notif->at, delta;
+		timespec_from_ms(&delta, expire_timeout);
+		timespec_add(&at, &delta);
 		if (notif->timer) {
 			notif->timer->at = at;
 		} else {
