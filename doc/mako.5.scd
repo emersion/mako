@@ -57,9 +57,22 @@ Supported options:
 	Default: dismiss
 
 *on-touch*=_action_
-	Performs the action when tapped via a touch device.
+	Performs the action when tapped via a touch device if the tap
+	duration is less than *long-press-duration*.
 
 	Default: dismiss
+
+*on-long-touch*=_action_
+	Performs the action when tapped via a touch device if the press
+	duration is greater or equal to *long-press-duration*.
+
+	Default: invoke-default-action
+
+*long-press-duration*=_time_
+	Specifies the cutoff time (in milliseconds) for a press to be
+	considered a long press.
+
+	Default: 500
 
 *on-notify*=_action_
 	Performs the action when the notification is opened.

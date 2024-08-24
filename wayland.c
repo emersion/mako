@@ -122,6 +122,7 @@ static void touch_handle_down(void *data, struct wl_touch *wl_touch,
 	}
 	seat->touch.pts[id].x = wl_fixed_to_int(surface_x);
 	seat->touch.pts[id].y = wl_fixed_to_int(surface_y);
+	seat->touch.pts[id].time = time;
 	seat->touch.pts[id].surface = get_surface(seat->state, wl_surface);
 }
 
@@ -144,7 +145,7 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (hotspot_at(&notif->hotspot, seat->touch.pts[id].x, seat->touch.pts[id].y)) {
 			struct mako_surface *surface = notif->surface;
-			notification_handle_touch(notif, &ctx);
+			notification_handle_touch(notif, &ctx, time - seat->touch.pts[id].time);
 			set_dirty(surface);
 			break;
 		}

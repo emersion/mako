@@ -446,8 +446,12 @@ void notification_handle_button(struct mako_notification *notif, uint32_t button
 }
 
 void notification_handle_touch(struct mako_notification *notif,
-		const struct mako_binding_context *ctx) {
-	notification_execute_binding(notif, &notif->style.touch_binding, ctx);
+		const struct mako_binding_context *ctx, int32_t duration_ms) {
+	if (duration_ms >= notif->style.long_press_duration) {
+		notification_execute_binding(notif, &notif->style.long_touch_binding, ctx);
+	} else {
+		notification_execute_binding(notif, &notif->style.touch_binding, ctx);
+	}
 }
 
 /*

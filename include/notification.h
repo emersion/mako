@@ -101,7 +101,7 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 void notification_handle_button(struct mako_notification *notif, uint32_t button,
 	enum wl_pointer_button_state state, const struct mako_binding_context *ctx);
 void notification_handle_touch(struct mako_notification *notif,
-	const struct mako_binding_context *ctx);
+	const struct mako_binding_context *ctx, int32_t duration_ms);
 void notification_execute_binding(struct mako_notification *notif,
 	const struct mako_binding *binding, const struct mako_binding_context *ctx);
 void insert_notification(struct mako_state *state, struct mako_notification *notif);
