@@ -54,4 +54,7 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# clangd cache
+.cache/
+
 build/
