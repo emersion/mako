@@ -81,15 +81,6 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 	return 0;
 }
 
-static void handle_notification_timer(void *data) {
-	struct mako_notification *notif = data;
-	struct mako_surface *surface = notif->surface;
-	notif->timer = NULL;
-
-	close_notification(notif, MAKO_NOTIFICATION_CLOSE_EXPIRED, true);
-	set_dirty(surface);
-}
-
 static int handle_notify(sd_bus_message *msg, void *data,
 		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
@@ -382,7 +373,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		insert_notification(state, notif);
 	}
 
-	int match_count = apply_each_criteria(&state->config.criteria, notif);
+	int match_count = apply_each_criteria(state, notif);
 	if (match_count == -1) {
 		// We encountered an allocation failure or similar while applying
 		// criteria. The notification may be partially matched, but the worst
@@ -396,16 +387,6 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		fprintf(stderr, "Notification matched zero criteria?!\n");
 		destroy_notification(notif);
 		return -1;
-	}
-
-	int32_t expire_timeout = notif->requested_timeout;
-	if (expire_timeout < 0 || notif->style.ignore_timeout) {
-		expire_timeout = notif->style.default_timeout;
-	}
-
-	if (expire_timeout > 0) {
-		notif->timer = add_event_loop_timer(&state->event_loop, expire_timeout,
-			handle_notification_timer, notif);
 	}
 
 	if (notif->style.icons) {
