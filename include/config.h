@@ -42,7 +42,7 @@ struct mako_style_spec {
 	bool width, height, outer_margin, margin, padding, border_size, border_radius, font,
 		markup, format, text_alignment, actions, default_timeout, ignore_timeout,
 		icons, max_icon_size, icon_path, group_criteria_spec, invisible, history,
-		icon_location, max_visible, layer, output, anchor;
+		icon_location, max_visible, layer, output, anchor, freeze;
 	struct {
 		bool background, text, border, progress;
 	} colors;
@@ -76,6 +76,7 @@ struct mako_style {
 	bool actions;
 	int default_timeout; // in ms
 	bool ignore_timeout;
+	bool freeze;
 
 	struct {
 		uint32_t background;
