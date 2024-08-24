@@ -4,6 +4,7 @@ usage() {
 	echo "Usage: makoctl <command> [options...]"
 	echo ""
 	echo "Commands:"
+	echo "  count [waiting|history]        Show the number of notifications"
 	echo "  dismiss [-n id]                Dismiss the notification with the"
 	echo "                                 given id, or the last notification"
 	echo "                                 if none is given"
@@ -56,6 +57,24 @@ if [ $# -eq 0 ]; then
 fi
 
 case "$1" in
+"count")
+	require_jq
+  if [ $# -gt 1 ]; then
+  	case "$2" in
+  		waiting)
+        call ListNotifications | jq -re '.data[0] | length'
+        ;;
+      history)
+        call ListHistory | jq -re '.data[0] | length'
+        ;;
+      *)
+      	echo >&2 "$0: Expected 'waiting' or 'history' after 'count', got '$2'"
+      	;;
+    esac
+	else
+  	echo >&2 "$0: Expected 'waiting' or 'history' after 'count', got nothing"
+  fi
+	;;
 "dismiss")
 	all=0
 	group=0
