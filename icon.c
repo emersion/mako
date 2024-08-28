@@ -293,25 +293,9 @@ struct mako_icon *create_icon(struct mako_notification *notif) {
 }
 #endif
 
-void rounded_square(cairo_t *cairo, double xpos, double ypos, double size, double corner_radius) {
-	double degrees = 3.14 / 180.0;
-	if (corner_radius > size / 2) {
-		corner_radius = size / 2; // To prevent obliterating smaller icons
-	}
-
-	cairo_new_sub_path (cairo);
-	cairo_arc (cairo, xpos + size - corner_radius, ypos + corner_radius, corner_radius, -90 * degrees, 0 * degrees);
-	cairo_arc (cairo, xpos + size - corner_radius, ypos + size - corner_radius, corner_radius, 0 * degrees, 90 * degrees);
-	cairo_arc (cairo, xpos + corner_radius, ypos + size - corner_radius, corner_radius, 90 * degrees, 180 * degrees);
-	cairo_arc (cairo, xpos + corner_radius, ypos + corner_radius, corner_radius, 180 * degrees, 270 * degrees);
-	cairo_close_path (cairo);
-}
-
 void draw_icon(cairo_t *cairo, struct mako_icon *icon,
-	double xpos, double ypos, double scale, double icon_radius) {
+	double xpos, double ypos, double scale) {
 	cairo_save(cairo);
-	rounded_square(cairo, xpos, ypos, (icon->height > icon->width) ? icon->height : icon->width, icon_radius);
-	cairo_clip(cairo);
 	cairo_scale(cairo, scale*icon->scale, scale*icon->scale);
 	cairo_set_source_surface(cairo, icon->image, xpos/icon->scale, ypos/icon->scale);
 	cairo_paint(cairo);
