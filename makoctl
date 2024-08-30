@@ -112,11 +112,17 @@ case "$1" in
 	require_jq
 	if [ $# -gt 1 ] && [ "$1" = "-n" ]; then
 		id="$2"
-		actions="$(call ListNotifications | jq --arg id "$id" -re '.data[0][] | select(.id.data==($id | tonumber)) | .actions.data')"
+		if [ $id -eq 0 ]; then
+			actions="$(call ListNotifications | jq -re '.data[0][0].actions.data')"
+		else
+			actions="$(call ListNotifications | jq --arg id "$id" -re '.data[0][] | select(.id.data==($id | tonumber)) | .actions.data')"
+		fi
 		shift 2
 	else
-		actions="$(call ListNotifications | jq -re '.data[0][0].actions.data')"
-		id="0"
+		notification_list="$(call ListNotifications)"
+		actions="$(echo "$notification_list" | jq -re '.data[0][0].actions.data')"
+		id="$(echo "$notification_list" | jq -re '.data[0][0].id.data')"
+		unset notification_list
 	fi
 	if [ "$(jq -rn "$actions | length")" -eq "0" ]; then
 		echo >&2 "$0: No actions found"
