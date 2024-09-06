@@ -2,12 +2,14 @@
 #define MAKO_ICON_H
 
 #include <cairo/cairo.h>
+#include <stdint.h>
 #include "notification.h"
 
 struct mako_icon {
 	double width;
 	double height;
 	double scale;
+  int32_t border_radius;
 	cairo_surface_t *image;
 };
 
