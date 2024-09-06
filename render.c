@@ -37,10 +37,10 @@ static void move_to(cairo_t *cairo, double x, double y, int scale) {
 
 static void set_rounded_rectangle(cairo_t *cairo, double x, double y, double width, double height,
 		int scale, int radius) {
-	if (width == 0 || height == 0 || radius == 0) {
+	if (width == 0 || height == 0) {
 		return;
 	}
-	// limit rounding to avoid destroying shapes smaller than the given radius
+	// limit radius to avoid destroying shapes smaller than the given radius
 	double shortest_side = width > height ? width : height;
 	if (radius > shortest_side / 2) {
 		radius = shortest_side / 2;
