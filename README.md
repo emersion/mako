@@ -12,7 +12,6 @@ Feel free to join the IRC channel: #emersion on irc.libera.chat.
 
 ## Running
 
-
 `mako` will run automatically when a notification is emitted. This happens via
 D-Bus activation, so you don't really need to explicitly start it up (this also
 allows delaying its startup time and speed up system startup).
@@ -37,15 +36,15 @@ For control of mako during runtime, `makoctl` can be used; see `man makoctl`
 
 Install dependencies:
 
-* meson (build-time dependency)
-* wayland
-* pango
-* cairo
-* systemd, elogind or [basu] (for the sd-bus library)
-* gdk-pixbuf (optional, for icons support)
-* dbus (runtime dependency, user-session support is required)
-* scdoc (optional, for man pages)
-* jq (optional, runtime dependency)
+- meson (build-time dependency)
+- wayland
+- pango
+- cairo
+- systemd, elogind or [basu] (for the sd-bus library)
+- gdk-pixbuf (optional, for icons support)
+- dbus (runtime dependency, user-session support is required)
+- scdoc (optional, for man pages)
+- jq (optional, runtime dependency)
 
 Then run:
 
@@ -59,7 +58,7 @@ build/mako
   <img src="https://sr.ht/frOL.jpg" alt="mako">
 </p>
 
-## I have a question!
+## I have a question
 
 See the [faq section in the wiki](https://github.com/emersion/mako/wiki/Frequently-asked-questions).
 
@@ -67,5 +66,5 @@ See the [faq section in the wiki](https://github.com/emersion/mako/wiki/Frequent
 
 MIT
 
-[spec]: https://specifications.freedesktop.org/notification-spec/notification-spec-latest.html
+[spec]: https://specifications.freedesktop.org/notification-spec/latest/
 [basu]: https://github.com/emersion/basu
