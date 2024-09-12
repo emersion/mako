@@ -12,19 +12,17 @@ Feel free to join the IRC channel: #emersion on irc.libera.chat.
 
 ## Running
 
+`mako` assumes that there is a D-Bus session available at it's runtime.
+Systemd sets up a session bus by default so if you are using it, you are golden.
 
-`mako` will run automatically when a notification is emitted. This happens via
-D-Bus activation, so you don't really need to explicitly start it up (this also
-allows delaying its startup time and speed up system startup).
+If you are not using systemd, you might need to manually start a dbus user session
+with the compositor of your choice from the display manager. The command run should
+look something like this: `dbus-launch --exit-with-session COMPOSITOR`.
 
+### Multiple notification daemons
 If you have several notification daemons installed though, you might want to
-explicitly start this one. Some ways of achieving this is:
-
-- If you're using Sway you can start mako on launch by putting `exec mako` in
-  your configuration file.
-
-- If you are not using systemd, you might need to manually start a dbus user
-  session: `dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus`
+explicitly start this one.
+This is usually done by putting `exec mako` in your compositor's configuration file.
 
 ## Configuration
 
