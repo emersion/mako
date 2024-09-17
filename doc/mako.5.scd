@@ -176,8 +176,9 @@ Supported actions:
 
 	Default: #4C7899FF
 
-*border-radius*=_px_
-	Set popup corner radius to _px_ pixels.
+*border-radius*=_directional_
+	Set popup corner radius on each side to the size specified by _directional_. See
+	*DIRECTIONAL VALUES* for more information.
 
 	Default: 0
 
