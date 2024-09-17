@@ -61,8 +61,8 @@ struct mako_style {
 	struct mako_directional outer_margin;
 	struct mako_directional margin;
 	struct mako_directional padding;
+	struct mako_directional border_radius;
 	int32_t border_size;
-	int32_t border_radius;
 
 	bool icons;
 	int32_t max_icon_size;
