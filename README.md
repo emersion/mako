@@ -67,5 +67,5 @@ See the [faq section in the wiki](https://github.com/emersion/mako/wiki/Frequent
 
 MIT
 
-[spec]: https://specifications.freedesktop.org/notification-spec/notification-spec-latest.html
+[spec]: https://specifications.freedesktop.org/notification-spec/latest/
 [basu]: https://github.com/emersion/basu
