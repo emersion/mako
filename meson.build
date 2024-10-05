@@ -99,10 +99,11 @@ executable(
 	install: true,
 )
 
-install_data(
+executable(
 	'makoctl',
-	install_dir: get_option('bindir'),
-	install_mode: 'rwxr-xr-x',
+	['makoctl.c'],
+	dependencies: [sdbus],
+	install: true,
 )
 
 conf_data = configuration_data()
