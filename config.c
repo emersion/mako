@@ -86,8 +86,12 @@ void init_default_style(struct mako_style *style) {
 	style->padding.bottom = 5;
 	style->padding.left = 5;
 
+	style->border_radius.top = 0;
+	style->border_radius.right = 0;
+	style->border_radius.bottom = 0;
+	style->border_radius.left = 0;
+
 	style->border_size = 2;
-	style->border_radius = 0;
 
 #ifdef HAVE_ICONS
 	style->icons = true;
@@ -341,7 +345,7 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		target->spec.icon_location = true;
 	}
 
-	if (style->border_radius) {
+	if (style->spec.border_radius) {
 		target->border_radius = style->border_radius;
 		target->spec.border_radius = true;
 	}
@@ -407,6 +411,7 @@ bool apply_superset_style(
 	target->spec.margin = true;
 	target->spec.padding = true;
 	target->spec.border_size = true;
+	target->spec.border_radius = true;
 	target->spec.icons = true;
 	target->spec.max_icon_size = true;
 	target->spec.default_timeout = true;
@@ -447,6 +452,11 @@ bool apply_superset_style(
 		target->padding.bottom =
 			max(style->padding.bottom, target->padding.bottom);
 		target->padding.left = max(style->padding.left, target->padding.left);
+		target->border_radius.top = max(style->border_radius.top, target->border_radius.top);
+		target->border_radius.right = max(style->border_radius.right, target->border_radius.right);
+		target->border_radius.bottom =
+			max(style->border_radius.bottom, target->border_radius.bottom);
+		target->border_radius.left = max(style->border_radius.left, target->border_radius.left);
 		target->border_size = max(style->border_size, target->border_size);
 		target->icons = style->icons || target->icons;
 		target->max_icon_size = max(style->max_icon_size, target->max_icon_size);
@@ -561,8 +571,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "padding") == 0) {
 		spec->padding = parse_directional(value, &style->padding);
 		if (spec->border_radius && spec->padding) {
-			style->padding.left = max(style->border_radius, style->padding.left);
-			style->padding.right = max(style->border_radius, style->padding.right);
+			style->padding.left = max(style->border_radius.left, style->padding.left);
+			style->padding.right = max(style->border_radius.right, style->padding.right);
 		}
 		return spec->padding;
 	} else if (strcmp(name, "border-size") == 0) {
@@ -631,10 +641,10 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "history") == 0) {
 		return spec->history = parse_boolean(value, &style->history);
 	} else if (strcmp(name, "border-radius") == 0) {
-		spec->border_radius = parse_int_ge(value, &style->border_radius, 0);
+		spec->border_radius = parse_directional(value, &style->border_radius);
 		if (spec->border_radius && spec->padding) {
-			style->padding.left = max(style->border_radius, style->padding.left);
-			style->padding.right = max(style->border_radius, style->padding.right);
+			style->padding.left = max(style->border_radius.left, style->padding.left);
+			style->padding.right = max(style->border_radius.right, style->padding.right);
 		}
 		return spec->border_radius;
 	} else if (strcmp(name, "max-visible") == 0) {
