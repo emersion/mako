@@ -4,6 +4,7 @@
 
 #include "mako.h"
 #include "mode.h"
+#include "dbus.h"
 
 bool has_mode(struct mako_state *state, const char *mode) {
 	const char **mode_ptr;
@@ -38,4 +39,6 @@ void set_modes(struct mako_state *state, const char **modes, size_t modes_len) {
 		char **dst = wl_array_add(&state->current_modes, sizeof(char *));
 		*dst = strdup(modes[i]);
 	}
+
+	emit_modes_changed(state);
 }

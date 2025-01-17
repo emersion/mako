@@ -433,6 +433,37 @@ static int handle_set_modes(sd_bus_message *msg, void *data,
 	return sd_bus_reply_method_return(msg, "");
 }
 
+static int get_modes(sd_bus *bus, const char *path,
+		     const char *interface, const char *property,
+		     sd_bus_message *reply, void *data,
+		     sd_bus_error *ret_error) {
+	struct mako_state *state = data;
+
+	int ret = sd_bus_message_open_container(reply, 'a', "s");
+	if (ret < 0) {
+		return ret;
+	}
+
+	const char **mode_ptr;
+	wl_array_for_each(mode_ptr, &state->current_modes) {
+		ret = sd_bus_message_append_basic(reply, 's', *mode_ptr);
+		if (ret < 0) {
+			return ret;
+		}
+	}
+
+	ret = sd_bus_message_close_container(reply);
+	if (ret < 0) {
+		return ret;
+	}
+
+	return 0;
+}
+
+void emit_modes_changed(struct mako_state *state) {
+	sd_bus_emit_properties_changed(state->bus, service_path, service_interface, "Modes", NULL);
+}
+
 static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_VTABLE_START(0),
 	SD_BUS_METHOD("DismissAllNotifications", "", "", handle_dismiss_all_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
@@ -447,6 +478,7 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_METHOD("SetMode", "s", "", handle_set_mode, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("ListModes", "", "as", handle_list_modes, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("SetModes", "as", "", handle_set_modes, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_PROPERTY("Modes", "as", get_modes, 0, SD_BUS_VTABLE_PROPERTY_EMITS_INVALIDATION),
 	SD_BUS_VTABLE_END
 };
 
