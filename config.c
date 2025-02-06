@@ -133,6 +133,9 @@ void init_default_style(struct mako_style *style) {
 	style->button_bindings.right.action = MAKO_BINDING_DISMISS;
 	style->button_bindings.middle.action = MAKO_BINDING_NONE;
 	style->touch_binding.action = MAKO_BINDING_DISMISS;
+	style->long_touch_binding.action = MAKO_BINDING_INVOKE_ACTION;
+	style->long_touch_binding.action_name = strdup(DEFAULT_ACTION_KEY);
+	style->long_press_duration = 500;
 
 	// Everything in the default config is explicitly specified.
 	memset(&style->spec, true, sizeof(struct mako_style_spec));
@@ -152,6 +155,7 @@ void finish_style(struct mako_style *style) {
 	finish_binding(&style->button_bindings.middle);
 	finish_binding(&style->button_bindings.right);
 	finish_binding(&style->touch_binding);
+	finish_binding(&style->long_touch_binding);
 	finish_binding(&style->notify_binding);
 	free(style->icon_path);
 	free(style->font);
@@ -387,6 +391,16 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.touch_binding) {
 		copy_binding(&target->touch_binding, &style->touch_binding);
 		target->spec.touch_binding = true;
+	}
+
+	if (style->spec.long_touch_binding) {
+		copy_binding(&target->long_touch_binding, &style->long_touch_binding);
+		target->spec.long_touch_binding = true;
+	}
+
+	if (style->spec.long_press_duration) {
+		target->long_press_duration = style->long_press_duration;
+		target->spec.long_press_duration = true;
 	}
 
 	if (style->spec.notify_binding) {
@@ -670,6 +684,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		return true;
 	} else if (strcmp(name, "anchor") == 0) {
 		return spec->anchor = parse_anchor(value, &style->anchor);
+	} else if (strcmp(name, "long-press-duration") == 0) {
+		return spec->long_press_duration = parse_int_ge(value, &style->long_press_duration, 0);
 	} else if (has_prefix(name, "on-")) {
 		struct mako_binding binding = {0};
 		if (strcmp(value, "none") == 0) {
@@ -707,6 +723,9 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		} else if (strcmp(name, "on-touch") == 0) {
 			copy_binding(&style->touch_binding, &binding);
 			style->spec.touch_binding = true;
+		} else if (strcmp(name, "on-long-touch") == 0) {
+			copy_binding(&style->long_touch_binding, &binding);
+			style->spec.long_touch_binding = true;
 		} else if (strcmp(name, "on-notify") == 0) {
 			copy_binding(&style->notify_binding, &binding);
 			style->spec.notify_binding = true;
@@ -920,6 +939,8 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"on-button-right", required_argument, 0, 0},
 		{"on-button-middle", required_argument, 0, 0},
 		{"on-touch", required_argument, 0, 0},
+		{"on-long-touch", required_argument, 0, 0},
+		{"long-press-duration", required_argument, 0, 0},
 		{0},
 	};
 
