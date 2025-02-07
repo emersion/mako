@@ -100,6 +100,7 @@ void init_default_style(struct mako_style *style) {
 #endif
 	style->max_icon_size = 64;
 	style->icon_path = strdup("");  // hicolor and pixmaps are implicit.
+	style->icon_border_radius = 0;
 
 	style->font = strdup("monospace 10");
 	style->markup = true;
@@ -266,6 +267,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		free(target->icon_path);
 		target->icon_path = new_icon_path;
 		target->spec.icon_path = true;
+	}
+
+	if (style->spec.icon_border_radius) {
+		target->icon_border_radius = style->icon_border_radius;
+		target->spec.icon_border_radius = true;
 	}
 
 	if (style->spec.font) {
@@ -608,6 +614,9 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "icon-path") == 0) {
 		free(style->icon_path);
 		return spec->icon_path = !!(style->icon_path = strdup(value));
+	} else if (strcmp(name, "icon-border-radius") == 0) {
+		spec->icon_border_radius = parse_int_ge(value, &style->icon_border_radius, 0);
+		return spec->icon_border_radius;
 	} else if (strcmp(name, "markup") == 0) {
 		return spec->markup = parse_boolean(value, &style->markup);
 	} else if (strcmp(name, "actions") == 0) {
@@ -903,6 +912,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"icon-location", required_argument, 0, 0},
 		{"icon-path", required_argument, 0, 0},
 		{"max-icon-size", required_argument, 0, 0},
+		{"icon-border-radius", required_argument, 0, 0},
 		{"markup", required_argument, 0, 0},
 		{"actions", required_argument, 0, 0},
 		{"format", required_argument, 0, 0},
