@@ -305,7 +305,7 @@ static void reapply_config(struct mako_state *state) {
 
 		finish_style(&notif->style);
 		init_empty_style(&notif->style);
-		apply_each_criteria(&state->config.criteria, notif);
+		apply_each_criteria(state, notif);
 
 		// Having to do this for every single notification really hurts... but
 		// it does do The Right Thing (tm).
