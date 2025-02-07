@@ -8,6 +8,7 @@ struct mako_icon {
 	double width;
 	double height;
 	double scale;
+	int32_t border_radius;
 	cairo_surface_t *image;
 };
 

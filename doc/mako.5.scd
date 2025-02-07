@@ -224,6 +224,11 @@ Supported actions:
 
 	Default: left
 
+*icon-border-radius*=_px_
+	Sets icon corner radius to _px_ pixels.
+
+	Default: 0
+
 *markup*=0|1
 	If 1, enable Pango markup. If 0, disable Pango markup. If enabled, Pango
 	markup will be interpreted in your format specifier and in the body of
