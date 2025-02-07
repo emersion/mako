@@ -48,6 +48,9 @@ struct mako_notification {
 
 	struct mako_hotspot hotspot;
 	struct mako_timer *timer;
+	struct timespec at;
+	struct timespec froze_at;
+	bool frozen;
 };
 
 struct mako_action {

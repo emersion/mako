@@ -418,15 +418,56 @@ struct mako_criteria *global_criteria(struct mako_config *config) {
 	return criteria;
 }
 
-// Iterate through `criteria_list`, applying the style from each matching
+static void timespec_from_ms(struct timespec *t, long time_ms) {
+	static const long ms = 1000000;
+
+	t->tv_sec = time_ms / 1000;
+	t->tv_nsec = (time_ms % 1000) * ms;
+}
+
+static void timespec_add(struct timespec *t, struct timespec *u) {
+	static const long s = 1000000000;
+
+	t->tv_sec += u->tv_sec;
+	t->tv_nsec += u->tv_nsec;
+
+	if (t->tv_nsec >= s) {
+		t->tv_nsec -= s;
+		++t->tv_sec;
+	}
+}
+
+static void timespec_sub(struct timespec *t, struct timespec *u) {
+	static const long s = 1000000000;
+
+	t->tv_sec -= u->tv_sec;
+	t->tv_nsec += s;
+	t->tv_nsec -= u->tv_nsec;
+
+	if (t->tv_nsec >= s) {
+		t->tv_nsec -= s;
+	} else {
+		--t->tv_sec;
+	}
+}
+
+static void handle_notification_timer(void *data) {
+	struct mako_notification *notif = data;
+	struct mako_surface *surface = notif->surface;
+	notif->timer = NULL;
+
+	close_notification(notif, MAKO_NOTIFICATION_CLOSE_EXPIRED, true);
+	set_dirty(surface);
+}
+
+// Iterate through the criteria list, applying the style from each matching
 // criteria to `notif`. Returns the number of criteria that matched, or -1 if
 // a failure occurs.
-ssize_t apply_each_criteria(struct wl_list *criteria_list,
-		struct mako_notification *notif) {
+ssize_t apply_each_criteria(struct mako_state *state, struct mako_notification *notif) {
 	ssize_t match_count = 0;
 
 	struct mako_criteria *criteria;
-	wl_list_for_each(criteria, criteria_list, link) {
+	wl_list_for_each(criteria, &state->config.criteria, link) {
 		if (!match_criteria(criteria, notif)) {
 			continue;
 		}
@@ -445,6 +486,40 @@ ssize_t apply_each_criteria(struct wl_list *criteria_list,
 			notif->surface = surface;
 			break;
 		}
+	}
+
+	int32_t expire_timeout = notif->requested_timeout;
+	if (expire_timeout < 0 || notif->style.ignore_timeout) {
+		expire_timeout = notif->style.default_timeout;
+	}
+	if (notif->frozen != notif->style.freeze) {
+		struct timespec now;
+		clock_gettime(CLOCK_MONOTONIC, &now);
+		if (notif->style.freeze) {
+			notif->froze_at = now;
+		} else {
+			timespec_sub(&now, &notif->froze_at);
+			timespec_add(&notif->at, &now);
+		}
+		notif->frozen = notif->style.freeze;
+	}
+	if (notif->frozen) {
+		expire_timeout = 0;
+	}
+
+	if (expire_timeout > 0) {
+		struct timespec at = notif->at, delta;
+		timespec_from_ms(&delta, expire_timeout);
+		timespec_add(&at, &delta);
+		if (notif->timer) {
+			notif->timer->at = at;
+		} else {
+			notif->timer = add_event_loop_timer(&state->event_loop, &at,
+				handle_notification_timer, notif);
+		}
+	} else if (notif->timer) {
+		destroy_timer(notif->timer);
+		notif->timer = NULL;
 	}
 
 	if (!notif->surface) {

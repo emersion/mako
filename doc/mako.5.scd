@@ -409,6 +409,12 @@ associated command-line option.
 
 	Default: 0
 
+*freeze*=0|1
+	Whether to freeze this notification's active timeout, stopping it from
+	progressing. This can be used for pausing notifications while you're away.
+
+	Default: 0
+
 # COLORS
 
 Colors can be specified as _#RRGGBB_ or _#RRGGBBAA_.
