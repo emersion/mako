@@ -49,13 +49,14 @@ Install dependencies:
 Then run:
 
 ```shell
+
 meson build
 ninja -C build
 build/mako
 ```
 
 <p align="center">
-  <img src="https://sr.ht/frOL.jpg" alt="mako">
+  <img src="https://github.com/user-attachments/assets/4b32fef6-61d9-4ad1-8820-d4e5a245a76c" width="512" alt="mako">
 </p>
 
 ## I have a question!
