@@ -3,7 +3,7 @@
 A lightweight notification daemon for Wayland. Works on Sway.
 
 <p align="center">
-  <img src="https://sr.ht/meoc.png" alt="mako screenshot">
+  <img src="https://github.com/user-attachments/assets/25582bd6-bd3b-4bb3-b248-87fa7f88e967" alt="mako screenshot">
 </p>
 
 mako implements the [FreeDesktop Notifications Specification][spec].
@@ -55,7 +55,7 @@ build/mako
 ```
 
 <p align="center">
-  <img src="https://sr.ht/frOL.jpg" alt="mako">
+  <img src="https://github.com/user-attachments/assets/4b32fef6-61d9-4ad1-8820-d4e5a245a76c" width="512" alt="mako">
 </p>
 
 ## I have a question!
