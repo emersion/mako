@@ -57,8 +57,9 @@ static int handle_dismiss_last_notification(sd_bus_message *msg, void *data,
 
 	struct mako_notification *notif =
 		wl_container_of(state->notifications.next, notif, link);
+	struct mako_surface *surface = notif->surface;
 	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, true);
-	set_dirty(notif->surface);
+	set_dirty(surface);
 
 done:
 	return sd_bus_reply_method_return(msg, "");
@@ -78,12 +79,13 @@ static int handle_dismiss_notification(sd_bus_message *msg, void *data,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (notif->id == id || id == 0) {
+			struct mako_surface *surface = notif->surface;
 			if (dismiss_group) {
 				close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 			} else {
 				close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, true);
 			}
-			set_dirty(notif->surface);
+			set_dirty(surface);
 			break;
 		}
 	}
