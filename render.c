@@ -53,8 +53,8 @@ static void set_rounded_rectangle(cairo_t *cairo, double x, double y, double wid
 	cairo_new_sub_path(cairo);
 
 	cairo_arc(cairo, x + width - radius_right, y + radius_right, radius_right, -90 * degrees, 0 * degrees);
-	cairo_arc(cairo, x + width - radius_left, y + height - radius_left, radius_left, 0 * degrees, 90 * degrees);
-	cairo_arc(cairo, x + radius_bottom, y + height - radius_bottom, radius_bottom, 90 * degrees, 180 * degrees);
+	cairo_arc(cairo, x + width - radius_bottom, y + height - radius_bottom, radius_bottom, 0 * degrees, 90 * degrees);
+	cairo_arc(cairo, x + radius_left, y + height - radius_left, radius_left, 90 * degrees, 180 * degrees);
 	cairo_arc(cairo, x + radius_top, y + radius_top, radius_top, 180 * degrees, 270 * degrees);
 
 	cairo_close_path(cairo);
@@ -204,11 +204,11 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	if (icon != NULL && ! icon_vertical && icon->height > text_height) {
 		notif_height = icon->height + border_size + padding_height;
 	}
-	if (notif_height < radius_top + radius_bottom) {
-		notif_height = radius_top + radius_bottom + border_size;
+	if (notif_height < radius_top + radius_left) {
+		notif_height = radius_top + radius_left + border_size;
 	}
-	if (notif_height < radius_right + radius_left) {
-		notif_height = radius_right + radius_left + border_size;
+	if (notif_height < radius_right + radius_bottom) {
+		notif_height = radius_right + radius_bottom + border_size;
 	}
 
 	int notif_background_width = notif_width - style->border_size;
