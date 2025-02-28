@@ -84,13 +84,15 @@ static int run_dismiss(sd_bus *bus, int argc, char *argv[]) {
 	uint32_t id = 0;
 	bool group = false;
 	bool all = false;
+	bool no_history = false;
 	while (true) {
 		const struct option options[] = {
 			{ "all", no_argument, 0, 'a' },
 			{ "group", no_argument, 0, 'g' },
+			{ "no-history", no_argument, 0, 'h' },
 			{0},
 		};
-		int opt = getopt_long(argc, argv, "agn:", options, NULL);
+		int opt = getopt_long(argc, argv, "aghn:", options, NULL);
 		if (opt == -1) {
 			break;
 		}
@@ -109,16 +111,66 @@ static int run_dismiss(sd_bus *bus, int argc, char *argv[]) {
 				return 1;
 			}
 			break;
+		case 'h':;
+			no_history = true;
+			break;
 		default:
 			return -EINVAL;
 		}
 	}
 
-	if (all) {
-		return call_method(bus, "DismissAllNotifications", NULL, "");
-	} else {
-		return call_method(bus, "DismissNotification", NULL, "ub", id, (int)group);
+	if (all && group) {
+		fprintf(stderr, "-a and -g cannot be used together\n");
+		return -EINVAL;
+	} else if ((all || group) && id != 0) {
+		fprintf(stderr, "-n cannot be used with -a or -g\n");
+		return -EINVAL;
 	}
+
+	char types[6] = "a{sv}";
+
+	sd_bus_message *msg = NULL;
+	int ret = new_method_call(bus, &msg, "DismissNotifications");
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_open_container(msg, 'a', "{sv}");
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_append(msg, "{sv}", "id", "u", id);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_append(msg, "{sv}", "group", "b", (int)group);
+	if (ret < 0) {
+		return ret;
+	}
+
+	int history = !no_history;
+	ret = sd_bus_message_append(msg, "{sv}", "history", "b", (int)history);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_append(msg, "{sv}", "all", "b", (int)all);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_close_container(msg);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = call(bus, msg, NULL);
+	sd_bus_message_unref(msg);
+	return ret;
+
+	return call_method(bus, "DismissNotifications", NULL, types, &msg);
 }
 
 static int run_invoke(sd_bus *bus, int argc, char *argv[]) {
@@ -740,6 +792,7 @@ static const char usage[] =
 	"                                 if none is given\n"
 	"          [-a|--all]             Dismiss all notifications\n"
 	"          [-g|--group]           Dismiss all the notifications\n"
+	"          [-h|--no-history]      Dismiss w/o adding to history\n"
 	"                                 in the last notification's group\n"
 	"  restore                        Restore the most recently expired\n"
 	"                                 notification from the history buffer\n"
