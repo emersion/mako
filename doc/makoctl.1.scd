@@ -25,6 +25,9 @@ Sends IPC commands to the running mako daemon via dbus.
 	*-g, --group*
 		Dismiss the first notification group.
 
+	*-h, --no-history*
+		Dismiss the current notification without adding it to history.
+
 	*-n* <id>
 		Dismiss the notification with the given id. Defaults to the first
 		notification.
