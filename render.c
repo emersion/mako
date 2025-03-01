@@ -36,7 +36,7 @@ static void move_to(cairo_t *cairo, double x, double y, int scale) {
 }
 
 static void set_rounded_rectangle(cairo_t *cairo, double x, double y, double width, double height,
-		int scale, int radius_top, int radius_right, int radius_bottom, int radius_left) {
+		int scale, int radius_top_left, int radius_top_right, int radius_bottom_right, int radius_bottom_left) {
 	if (width == 0 || height == 0) {
 		return;
 	}
@@ -44,18 +44,18 @@ static void set_rounded_rectangle(cairo_t *cairo, double x, double y, double wid
 	y *= scale;
 	width *= scale;
 	height *= scale;
-	radius_top *= scale;
-	radius_right *= scale;
-	radius_bottom *= scale;
-	radius_left *= scale;
+	radius_top_left *= scale;
+	radius_top_right *= scale;
+	radius_bottom_right *= scale;
+	radius_bottom_left *= scale;
 	double degrees = M_PI / 180.0;
 
 	cairo_new_sub_path(cairo);
 
-	cairo_arc(cairo, x + width - radius_right, y + radius_right, radius_right, -90 * degrees, 0 * degrees);
-	cairo_arc(cairo, x + width - radius_left, y + height - radius_left, radius_left, 0 * degrees, 90 * degrees);
-	cairo_arc(cairo, x + radius_bottom, y + height - radius_bottom, radius_bottom, 90 * degrees, 180 * degrees);
-	cairo_arc(cairo, x + radius_top, y + radius_top, radius_top, 180 * degrees, 270 * degrees);
+	cairo_arc(cairo, x + radius_top_left, y + radius_top_left, radius_top_left, 180 * degrees, 270 * degrees);
+	cairo_arc(cairo, x + width - radius_top_right, y + radius_top_right, radius_top_right, -90 * degrees, 0 * degrees);
+	cairo_arc(cairo, x + width - radius_bottom_right, y + height - radius_bottom_right, radius_bottom_right, 0 * degrees, 90 * degrees);
+	cairo_arc(cairo, x + radius_bottom_left, y + height - radius_bottom_left, radius_bottom_left, 90 * degrees, 180 * degrees);
 
 	cairo_close_path(cairo);
 }
@@ -101,10 +101,10 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	int border_size = 2 * style->border_size;
 	int padding_height = style->padding.top + style->padding.bottom;
 	int padding_width = style->padding.left + style->padding.right;
-	int radius_top = style->border_radius.top;
-	int radius_right = style->border_radius.right;
-	int radius_bottom = style->border_radius.bottom;
-	int radius_left = style->border_radius.left;
+	int radius_top_left = style->border_radius.top;
+	int radius_top_right = style->border_radius.right;
+	int radius_bottom_right = style->border_radius.bottom;
+	int radius_bottom_left = style->border_radius.left;
 	int icon_radius = style->icon_border_radius;
 	bool icon_vertical = style->icon_location == MAKO_ICON_LOCATION_TOP ||
 		style->icon_location == MAKO_ICON_LOCATION_BOTTOM;
@@ -204,11 +204,11 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	if (icon != NULL && ! icon_vertical && icon->height > text_height) {
 		notif_height = icon->height + border_size + padding_height;
 	}
-	if (notif_height < radius_top + radius_bottom) {
-		notif_height = radius_top + radius_bottom + border_size;
+	if (notif_height < radius_top_left + radius_bottom_left) {
+		notif_height = radius_top_left + radius_bottom_left + border_size;
 	}
-	if (notif_height < radius_right + radius_left) {
-		notif_height = radius_right + radius_left + border_size;
+	if (notif_height < radius_top_right + radius_bottom_right) {
+		notif_height = radius_top_right + radius_bottom_right + border_size;
 	}
 
 	int notif_background_width = notif_width - style->border_size;
@@ -221,7 +221,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 		offset_y + style->border_size / 2.0,
 		notif_background_width,
 		notif_height - style->border_size,
-		scale, radius_top, radius_right, radius_bottom, radius_left);
+		scale, radius_top_left, radius_top_right, radius_bottom_right, radius_bottom_left);
 
 	// Render background, keeping the path.
 	set_source_u32(cairo, style->colors.background);
