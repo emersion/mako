@@ -74,21 +74,6 @@ void finish_event_loop(struct mako_event_loop *loop) {
 	}
 }
 
-static void timespec_add(struct timespec *t, int delta_ms) {
-	static const long ms = 1000000, s = 1000000000;
-
-	int delta_ms_low = delta_ms % 1000;
-	int delta_s_high = delta_ms / 1000;
-
-	t->tv_sec += delta_s_high;
-
-	t->tv_nsec += (long)delta_ms_low * ms;
-	if (t->tv_nsec >= s) {
-		t->tv_nsec -= s;
-		++t->tv_sec;
-	}
-}
-
 static bool timespec_less(struct timespec *t1, struct timespec *t2) {
 	if (t1->tv_sec != t2->tv_sec) {
 		return t1->tv_sec < t2->tv_sec;
@@ -124,7 +109,7 @@ static void update_event_loop_timer(struct mako_event_loop *loop) {
 }
 
 struct mako_timer *add_event_loop_timer(struct mako_event_loop *loop,
-		int delay_ms, mako_event_loop_timer_func_t func, void *data) {
+		struct timespec *at, mako_event_loop_timer_func_t func, void *data) {
 	struct mako_timer *timer = calloc(1, sizeof(struct mako_timer));
 	if (timer == NULL) {
 		fprintf(stderr, "allocation failed\n");
@@ -133,10 +118,9 @@ struct mako_timer *add_event_loop_timer(struct mako_event_loop *loop,
 	timer->event_loop = loop;
 	timer->func = func;
 	timer->user_data = data;
-	wl_list_insert(&loop->timers, &timer->link);
+	timer->at = *at;
 
-	clock_gettime(CLOCK_MONOTONIC, &timer->at);
-	timespec_add(&timer->at, delay_ms);
+	wl_list_insert(&loop->timers, &timer->link);
 
 	update_event_loop_timer(loop);
 	return timer;

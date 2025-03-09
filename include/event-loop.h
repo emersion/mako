@@ -47,7 +47,7 @@ bool init_event_loop(struct mako_event_loop *loop, sd_bus *bus,
 void finish_event_loop(struct mako_event_loop *loop);
 int run_event_loop(struct mako_event_loop *loop);
 struct mako_timer *add_event_loop_timer(struct mako_event_loop *loop,
-	int delay_ms, mako_event_loop_timer_func_t func, void *data);
+	struct timespec *at, mako_event_loop_timer_func_t func, void *data);
 
 void destroy_timer(struct mako_timer *timer);
 
