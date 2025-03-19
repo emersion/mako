@@ -138,6 +138,14 @@ Supported actions:
 
 	Default: 300
 
+*min-width*=_px_
+	Set mininum (dynamic) width of notification popups.
+	The normal width of notifications will be considered
+	the maximum notification width.
+	Set to 0 to disable.
+
+	Default: 0
+
 *height*=_px_
 	Set maximum height of notification popups. Notifications whose text takes
 	up less space are shrunk to fit.
