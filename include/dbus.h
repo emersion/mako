@@ -27,6 +27,8 @@ int init_dbus_xdg(struct mako_state *state);
 
 void emit_modes_changed(struct mako_state *state);
 
+void emit_notifications_changed(struct mako_state *state);
+
 int init_dbus_mako(struct mako_state *state);
 
 #endif

@@ -136,22 +136,16 @@ done:
 	return sd_bus_reply_method_return(msg, "");
 }
 
-static int handle_list(sd_bus_message *msg, struct wl_list *list) {
+static int handle_list_for_each(sd_bus_message *reply, struct wl_list *list) {
 
-	sd_bus_message *reply = NULL;
-	int ret = sd_bus_message_new_method_return(msg, &reply);
-	if (ret < 0) {
-		return ret;
-	}
-
-	ret = sd_bus_message_open_container(reply, 'a', "a{sv}");
+	int ret = sd_bus_message_open_container(reply, 'a', "a{sv}");
 	if (ret < 0) {
 		return ret;
 	}
 
 	struct mako_notification *notif;
 	wl_list_for_each(notif, list, link) {
-		ret = sd_bus_message_open_container(reply, 'a', "{sv}");
+		int ret = sd_bus_message_open_container(reply, 'a', "{sv}");
 		if (ret < 0) {
 			return ret;
 		}
@@ -254,6 +248,21 @@ static int handle_list(sd_bus_message *msg, struct wl_list *list) {
 	}
 
 	ret = sd_bus_message_close_container(reply);
+	if (ret < 0) {
+		return ret;
+	}
+
+	return 0;
+}
+
+static int handle_list(sd_bus_message *msg, struct wl_list *list) {
+	sd_bus_message *reply = NULL;
+	int ret = sd_bus_message_new_method_return(msg, &reply);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = handle_list_for_each(reply, list);
 	if (ret < 0) {
 		return ret;
 	}
@@ -462,6 +471,25 @@ void emit_modes_changed(struct mako_state *state) {
 	sd_bus_emit_properties_changed(state->bus, service_path, service_interface, "Modes", NULL);
 }
 
+
+static int get_notifications(sd_bus *bus, const char *path,
+		     const char *interface, const char *property,
+		     sd_bus_message *reply, void *data,
+		     sd_bus_error *ret_error) {
+	struct mako_state *state = data;
+
+	int ret = handle_list_for_each(reply, &state->notifications);
+	if (ret < 0) {
+		return ret;
+	}
+
+	return 0;
+}
+
+void emit_notifications_changed(struct mako_state *state) {
+	sd_bus_emit_properties_changed(state->bus, service_path, service_interface, "Notifications", NULL);
+}
+
 static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_VTABLE_START(0),
 	SD_BUS_METHOD("DismissNotifications", "a{sv}", "", handle_dismiss, SD_BUS_VTABLE_UNPRIVILEGED),
@@ -474,6 +502,7 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_METHOD("ListModes", "", "as", handle_list_modes, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("SetModes", "as", "", handle_set_modes, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_PROPERTY("Modes", "as", get_modes, 0, SD_BUS_VTABLE_PROPERTY_EMITS_INVALIDATION),
+	SD_BUS_PROPERTY("Notifications", "aa{sv}", get_notifications, 0, SD_BUS_VTABLE_PROPERTY_EMITS_INVALIDATION),
 	SD_BUS_VTABLE_END
 };
 
