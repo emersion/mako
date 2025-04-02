@@ -140,6 +140,8 @@ void close_notification(struct mako_notification *notif,
 	} else {
 		destroy_notification(notif);
 	}
+
+	emit_notifications_changed(notif->state);
 }
 
 struct mako_notification *get_notification(struct mako_state *state,
@@ -503,6 +505,8 @@ void insert_notification(struct mako_state *state, struct mako_notification *not
 	}
 
 	wl_list_insert(insert_node, &notif->link);
+
+	emit_notifications_changed(state);
 }
 
 // Iterate through all of the current notifications and group any that share
