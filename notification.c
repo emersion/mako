@@ -109,6 +109,8 @@ void destroy_notification(struct mako_notification *notif) {
 void close_notification(struct mako_notification *notif,
 		enum mako_notification_close_reason reason,
 		bool add_to_history) {
+	struct mako_state *state = notif->state;
+
 	notify_notification_closed(notif, reason);
 	wl_list_remove(&notif->link);  // Remove so regrouping works...
 	wl_list_init(&notif->link);  // ...but destroy will remove again.
@@ -116,12 +118,12 @@ void close_notification(struct mako_notification *notif,
 	struct mako_criteria *notif_criteria = create_criteria_from_notification(
 			notif, &notif->style.group_criteria_spec);
 	if (notif_criteria) {
-		group_notifications(notif->state, notif_criteria);
+		group_notifications(state, notif_criteria);
 		destroy_criteria(notif_criteria);
 	}
 
 	if (!notif->style.history ||
-		notif->state->config.max_history <= 0) {
+		state->config.max_history <= 0) {
 		destroy_notification(notif);
 		return;
 	}
@@ -130,18 +132,18 @@ void close_notification(struct mako_notification *notif,
 	notif->timer = NULL;
 
 	if (add_to_history) {
-		wl_list_insert(&notif->state->history, &notif->link);
-		while (wl_list_length(&notif->state->history) >
-			notif->state->config.max_history) {
+		wl_list_insert(&state->history, &notif->link);
+		while (wl_list_length(&state->history) >
+			state->config.max_history) {
 			struct mako_notification *n =
-				wl_container_of(notif->state->history.prev, n, link);
+				wl_container_of(state->history.prev, n, link);
 			destroy_notification(n);
 		}
 	} else {
 		destroy_notification(notif);
 	}
 
-	emit_notifications_changed(notif->state);
+	emit_notifications_changed(state);
 }
 
 struct mako_notification *get_notification(struct mako_state *state,
