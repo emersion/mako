@@ -133,8 +133,7 @@ void close_notification(struct mako_notification *notif,
 
 	if (add_to_history) {
 		wl_list_insert(&state->history, &notif->link);
-		while (wl_list_length(&state->history) >
-			state->config.max_history) {
+		while (wl_list_length(&state->history) > state->config.max_history) {
 			struct mako_notification *n =
 				wl_container_of(state->history.prev, n, link);
 			destroy_notification(n);
@@ -162,8 +161,8 @@ struct mako_notification *get_tagged_notification(struct mako_state *state,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (notif->tag && strlen(notif->tag) != 0 &&
-			strcmp(notif->tag, tag) == 0 &&
-			strcmp(notif->app_name, app_name) == 0) {
+				strcmp(notif->tag, tag) == 0 &&
+				strcmp(notif->app_name, app_name) == 0) {
 			return notif;
 		}
 	}
@@ -315,7 +314,7 @@ size_t format_text(const char *format, char *buf, mako_format_func_t format_func
 		if (current[1] == '%') {
 			value = strdup("%");
 		} else {
-			value =	format_func(current[1], &markup, data);
+			value = format_func(current[1], &markup, data);
 		}
 		if (value == NULL) {
 			value = strdup("");
@@ -471,7 +470,7 @@ static struct wl_list *get_last_notif_by_urgency(struct wl_list *notifications,
 	}
 
 	while (current <= MAKO_NOTIFICATION_URGENCY_CRITICAL &&
-		current >= MAKO_NOTIFICATION_URGENCY_UNKNOWN) {
+			current >= MAKO_NOTIFICATION_URGENCY_UNKNOWN) {
 		struct mako_notification *notif;
 		wl_list_for_each_reverse(notif, notifications, link) {
 			if (notif->urgency == current) {
