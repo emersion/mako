@@ -36,6 +36,7 @@ void reset_notification(struct mako_notification *notif) {
 		free(action);
 	}
 
+	notif->transient = false;
 	notif->urgency = MAKO_NOTIFICATION_URGENCY_UNKNOWN;
 	notif->progress = -1;
 

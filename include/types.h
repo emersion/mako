@@ -47,6 +47,7 @@ struct mako_criteria_spec {
 	bool app_icon;
 	bool actionable;
 	bool expiring;
+	bool transient;
 	bool urgency;
 	bool category;
 	bool desktop_entry;

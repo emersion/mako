@@ -86,7 +86,7 @@ static void handle_notification_timer(void *data) {
 	struct mako_surface *surface = notif->surface;
 	notif->timer = NULL;
 
-	close_notification(notif, MAKO_NOTIFICATION_CLOSE_EXPIRED, true);
+	close_notification(notif, MAKO_NOTIFICATION_CLOSE_EXPIRED, !notif->transient);
 	set_dirty(surface);
 }
 
@@ -334,6 +334,10 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			if (ret < 0) {
 				return ret;
 			}
+		} else if (strcmp(hint, "transient") == 0) {
+			bool transient = false;
+			ret = sd_bus_message_read(msg, "v", "b", &transient);
+			notif->transient = transient;
 		} else {
 			ret = sd_bus_message_skip(msg, "v");
 			if (ret < 0) {
@@ -448,7 +452,7 @@ static int handle_close_notification(sd_bus_message *msg, void *data,
 	struct mako_notification *notif = get_notification(state, id);
 	if (notif) {
 		struct mako_surface *surface = notif->surface;
-		close_notification(notif, MAKO_NOTIFICATION_CLOSE_REQUEST, true);
+		close_notification(notif, MAKO_NOTIFICATION_CLOSE_REQUEST, !notif->transient);
 		set_dirty(surface);
 	}
 

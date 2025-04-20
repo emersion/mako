@@ -73,13 +73,14 @@ static int handle_dismiss(sd_bus_message *msg, void *data,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (notif->id == id || id == 0) {
+			notif->transient = !history;
 			struct mako_surface *surface = notif->surface;
 			if (group) {
-				close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, history);
+				close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, !notif->transient);
 			} else if (all) {
-				close_all_notifications(state, MAKO_NOTIFICATION_CLOSE_DISMISSED, history);
+				close_all_notifications(state, MAKO_NOTIFICATION_CLOSE_DISMISSED, !notif->transient);
 			} else {
-				close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, history);
+				close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, !notif->transient);
 			}
 			set_dirty(surface);
 			break;

@@ -39,6 +39,7 @@ struct mako_notification {
 	int32_t requested_timeout;
 	struct wl_list actions; // mako_action::link
 
+	bool transient;
 	enum mako_notification_urgency urgency;
 	char *category;
 	char *desktop_entry;
