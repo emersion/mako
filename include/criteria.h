@@ -25,6 +25,7 @@ struct mako_criteria {
 	char *app_icon;
 	bool actionable;  // Whether mako_notification.actions is nonempty
 	bool expiring;  // Whether mako_notification.requested_timeout is non-zero
+	bool transient;
 	enum mako_notification_urgency urgency;
 	char *category;
 	char *desktop_entry;
