@@ -86,7 +86,7 @@ static void handle_notification_timer(void *data) {
 	struct mako_surface *surface = notif->surface;
 	notif->timer = NULL;
 
-	close_notification(notif, MAKO_NOTIFICATION_CLOSE_EXPIRED, !notif->transient);
+	close_notification(notif, MAKO_NOTIFICATION_CLOSE_EXPIRED);
 	set_dirty(surface);
 }
 
@@ -452,7 +452,7 @@ static int handle_close_notification(sd_bus_message *msg, void *data,
 	struct mako_notification *notif = get_notification(state, id);
 	if (notif) {
 		struct mako_surface *surface = notif->surface;
-		close_notification(notif, MAKO_NOTIFICATION_CLOSE_REQUEST, !notif->transient);
+		close_notification(notif, MAKO_NOTIFICATION_CLOSE_REQUEST);
 		set_dirty(surface);
 	}
 

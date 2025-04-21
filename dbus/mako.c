@@ -21,7 +21,7 @@ static int handle_dismiss(sd_bus_message *msg, void *data,
 	uint32_t id = 0;
 	int group = 0;
 	int all = 0;
-	int history = 1; // Keep history be default
+	int transient = 0; // Keep history be default
 
 	int ret = sd_bus_message_enter_container(msg, 'a', "{sv}");
 	if (ret < 0) {
@@ -46,8 +46,8 @@ static int handle_dismiss(sd_bus_message *msg, void *data,
 			ret = sd_bus_message_read(msg, "v", "u", &id);
 		} else if (strcmp(key, "group") == 0) {
 			ret = sd_bus_message_read(msg, "v", "b", &group);
-		} else if (strcmp(key, "history") == 0) {
-			ret = sd_bus_message_read(msg, "v", "b", &history);
+		} else if (strcmp(key, "transient") == 0) {
+			ret = sd_bus_message_read(msg, "v", "b", &transient);
 		} else if (strcmp(key, "all") == 0) {
 			ret = sd_bus_message_read(msg, "v", "b", &all);
 		} else {
@@ -73,14 +73,14 @@ static int handle_dismiss(sd_bus_message *msg, void *data,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (notif->id == id || id == 0) {
-			notif->transient = !history;
+			notif->transient = transient;
 			struct mako_surface *surface = notif->surface;
 			if (group) {
-				close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, !notif->transient);
+				close_group_notifications(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 			} else if (all) {
-				close_all_notifications(state, MAKO_NOTIFICATION_CLOSE_DISMISSED, !notif->transient);
+				close_all_notifications(state, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 			} else {
-				close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, !notif->transient);
+				close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 			}
 			set_dirty(surface);
 			break;
