@@ -85,6 +85,7 @@ struct mako_notification *create_notification(struct mako_state *state) {
 
 	// Start ungrouped.
 	notif->group_index = -1;
+	notif->group_focus_index = 0;
 
 	return notif;
 }
@@ -111,12 +112,24 @@ void close_notification(struct mako_notification *notif,
 		bool add_to_history) {
 	struct mako_state *state = notif->state;
 
+	// If last member of a group, decrease the focus
+	struct mako_criteria *notif_criteria = create_criteria_from_notification(
+			notif, &notif->style.group_criteria_spec);
+	if (notif_criteria) {
+		if (notif->group_index == notif->group_count - 1) {
+			struct mako_notification *iter;
+			wl_list_for_each(iter, &notif->state->notifications, link) {
+				if (match_criteria(notif_criteria, iter)) {
+					iter->group_focus_index--;
+				}
+			}
+		}
+	}
+
 	notify_notification_closed(notif, reason);
 	wl_list_remove(&notif->link);  // Remove so regrouping works...
 	wl_list_init(&notif->link);  // ...but destroy will remove again.
 
-	struct mako_criteria *notif_criteria = create_criteria_from_notification(
-			notif, &notif->style.group_criteria_spec);
 	if (notif_criteria) {
 		group_notifications(state, notif_criteria);
 		destroy_criteria(notif_criteria);
@@ -282,7 +295,7 @@ char *format_notif_text(char variable, bool *markup, void *data) {
 		*markup = notif->style.markup;
 		return strdup(notif->body);
 	case 'g':
-		return mako_asprintf("%d", notif->group_count);
+		return mako_asprintf("%d/%d", notif->group_index + 1, notif->group_count);
 	}
 	return NULL;
 }
@@ -450,6 +463,36 @@ void notification_handle_button(struct mako_notification *notif, uint32_t button
 	}
 }
 
+void notification_handle_axis(struct mako_notification *notif, uint32_t axis, wl_fixed_t value, const struct mako_binding_context *ctx) {
+	// If notification is not part of a group, return
+	if (notif->group_index == -1)
+		return;
+
+	// Create criteria to find other group members
+	struct mako_criteria *criteria = create_criteria_from_notification(notif, &notif->style.group_criteria_spec);
+	if (!criteria)
+		return;
+
+	if (value < 0 && notif->group_focus_index > 0) {
+		// On scroll up
+		struct mako_notification *iter;
+		wl_list_for_each(iter, &notif->state->notifications, link) {
+			if (match_criteria(criteria, iter)) {
+				iter->group_focus_index--;
+			}
+		}
+	} else if (value > 0 && notif->group_focus_index < notif->group_count - 1) {
+		// On scroll down
+		struct mako_notification *iter;
+		wl_list_for_each(iter, &notif->state->notifications, link) {
+			if (match_criteria(criteria, iter)) {
+				iter->group_focus_index++;
+			}
+		}
+	}
+	destroy_criteria(criteria);
+}
+
 void notification_handle_touch(struct mako_notification *notif,
 		const struct mako_binding_context *ctx) {
 	notification_execute_binding(notif, &notif->style.touch_binding, ctx);
@@ -523,6 +566,7 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 	// is technically unnecessary, since it will go back in the same place, but
 	// it makes the rest of this logic nicer.
 	struct wl_list *location = NULL;  // The place we're going to reinsert them.
+	int group_visible = 0;
 	struct mako_notification *notif = NULL, *tmp = NULL;
 	size_t count = 0;
 	wl_list_for_each_safe(notif, tmp, &state->notifications, link) {
@@ -532,6 +576,7 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 
 		if (!location) {
 			location = notif->link.prev;
+			group_visible = notif->group_focus_index;
 		}
 
 		wl_list_remove(&notif->link);
@@ -564,6 +609,7 @@ int group_notifications(struct mako_state *state, struct mako_criteria *criteria
 	// anymore.
 	wl_list_for_each(notif, &matches, link) {
 		notif->group_count = count;
+		notif->group_focus_index = group_visible;
 	}
 
 	// Place all of the matches back into the list where the first one was

@@ -394,7 +394,11 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
 			continue;
 		}
 
-		if (style->invisible) {
+		if (style->invisible && notif->group_index != notif->group_focus_index) {
+			continue;
+		}
+
+		if (notif->group_index > -1 && notif->group_index != notif->group_focus_index) {
 			continue;
 		}
 
