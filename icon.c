@@ -60,23 +60,26 @@ static GdkPixbuf *load_scaled_to_minimum(GdkPixbuf *image, char *path, int min_s
 
 	double longest = image_width > image_height ? image_width : image_height;
 
-	if (longest < min_size) {
-		const double scale = min_size / longest;
-		image_width *= scale;
-		image_height *= scale;
-
-		GError *err = NULL;
-		GdkPixbuf *scaled_pixbuf = gdk_pixbuf_new_from_file_at_scale(
-			path, image_width, image_height, true, &err);
-		if (!scaled_pixbuf) {
-			fprintf(stderr, "Failed to load icon (%s)\n", err->message);
-			g_error_free(err);
-			return NULL;
-		}
-		return scaled_pixbuf;
+	if (longest >= min_size) {
+		return image;
 	}
 
-	return image;
+	const double scale = min_size / longest;
+	image_width *= scale;
+	image_height *= scale;
+
+	GError *err = NULL;
+	GdkPixbuf *scaled_pixbuf = gdk_pixbuf_new_from_file_at_scale(
+		path, image_width, image_height, true, &err);
+	free(image);
+
+	if (!scaled_pixbuf) {
+		fprintf(stderr, "Failed to load icon (%s)\n", err->message);
+		g_error_free(err);
+		return NULL;
+	}
+
+	return scaled_pixbuf;
 }
 
 static GdkPixbuf *load_image_data(struct mako_image_data *image_data) {
@@ -294,9 +297,7 @@ struct mako_icon *create_icon(struct mako_notification *notif) {
 		}
 
 		image = load_image(path);
-		GdkPixbuf *scaled = load_scaled_to_minimum(image, path, notif->style.min_icon_size);
-		free(image);
-		image = scaled;
+		image = load_scaled_to_minimum(image, path, notif->style.min_icon_size);
 
 		free(path);
 		if (image == NULL) {
