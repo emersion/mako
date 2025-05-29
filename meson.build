@@ -33,6 +33,8 @@ realtime = cc.find_library('rt')
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.32')
 wayland_cursor = dependency('wayland-cursor')
+sfdo_basedir = dependency('libsfdo-basedir')
+sfdo_icon = dependency('libsfdo-icon')
 
 epoll = dependency('', required: false)
 if (not cc.has_function('timerfd_create', prefix: '#include <sys/timerfd.h>') or
@@ -94,6 +96,8 @@ executable(
 		realtime,
 		wayland_client,
 		wayland_cursor,
+		sfdo_basedir,
+		sfdo_icon,
 	],
 	include_directories: [mako_inc],
 	install: true,

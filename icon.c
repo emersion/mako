@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <ctype.h>
 #include <cairo/cairo.h>
+#include <sfdo-basedir.h>
+#include <sfdo-icon.h>
 
 #include "mako.h"
 #include "icon.h"
@@ -122,6 +124,10 @@ static char *resolve_icon(struct mako_notification *notif) {
 		return icon_path;
 	}
 
+	if (!validate_icon_name(icon_name)) {
+		return NULL;
+	}
+
 	// Determine the largest scale factor of any attached output.
 	int32_t max_scale = 1;
 	struct mako_output *output = NULL;
@@ -131,10 +137,62 @@ static char *resolve_icon(struct mako_notification *notif) {
 		}
 	}
 
-	static const char fallback[] = "%s:/usr/share/icons/hicolor";
-	char *search = mako_asprintf(fallback, notif->style.icon_path);
+	static const char fallback_name[] = "%s:hicolor";
+	char *search = mako_asprintf(fallback_name, notif->style.icon_theme);
 
-	char *saveptr = NULL;
+	static char *saveptr = NULL;
+	char *theme_name = strtok_r(search, ":", &saveptr);
+
+	struct sfdo_basedir_ctx *basedir_ctx = sfdo_basedir_ctx_create();
+	struct sfdo_icon_ctx *icon_ctx = sfdo_icon_ctx_create(basedir_ctx);
+	if (icon_ctx == NULL) {
+		sfdo_basedir_ctx_destroy(basedir_ctx);
+		return NULL;
+	}
+
+	const int THEME_OPTIONS = SFDO_ICON_THEME_LOAD_OPTIONS_DEFAULT
+		| SFDO_ICON_THEME_LOAD_OPTION_RELAXED
+		| SFDO_ICON_THEME_LOAD_OPTION_ALLOW_MISSING;
+
+	const int ICON_OPTIONS = SFDO_ICON_THEME_LOOKUP_OPTIONS_DEFAULT;
+
+	char *icon_path = NULL;
+	for (;theme_name; theme_name = strtok_r(NULL, ":", &saveptr)) {
+		if (strlen(theme_name) == 0) {
+			continue;
+		}
+
+		struct sfdo_icon_theme *icon_theme = sfdo_icon_theme_load(icon_ctx, theme_name, THEME_OPTIONS);
+		if (icon_theme == NULL) {
+			continue;
+		}
+
+		struct sfdo_icon_file *icon_file = sfdo_icon_theme_lookup(
+			icon_theme, icon_name, SFDO_NT, notif->style.max_icon_size, max_scale, ICON_OPTIONS);
+		sfdo_icon_theme_destroy(icon_theme);
+		if (icon_file == NULL || icon_file == SFDO_ICON_FILE_INVALID) {
+			continue;
+		}
+
+		icon_path = strdup(sfdo_icon_file_get_path(icon_file, NULL));
+		break;
+	}
+
+	sfdo_icon_ctx_destroy(icon_ctx);
+	sfdo_basedir_ctx_destroy(basedir_ctx);
+
+	free(search);
+
+	if (icon_path != NULL) {
+		return icon_path;
+	}
+
+	// Now by path directly
+
+	static const char fallback[] = "%s:/usr/share/icons/hicolor";
+	search = mako_asprintf(fallback, notif->style.icon_path);
+
+	saveptr = NULL;
 	char *theme_path = strtok_r(search, ":", &saveptr);
 
 	// Match all icon files underneath of the theme_path followed by any icon
@@ -142,14 +200,9 @@ static char *resolve_icon(struct mako_notification *notif) {
 	// files in the icon path are valid icon types.
 	static const char pattern_fmt[] = "%s/*/*/%s.*";
 
-	char *icon_path = NULL;
 	int32_t last_icon_size = 0;
 
-	if (!validate_icon_name(icon_name)) {
-		return NULL;
-	}
-
-	while (theme_path) {
+	for (;theme_path; theme_path = strtok_r(NULL, ":", &saveptr)) {
 		if (strlen(theme_path) == 0) {
 			continue;
 		}
@@ -225,7 +278,6 @@ static char *resolve_icon(struct mako_notification *notif) {
 			// themes even if one is a better size.
 			break;
 		}
-		theme_path = strtok_r(NULL, ":", &saveptr);
 	}
 
 	if (icon_path == NULL) {

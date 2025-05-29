@@ -100,6 +100,7 @@ void init_default_style(struct mako_style *style) {
 #endif
 	style->max_icon_size = 64;
 	style->icon_path = strdup("");  // hicolor and pixmaps are implicit.
+	style->icon_theme = strdup("");
 	style->icon_border_radius = 0;
 
 	style->font = strdup("monospace 10");
@@ -155,6 +156,7 @@ void finish_style(struct mako_style *style) {
 	finish_binding(&style->touch_binding);
 	finish_binding(&style->notify_binding);
 	free(style->icon_path);
+	free(style->icon_theme);
 	free(style->font);
 	free(style->format);
 	free(style->output);
@@ -181,6 +183,7 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	char *new_font = NULL;
 	char *new_format = NULL;
 	char *new_icon_path = NULL;
+	char *new_icon_theme = NULL;
 	char *new_output = NULL;
 
 	if (style->spec.font) {
@@ -210,12 +213,23 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		}
 	}
 
+	if (style->spec.icon_theme) {
+		new_icon_theme = strdup(style->icon_theme);
+		if (new_icon_theme == NULL) {
+			free(new_format);
+			free(new_font);
+			fprintf(stderr, "allocation failed\n");
+			return false;
+		}
+	}
+
 	if (style->spec.output) {
 		new_output = strdup(style->output);
 		if (new_output == NULL) {
 			free(new_format);
 			free(new_font);
 			free(new_icon_path);
+			free(new_icon_theme);
 			fprintf(stderr, "allocation failed\n");
 			return false;
 		}
@@ -267,6 +281,12 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		free(target->icon_path);
 		target->icon_path = new_icon_path;
 		target->spec.icon_path = true;
+	}
+
+	if (style->spec.icon_theme) {
+		free(target->icon_theme);
+		target->icon_theme = new_icon_theme;
+		target->spec.icon_theme = true;
 	}
 
 	if (style->spec.icon_border_radius) {
@@ -614,6 +634,9 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "icon-path") == 0) {
 		free(style->icon_path);
 		return spec->icon_path = !!(style->icon_path = strdup(value));
+	} else if (strcmp(name, "icon-theme") == 0) {
+		free(style->icon_theme);
+		return spec->icon_theme = !!(style->icon_theme == strdup(value));
 	} else if (strcmp(name, "icon-border-radius") == 0) {
 		spec->icon_border_radius = parse_int_ge(value, &style->icon_border_radius, 0);
 		return spec->icon_border_radius;
