@@ -54,6 +54,31 @@ static GdkPixbuf *load_image(const char *path) {
 	return pixbuf;
 }
 
+static GdkPixbuf *load_scaled_to_minimum(GdkPixbuf *image, char *path, int min_size) {
+	int image_width = gdk_pixbuf_get_width(image);
+	int image_height = gdk_pixbuf_get_height(image);
+
+	double longest = image_width > image_height ? image_width : image_height;
+
+	if (longest < min_size) {
+		const double scale = min_size / longest;
+		image_width *= scale;
+		image_height *= scale;
+
+		GError *err = NULL;
+		GdkPixbuf *scaled_pixbuf = gdk_pixbuf_new_from_file_at_scale(
+			path, image_width, image_height, true, &err);
+		if (!scaled_pixbuf) {
+			fprintf(stderr, "Failed to load icon (%s)\n", err->message);
+			g_error_free(err);
+			return NULL;
+		}
+		return scaled_pixbuf;
+	}
+
+	return image;
+}
+
 static GdkPixbuf *load_image_data(struct mako_image_data *image_data) {
 	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(image_data->data, GDK_COLORSPACE_RGB,
 			image_data->has_alpha, image_data->bits_per_sample, image_data->width,
@@ -65,9 +90,15 @@ static GdkPixbuf *load_image_data(struct mako_image_data *image_data) {
 	return pixbuf;
 }
 
-static double fit_to_square(int width, int height, int square_size) {
-	double longest = width > height ? width : height;
-	return longest > square_size ? square_size/longest : 1.0;
+static void fit_to_square(GdkPixbuf *image, struct mako_icon *icon, int max_size) {
+	int image_width = gdk_pixbuf_get_width(image);
+	int image_height = gdk_pixbuf_get_height(image);
+
+	double longest = image_width > image_height ? image_width : image_height;
+
+	icon->scale = longest > max_size ? max_size / longest : 1.0;
+	icon->width = image_width * icon->scale;
+	icon->height = image_height * icon->scale;
 }
 
 static char hex_val(char digit) {
@@ -263,20 +294,18 @@ struct mako_icon *create_icon(struct mako_notification *notif) {
 		}
 
 		image = load_image(path);
+		GdkPixbuf *scaled = load_scaled_to_minimum(image, path, notif->style.min_icon_size);
+		free(image);
+		image = scaled;
+
 		free(path);
 		if (image == NULL) {
 			return NULL;
 		}
 	}
 
-	int image_width = gdk_pixbuf_get_width(image);
-	int image_height = gdk_pixbuf_get_height(image);
-
 	struct mako_icon *icon = calloc(1, sizeof(struct mako_icon));
-	icon->scale = fit_to_square(
-			image_width, image_height, notif->style.max_icon_size);
-	icon->width = image_width * icon->scale;
-	icon->height = image_height * icon->scale;
+	fit_to_square(image, icon, notif->style.max_icon_size);
 
 	icon->image = create_cairo_surface_from_gdk_pixbuf(image);
 	g_object_unref(image);

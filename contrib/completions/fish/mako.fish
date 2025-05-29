@@ -22,6 +22,7 @@ complete -c mako -l progress-color -d 'Progress color indicator' -x
 complete -c mako -l icons -d 'Show icons or not' -xa "1 0"
 complete -c mako -l icon-path -d 'Icon search path, colon delimited' -r
 complete -c mako -l max-icon-size -d 'Max icon size in px' -x
+complete -c mako -l min-icon-size -d 'Min icon size in px' -x
 complete -c mako -l icon-border-radius -d 'Icon border radius value in px' -x
 complete -c mako -l markup -d 'Enable markup or not' -xa "1 0"
 complete -c mako -l actions -d 'Enable actions or not' -xa "1 0"
