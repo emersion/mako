@@ -281,149 +281,149 @@ static bool is_empty_str(const char *str) {
 }
 
 static void escape_and_print_json_string(const char *s) {
-    putchar('"');
+	putchar('"');
 
-    for (; *s; ++s) {
-        switch (*s) {
-            case '\"': printf("\\\""); break;
-            case '\\': printf("\\\\"); break;
-            case '\b': printf("\\b");  break;
-            case '\f': printf("\\f");  break;
-            case '\n': printf("\\n");  break;
-            case '\r': printf("\\r");  break;
-            case '\t': printf("\\t");  break;
-            default:
-                // control characters
-                if ((unsigned char) *s < 0x20) {
-                    printf("\\u%04x", (unsigned char)*s);
-                } else {
-                    putchar(*s);
-                }
-        }
-    }
+	for (; *s; ++s) {
+		switch (*s) {
+			case '\"': printf("\\\""); break;
+			case '\\': printf("\\\\"); break;
+			case '\b': printf("\\b");  break;
+			case '\f': printf("\\f");  break;
+			case '\n': printf("\\n");  break;
+			case '\r': printf("\\r");  break;
+			case '\t': printf("\\t");  break;
+			default:
+				// control characters
+				if ((unsigned char) *s < 0x20) {
+					printf("\\u%04x", (unsigned char)*s);
+				} else {
+					putchar(*s);
+				}
+		}
+	}
 
-    putchar('"');
+	putchar('"');
 }
 
 static int print_json_object(sd_bus_message *reply);
 
 static int print_json_value(sd_bus_message *message) {
-    int ret;
+	int ret;
 	char type;
 	const char *signature;
 
-    ret = sd_bus_message_peek_type(message, &type, &signature);
-    if (ret < 0) {
+	ret = sd_bus_message_peek_type(message, &type, &signature);
+	if (ret < 0) {
 		return ret;
 	}
 
-    switch ((char) type) {
-        case SD_BUS_TYPE_STRING: {
-            const char *value;
-            ret = sd_bus_message_read_basic(message, 's', &value);
-            if (ret < 0) {
+	switch ((char) type) {
+		case SD_BUS_TYPE_STRING: {
+			const char *value;
+			ret = sd_bus_message_read_basic(message, 's', &value);
+			if (ret < 0) {
 				return ret;
 			}
-        	escape_and_print_json_string(value);
-            return ret;
-        }
-        case SD_BUS_TYPE_BOOLEAN: {
-            bool value;
-            ret = sd_bus_message_read_basic(message, 'b', &value);
-            if (ret < 0) {
+			escape_and_print_json_string(value);
+			return ret;
+		}
+		case SD_BUS_TYPE_BOOLEAN: {
+			bool value;
+			ret = sd_bus_message_read_basic(message, 'b', &value);
+			if (ret < 0) {
 				return ret;
 			}
-            printf(value ? "true" : "false");
-            return ret;
-        }
-        case SD_BUS_TYPE_BYTE: {
-            uint8_t value;
-            ret = sd_bus_message_read_basic(message, 'y', &value);
-            if (ret < 0) {
+			printf(value ? "true" : "false");
+			return ret;
+		}
+		case SD_BUS_TYPE_BYTE: {
+			uint8_t value;
+			ret = sd_bus_message_read_basic(message, 'y', &value);
+			if (ret < 0) {
 				return ret;
 			}
-            printf("%u", value);
-            return ret;
-        }
-        case SD_BUS_TYPE_UINT32: {
-            uint32_t value;
-            ret = sd_bus_message_read_basic(message, 'u', &value);
-            if (ret < 0) {
+			printf("%u", value);
+			return ret;
+		}
+		case SD_BUS_TYPE_UINT32: {
+			uint32_t value;
+			ret = sd_bus_message_read_basic(message, 'u', &value);
+			if (ret < 0) {
 				return ret;
 			}
-            printf("%u", value);
-            return ret;
-        }
-        case SD_BUS_TYPE_INT32: {
-            int32_t value;
-            ret = sd_bus_message_read_basic(message, 'i', &value);
-            if (ret < 0) {
+			printf("%u", value);
+			return ret;
+		}
+		case SD_BUS_TYPE_INT32: {
+			int32_t value;
+			ret = sd_bus_message_read_basic(message, 'i', &value);
+			if (ret < 0) {
 				return ret;
 			}
-            printf("%d", value);
-            return ret;
-        }
-        case SD_BUS_TYPE_VARIANT: {
-            ret = sd_bus_message_enter_container(message, 'v', NULL);
-            if (ret < 0) {
+			printf("%d", value);
+			return ret;
+		}
+		case SD_BUS_TYPE_VARIANT: {
+			ret = sd_bus_message_enter_container(message, 'v', NULL);
+			if (ret < 0) {
 				return ret;
 			}
-            ret = print_json_value(message);
-            if (ret < 0) {
+			ret = print_json_value(message);
+			if (ret < 0) {
 				return ret;
 			}
-            return sd_bus_message_exit_container(message);  // 'v'
-        }
-        case SD_BUS_TYPE_ARRAY: {
+			return sd_bus_message_exit_container(message);  // 'v'
+		}
+		case SD_BUS_TYPE_ARRAY: {
 			bool outer_first = true;
 
 			printf("[");
 
-            if (strcmp(signature, "{sv}") == 0) {
-                while ((ret = sd_bus_message_enter_container(message, 'a', "{sv}")) > 0) {
-                    if (!outer_first) {
+			if (strcmp(signature, "{sv}") == 0) {
+				while ((ret = sd_bus_message_enter_container(message, 'a', "{sv}")) > 0) {
+					if (!outer_first) {
 						printf(",");
 					}
-                    outer_first = false;
+					outer_first = false;
 
-                    print_json_object(message);  // {sv}
-                    sd_bus_message_exit_container(message);
-                }
-            } else if (strcmp(signature, "{ss}") == 0) {
-                while ((ret = sd_bus_message_enter_container(message, 'a', "{ss}")) > 0) {
-                    bool inner_first = true;
+					print_json_object(message);  // {sv}
+					sd_bus_message_exit_container(message);
+				}
+			} else if (strcmp(signature, "{ss}") == 0) {
+				while ((ret = sd_bus_message_enter_container(message, 'a', "{ss}")) > 0) {
+					bool inner_first = true;
 
-                    if (!outer_first) {
+					if (!outer_first) {
 						printf(",");
 					}
-                    outer_first = false;
+					outer_first = false;
 
-                    printf("{");
+					printf("{");
 
-                    while ((ret = sd_bus_message_enter_container(message, 'e', NULL)) > 0) {
-                        const char *key, *value;
+					while ((ret = sd_bus_message_enter_container(message, 'e', NULL)) > 0) {
+						const char *key, *value;
 
-                        ret = sd_bus_message_read(message, "ss", &key, &value);
+						ret = sd_bus_message_read(message, "ss", &key, &value);
 						if (ret < 0) {
 							return ret;
 						}
 
-                        if (!inner_first) {
+						if (!inner_first) {
 							printf(",");
 						}
-                        inner_first = false;
+						inner_first = false;
 
-                        escape_and_print_json_string(key);
-                        printf(":");
-                        escape_and_print_json_string(value);
+						escape_and_print_json_string(key);
+						printf(":");
+						escape_and_print_json_string(value);
 
-                        sd_bus_message_exit_container(message);  // e
-                    }
-                    printf("}");
+						sd_bus_message_exit_container(message);  // e
+					}
+					printf("}");
 
-                    sd_bus_message_exit_container(message);  // a{ss}
-                }
-            } else {
+					sd_bus_message_exit_container(message);  // a{ss}
+				}
+			} else {
 				while ((ret = print_json_value(message)) > 0) {
 					if (!outer_first) {
 						printf(",");
@@ -436,49 +436,49 @@ static int print_json_value(sd_bus_message *message) {
 
 			break;
 		}
-        default: {
-            // skip unknown
-            sd_bus_message_skip(message, NULL);
-            printf("null");
+		default: {
+			// skip unknown
+			sd_bus_message_skip(message, NULL);
+			printf("null");
 		}
-    }
+	}
 
 	return 1;
 }
 
 static int print_json_object(sd_bus_message *reply) {
-    int ret;
-    bool is_first = true;
+	int ret;
+	bool is_first = true;
 
-    printf("{");
+	printf("{");
 
-    while ((ret = sd_bus_message_enter_container(reply, 'e', "sv")) > 0) {
-        const char *key;
+	while ((ret = sd_bus_message_enter_container(reply, 'e', "sv")) > 0) {
+		const char *key;
 
-        ret = sd_bus_message_read_basic(reply, 's', &key);
+		ret = sd_bus_message_read_basic(reply, 's', &key);
 		if (ret < 0) {
 			return ret;
 		}
 
-        if (!is_first) {
+		if (!is_first) {
 			printf(",");
 		}
-        is_first = false;
+		is_first = false;
 
 		escape_and_print_json_string(key);
-        printf(":");
+		printf(":");
 
-        ret = print_json_value(reply);
+		ret = print_json_value(reply);
 		if (ret < 0) {
 			return ret;
 		}
 
-        sd_bus_message_exit_container(reply);  // e{sv}
-    }
+		sd_bus_message_exit_container(reply);  // e{sv}
+	}
 
-    printf("}");
+	printf("}");
 
-    return 1;
+	return 1;
 }
 
 static int print_notification(sd_bus_message *reply) {
