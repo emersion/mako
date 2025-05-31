@@ -10,6 +10,7 @@ packages:
   - scdoc
   - wayland
   - wayland-protocols
+  - libsfdo
 sources:
   - https://github.com/emersion/mako
 tasks:
