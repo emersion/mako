@@ -3,8 +3,11 @@ packages:
   - basu
   - evdev-proto
   - gdk-pixbuf2
+  - git
+  - glib
   - libepoll-shim
   - meson
+  - ninja
   - pango
   - pkgconf
   - scdoc
@@ -12,10 +15,15 @@ packages:
   - wayland-protocols
   - libsfdo
 sources:
+  - https://github.com/zeniko/libsfdo
   - https://github.com/emersion/mako
 tasks:
   - setup: |
-      cd mako
+      cd libsfdo
+      meson setup build/
+      ninja -C build/
+      ninja -C build/ install
+      cd ../mako
       meson build/ -Dauto_features=enabled -Dsd-bus-provider=basu
   - build: |
       cd mako
