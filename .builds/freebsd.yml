@@ -14,7 +14,7 @@ packages:
   - wayland
   - wayland-protocols
 sources:
-  - https://github.com/zeniko/libsfdo
+  - https://gitlab.freedesktop.org/vyivel/libsfdo
   - https://github.com/emersion/mako
 tasks:
   - setup: |
