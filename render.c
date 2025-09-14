@@ -84,7 +84,8 @@ static void set_font_options(cairo_t *cairo, struct mako_surface *surface) {
 	}
 
 	cairo_font_options_t *fo = cairo_font_options_create();
-	if (surface->surface_output->subpixel == WL_OUTPUT_SUBPIXEL_NONE) {
+	if (surface->surface_output->subpixel == WL_OUTPUT_SUBPIXEL_NONE ||
+	    surface->surface_output->subpixel == WL_OUTPUT_SUBPIXEL_UNKNOWN) {
 		cairo_font_options_set_antialias(fo, CAIRO_ANTIALIAS_GRAY);
 	} else {
 		cairo_font_options_set_antialias(fo, CAIRO_ANTIALIAS_SUBPIXEL);
