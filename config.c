@@ -69,6 +69,7 @@ void finish_config(struct mako_config *config) {
 
 void init_default_style(struct mako_style *style) {
 	style->width = 300;
+	style->min_width = 0;
 	style->height = 100;
 
 	style->outer_margin.top = 0;
@@ -222,10 +223,15 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	}
 
 	// Now on to actually setting things!
-
+	
 	if (style->spec.width) {
 		target->width = style->width;
 		target->spec.width = true;
+	}
+
+	if (style->spec.width) {
+		target->min_width = style->min_width;
+		target->spec.min_width = true;
 	}
 
 	if (style->spec.height) {
@@ -412,6 +418,7 @@ bool apply_superset_style(
 		struct mako_style *target, struct mako_config *config) {
 	// Specify eveything that we'll be combining.
 	target->spec.width = true;
+	target->spec.min_width = true;
 	target->spec.height = true;
 	target->spec.outer_margin = true;
 	target->spec.margin = true;
@@ -442,6 +449,7 @@ bool apply_superset_style(
 		// since we're looking for the max and unspecified ones will be
 		// initialized to zero.
 		target->width = max(style->width, target->width);
+		target->min_width = max(style->min_width, target->min_width);
 		target->height = max(style->height, target->height);
 		target->outer_margin.top = max(style->outer_margin.top, target->outer_margin.top);
 		target->outer_margin.right = max(style->outer_margin.right, target->outer_margin.right);
@@ -568,6 +576,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		return spec->colors.text = parse_color(value, &style->colors.text);
 	} else if (strcmp(name, "width") == 0) {
 		return spec->width = parse_int_ge(value, &style->width, 1);
+	} else if (strcmp(name, "min-width") == 0) {
+		return spec->min_width = parse_int_ge(value, &style->min_width, 1);
 	} else if (strcmp(name, "height") == 0) {
 		return spec->height = parse_int_ge(value, &style->height, 1);
 	} else if (strcmp(name, "outer-margin") == 0) {
@@ -901,6 +911,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"text-color", required_argument, 0, 0},
 		{"width", required_argument, 0, 0},
 		{"height", required_argument, 0, 0},
+		{"min-width", required_argument, 0, 0},
 		{"outer-margin", required_argument, 0, 0},
 		{"margin", required_argument, 0, 0},
 		{"padding", required_argument, 0, 0},
