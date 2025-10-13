@@ -9,6 +9,7 @@ makoctl_cmds=(
 	'list:Retrieve a list of current notifications'
 	'history:Retrieve a list of dismissed notifications'
 	'reload:Reload the configuration file'
+	'mode:List, activate, or deactivate modes'
 	'help:Show help message and quit'
 )
 
@@ -27,6 +28,13 @@ else
 				;;
 			invoke)
 				_message -e action 'action'
+				;;
+			mode)
+				_arguments -s \
+						   '*-a[Add mode]:mode:' \
+						   '*-r[Remove mode]:mode:' \
+						   '*-t[Toggle mode]:mode:' \
+						   '*-s[Set mode]:mode:'
 				;;
 		esac
 	fi
