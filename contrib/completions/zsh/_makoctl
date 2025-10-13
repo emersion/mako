@@ -6,6 +6,7 @@ makoctl_cmds=(
 	'dismiss:Dismiss notification (first by default)'
 	'restore:Restore the most recently expired notification from the history buffer'
 	'invoke:Invoke an action on the first notification. If action is not specified, invoke the default action'
+	'menu:Use a program to select one action to be invoked on the notification'
 	'list:Retrieve a list of current notifications'
 	'history:Retrieve a list of dismissed notifications'
 	'reload:Reload the configuration file'
@@ -33,6 +34,11 @@ else
 				_arguments -s \
 						   '-n[Invoke an action on the notification with the given id]:id:' \
 						   '*:action:'
+				;;
+			menu)
+				_arguments -s \
+						   '-n[Use a program to select one action on the notification with the given id]:id:' \
+						   '*:prog and args:_command_names -e'
 				;;
 			mode)
 				_arguments -s \
