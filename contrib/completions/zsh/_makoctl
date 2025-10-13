@@ -24,7 +24,10 @@ else
 		case "${opt}" in
 			dismiss)
 				_arguments -s \
-						   '(-a --all)'{-a,--all}'[Dimiss all notification]'
+						   '(-a --all)'{-a,--all}'[Dismiss all notifications]' \
+						   '(-g --group)'{-g,--group}'[Dismiss all the notifications in the last notification'\''s group]' \
+						   '(-h --no-history)'{-h,--no-history}'[Dismiss without adding to history]' \
+						   '-n[Dismiss the notification with the given id]:id:'
 				;;
 			invoke)
 				_message -e action 'action'

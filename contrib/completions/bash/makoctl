@@ -26,7 +26,7 @@ _makoctl()
 
   case $prev in
     dismiss)
-      COMPREPLY=($(compgen -W "-a --all -g --group -n" -- "$cur"))
+      COMPREPLY=($(compgen -W "-a --all -g --group -h --no-history -n" -- "$cur"))
       return
       ;;
     invoke)
