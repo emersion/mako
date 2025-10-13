@@ -30,7 +30,9 @@ else
 						   '-n[Dismiss the notification with the given id]:id:'
 				;;
 			invoke)
-				_message -e action 'action'
+				_arguments -s \
+						   '-n[Invoke an action on the notification with the given id]:id:' \
+						   '*:action:'
 				;;
 			mode)
 				_arguments -s \
