@@ -19,6 +19,7 @@ complete -c makoctl -n '__fish_makoctl_complete_no_subcommand' -a help -d 'Show 
 
 complete -c makoctl -n '__fish_seen_subcommand_from dismiss' -s a -l all -d "Dismiss all notifications" -x
 complete -c makoctl -n '__fish_seen_subcommand_from dismiss' -s g -l group -d "Dismiss all the notifications in the last notification's group" -x
+complete -c makoctl -n '__fish_seen_subcommand_from dismiss' -s h -l no-history -d "Dismiss without adding to history" -x
 complete -c makoctl -n '__fish_seen_subcommand_from dismiss' -s n -d "Dismiss the notification with the given id" -x
 complete -c makoctl -n '__fish_seen_subcommand_from invoke' -s n -d "Invoke an action on the notification with the given id" -x
 complete -c makoctl -n '__fish_seen_subcommand_from menu' -s n -d "Use a program to select one action on the notification with the given id" -x
