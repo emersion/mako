@@ -173,35 +173,6 @@ static int run_dismiss(sd_bus *bus, int argc, char *argv[]) {
 	return call_method(bus, "DismissNotifications", NULL, types, &msg);
 }
 
-static int run_invoke(sd_bus *bus, int argc, char *argv[]) {
-	uint32_t id = 0;
-	while (true) {
-		int opt = getopt(argc, argv, "n:");
-		if (opt == -1) {
-			break;
-		}
-
-		switch (opt) {
-		case 'n':;
-			int ret = parse_uint32(&id, optarg);
-			if (ret < 0) {
-				log_neg_errno(ret, "invalid notification ID");
-				return 1;
-			}
-			break;
-		default:
-			return -EINVAL;
-		}
-	}
-
-	const char *action = "default";
-	if (optind < argc) {
-		action = argv[optind];
-	}
-
-	return call_method(bus, "InvokeAction", NULL, "us", id, action);
-}
-
 static int read_actions(sd_bus_message *msg, char ***out) {
 	int ret = sd_bus_message_enter_container(msg, 'v', "a{ss}");
 	if (ret < 0) {
@@ -542,6 +513,66 @@ static int find_actions(sd_bus_message *reply, uint32_t select_id, uint32_t *id_
 	*id_out = id;
 	*actions_out = actions;
 	return 0;
+}
+
+static int run_invoke(sd_bus *bus, int argc, char *argv[]) {
+	uint32_t id = 0;
+	while (true) {
+		int opt = getopt(argc, argv, "n:");
+		if (opt == -1) {
+			break;
+		}
+
+		switch (opt) {
+		case 'n':;
+			int ret = parse_uint32(&id, optarg);
+			if (ret < 0) {
+				log_neg_errno(ret, "invalid notification ID");
+				return 1;
+			}
+			break;
+		default:
+			return -EINVAL;
+		}
+	}
+
+	const char *action = "default";
+	if (optind < argc) {
+		action = argv[optind];
+	}
+
+	sd_bus_message *reply = NULL;
+	int ret = call_method(bus, "ListNotifications", &reply, "");
+	if (ret < 0) {
+		return ret;
+	}
+
+	char **actions = NULL;
+	ret = find_actions(reply, id, &id, &actions);
+	sd_bus_message_unref(reply);
+	if (ret < 0) {
+		return ret;
+	} else if (actions == NULL) {
+		fprintf(stderr, "Notification has no actions\n");
+		return -ENOENT;
+	}
+
+	bool found = false;
+	for (size_t i = 0; actions[i] != NULL; i += 2) {
+		const char *key = actions[i];
+		if (strcmp(key, action) == 0) {
+			found = true;
+			break;
+		}
+	}
+	free_strv(actions);
+
+	if (!found) {
+		fprintf(stderr, "Notification doesn't support action\n");
+		return -ENOENT;
+	}
+
+	return call_method(bus, "InvokeAction", NULL, "us", id, action);
 }
 
 static int run_menu(sd_bus *bus, int argc, char *argv[]) {
