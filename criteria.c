@@ -526,12 +526,6 @@ bool validate_criteria(struct mako_criteria *criteria) {
 	copy.hidden = false;
 	bool any_but_surface = mako_criteria_spec_any(&copy);
 
-	if (criteria->style.max_visible && any_but_surface) {
-		fprintf(stderr, "Setting `max_visible` is allowed only for `output` "
-				"and/or `anchor`\n");
-		return false;
-	}
-
 	// Hidden is almost always specified, need to look at the actual value.
 	if (criteria->hidden && any_but_surface) {
 		fprintf(stderr, "Can only set `hidden` along with `output` "
