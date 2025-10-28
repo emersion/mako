@@ -108,6 +108,20 @@ executable(
 
 conf_data = configuration_data()
 conf_data.set('bindir', get_option('prefix') / get_option('bindir'))
+conf_data.set('systemd_service', '')
+
+systemd = dependency('systemd', required: get_option('systemd'))
+if systemd.found()
+	service_file = 'mako.service'
+	user_unit_dir = systemd.get_variable(pkgconfig: 'systemduserunitdir',
+		pkgconfig_define: ['prefix', get_option('prefix')])
+	conf_data.set('systemd_service', 'SystemdService=' + service_file)
+
+	install_data(
+		'contrib' / 'systemd' / service_file,
+		install_dir: user_unit_dir
+	)
+endif
 
 configure_file(
 	configuration: conf_data,
