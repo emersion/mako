@@ -371,7 +371,7 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
 		// Immediately before rendering we need to re-match all of the criteria
 		// so that matches against the anchor and output work even if the
 		// output was automatically assigned by the compositor.
-		int rematch_count = apply_each_criteria(&state->config.criteria, notif);
+		int rematch_count = apply_each_criteria(state, notif);
 		if (rematch_count == -1) {
 			// We encountered an allocation failure or similar while applying
 			// criteria. The notification may be partially matched, but the
@@ -443,7 +443,7 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
 		struct mako_notification *hidden_notif = create_notification(state);
 		hidden_notif->surface = surface;
 		hidden_notif->hidden = true;
-		apply_each_criteria(&state->config.criteria, hidden_notif);
+		apply_each_criteria(state, hidden_notif);
 
 		struct mako_style *style = &hidden_notif->style;
 
