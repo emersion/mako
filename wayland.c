@@ -143,10 +143,12 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (hotspot_at(&notif->hotspot, seat->touch.pts[id].x, seat->touch.pts[id].y)) {
-			struct mako_surface *surface = notif->surface;
-			notification_handle_touch(notif, &ctx);
-			set_dirty(surface);
-			break;
+			if (notif->group_index == -1 || notif->group_index == notif->group_focus_index) {
+				struct mako_surface *surface = notif->surface;
+				notification_handle_touch(notif, &ctx);
+				set_dirty(surface);
+				break;
+			}
 		}
 	}
 
@@ -259,10 +261,34 @@ static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (hotspot_at(&notif->hotspot, seat->pointer.x, seat->pointer.y)) {
-			struct mako_surface *surface = notif->surface;
-			notification_handle_button(notif, button, button_state, &ctx);
-			set_dirty(surface);
-			break;
+			if (notif->group_index == -1 || notif->group_index == notif->group_focus_index) {
+				struct mako_surface *surface = notif->surface;
+				notification_handle_button(notif, button, button_state, &ctx);
+				set_dirty(surface);
+				break;
+			}
+		}
+	}
+}
+
+static void pointer_handle_axis(void *data, struct wl_pointer *wl_pointer, uint32_t time, uint32_t axis, wl_fixed_t value) {
+	struct mako_seat *seat = data;
+	struct mako_state *state = seat->state;
+
+	const struct mako_binding_context ctx = {
+		.surface = seat->pointer.surface,
+		.seat = seat,
+	};
+
+	struct mako_notification *notif;
+	wl_list_for_each(notif, &state->notifications, link) {
+		if (hotspot_at(&notif->hotspot, seat->pointer.x, seat->pointer.y)) {
+			if (notif->group_index == -1 || notif->group_index == notif->group_focus_index) {
+				struct mako_surface *surface = notif->surface;
+				notification_handle_axis(notif, axis, value, &ctx);
+				set_dirty(surface);
+				break;
+			}
 		}
 	}
 }
@@ -272,7 +298,7 @@ static const struct wl_pointer_listener pointer_listener = {
 	.leave = pointer_handle_leave,
 	.motion = pointer_handle_motion,
 	.button = pointer_handle_button,
-	.axis = noop,
+	.axis = pointer_handle_axis,
 };
 
 static const struct wl_touch_listener touch_listener = {
