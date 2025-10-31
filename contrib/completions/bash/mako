@@ -34,6 +34,7 @@ _mako()
     '--sort'
     '--default-timeout'
     '--ignore-timeout'
+    '--max-urgency'
     '--output'
     '--layer'
     '--anchor'
@@ -45,6 +46,10 @@ _mako()
       return
       ;;
     --icons|--markup|--actions|--history|--ignore-timeout)
+      COMPREPLY=($(compgen -W "low normal critical" -- "$cur"))
+      return
+      ;;
+    --max-urgency)
       COMPREPLY=($(compgen -W "0 1" -- "$cur"))
       return
       ;;
