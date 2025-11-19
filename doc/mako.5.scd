@@ -105,7 +105,7 @@ Supported actions:
 	display an interactive action menu on middle click:
 
 	```
-	on-button-middle=exec makoctl menu -n "$id" dmenu -p 'Select action: '
+	on-button-middle=exec makoctl menu -n "$id" -- dmenu -p 'Select action: '
 	```
 
 	The following option will play a sound when a new notification is opened:
