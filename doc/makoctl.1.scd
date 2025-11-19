@@ -63,7 +63,7 @@ Sends IPC commands to the running mako daemon via dbus.
 	Examples:
 
 	```
-	makoctl menu -- dmenu -p 'Select Action: '
+	makoctl menu -- wmenu -p 'Select Action: '
 	makoctl menu -n 12345 -- wofi -d -p 'Choose Action: '
 	```
 
