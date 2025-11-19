@@ -92,6 +92,11 @@ bool match_criteria(struct mako_criteria *criteria,
 		return false;
 	}
 
+	if (spec.transient &&
+			criteria->transient != notif->transient) {
+		return false;
+	}
+
 	if (spec.urgency &&
 			criteria->urgency != notif->urgency) {
 		return false;
@@ -480,6 +485,7 @@ struct mako_criteria *create_criteria_from_notification(
 	criteria->app_icon = strdup(notif->app_icon);
 	criteria->actionable = !wl_list_empty(&notif->actions);
 	criteria->expiring = (notif->requested_timeout != 0);
+	criteria->transient = notif->transient;
 	criteria->urgency = notif->urgency;
 	criteria->category = strdup(notif->category);
 	criteria->desktop_entry = strdup(notif->desktop_entry);
