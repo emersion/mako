@@ -49,7 +49,7 @@ struct mako_style_spec {
 	struct {
 		bool left, right, middle;
 	} button_bindings;
-	bool touch_binding, notify_binding;
+	bool touch_binding, notify_binding, closed_binding;
 };
 
 
@@ -99,7 +99,7 @@ struct mako_style {
 	struct {
 		struct mako_binding left, right, middle;
 	} button_bindings;
-	struct mako_binding touch_binding, notify_binding;
+	struct mako_binding touch_binding, notify_binding, closed_binding;
 };
 
 struct mako_config {
