@@ -274,6 +274,12 @@ Default when grouped: (%g) <b>%s</b>\\n%b
 
 	Default: 0
 
+*max-urgency*=low|normal|critical
+	Set the maximum allowed urgency to the given value. Intended to be used
+	as part of a criteria for applications abusing urgency.
+
+	Default: critical (meaning no practical limit)
+
 *group-by*=_field[,field,...]_
 	A comma-separated list of criteria fields that will be compared to other
 	visible notifications to determine if this one should form a group with

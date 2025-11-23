@@ -33,6 +33,7 @@ complete -c mako -l history -d 'Add expired notifications to history' -xa "1 0"
 complete -c mako -l sort -d 'Set notification sorting method' -x
 complete -c mako -l default-timeout -d 'Notification timeout in ms' -x
 complete -c mako -l ignore-timeout -d 'Enable notification timeout or not' -xa "1 0"
+complete -c mako -l max-urgency -d 'Max allowed notification urgency' -xa "low normal critical"
 complete -c mako -l output -d 'Show notifications on this output' -xa '(complete_outputs)'
 complete -c mako -l layer -d 'Show notifications on this layer' -x
 complete -c mako -l anchor -d 'Position on output to put notifications' -x

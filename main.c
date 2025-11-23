@@ -53,6 +53,7 @@ static const char usage[] =
 	"                                      descending(-) order.\n"
 	"      --default-timeout <timeout>     Default timeout in milliseconds.\n"
 	"      --ignore-timeout <0|1>          Enable/disable notification timeout.\n"
+	"      --max-urgency <urgency>         Max allowed notification urgency.\n"
 	"      --output <name>                 Show notifications on this output.\n"
 	"      --layer <layer>                 Arrange notifications at this layer.\n"
 	"      --anchor <position>             Position on output to put notifications.\n"
