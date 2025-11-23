@@ -51,9 +51,7 @@ struct mako_criteria_spec {
 	bool category;
 	bool desktop_entry;
 	bool summary;
-	bool summary_pattern;
 	bool body;
-	bool body_pattern;
 
 	bool mode;
 

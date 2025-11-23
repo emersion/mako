@@ -244,9 +244,7 @@ bool mako_criteria_spec_any(const struct mako_criteria_spec *spec) {
 		spec->category ||
 		spec->desktop_entry ||
 		spec->summary ||
-		spec->summary_pattern ||
 		spec->body ||
-		spec->body_pattern ||
 		spec->none ||
 		spec->group_index ||
 		spec->grouped ||
