@@ -1,0 +1,25 @@
+#!/sbin/openrc-run
+
+description="Lightweight Wayland notification daemon"
+
+supervisor="supervise-daemon"
+command="/usr/bin/mako"
+
+depend() {
+	after dbus
+	provide notification-daemon
+}
+
+start_pre() {
+	if [ -z "$WAYLAND_DISPLAY" ]; then
+		eerror "\$WAYLAND_DISPLAY unset, can't proceed."
+		return 1
+	fi
+}
+
+extra_started_commands="reload"
+description_reload="Reload mako configuration using makoctl"
+reload() {
+	makoctl reload
+	eend $? "Reloaded mako configuration"
+}
