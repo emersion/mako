@@ -39,6 +39,7 @@ static const char usage[] =
 	"      --icons <0|1>                   Show icons in notifications.\n"
 	"      --icon-path <path>[:<path>...]  Icon search path, colon delimited.\n"
 	"      --max-icon-size <px>            Set max size of icons.\n"
+	"      --min-icon-size <px>            Set min size of icons.\n"
 	"      --icon-border-radius <px>       Icon's corner radius.\n"
 	"      --markup <0|1>                  Enable/disable markup.\n"
 	"      --actions <0|1>                 Enable/disable application action\n"
