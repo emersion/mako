@@ -3,18 +3,32 @@ packages:
   - basu
   - evdev-proto
   - gdk-pixbuf2
+  - git
+  - glib
   - libepoll-shim
   - meson
+  - ninja
   - pango
   - pkgconf
   - scdoc
   - wayland
   - wayland-protocols
 sources:
+  - https://gitlab.freedesktop.org/vyivel/libsfdo
   - https://github.com/emersion/mako
 tasks:
   - setup: |
-      cd mako
+      cd libsfdo
+      meson setup build/ --prefix=$PWD/../local
+      ninja -C build/
+      ninja -C build/ install
+
+      export PKG_CONFIG_PATH="$PWD/../local/libdata/pkgconfig:/usr/local/libdata/pkgconfig:$PKG_CONFIG_PATH"
+      export LD_LIBRARY_PATH="$PWD/../local/lib:$LD_LIBRARY_PATH"
+      export CFLAGS="-I$PWD/../local/include $CFLAGS"
+      export LDFLAGS="-L$PWD/../local/lib $LDFLAGS"
+
+      cd ../mako
       meson build/ -Dauto_features=enabled -Dsd-bus-provider=basu
   - build: |
       cd mako
