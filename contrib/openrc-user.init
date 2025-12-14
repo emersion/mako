@@ -6,7 +6,7 @@ supervisor="supervise-daemon"
 command="/usr/bin/mako"
 
 depend() {
-	after dbus
+	need dbus
 	provide notification-daemon
 }
 
