@@ -91,6 +91,11 @@ void init_default_style(struct mako_style *style) {
 	style->border_radius.bottom = 0;
 	style->border_radius.left = 0;
 
+	style->border_cut.top = 0;
+	style->border_cut.right = 0;
+	style->border_cut.bottom = 0;
+	style->border_cut.left = 0;
+
 	style->border_size = 2;
 
 #ifdef HAVE_ICONS
@@ -356,6 +361,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		target->spec.border_radius = true;
 	}
 
+	if (style->spec.border_cut) {
+		target->border_cut = style->border_cut;
+		target->spec.border_cut = true;
+	}
+
 	if (style->spec.output) {
 		free(target->output);
 		target->output = new_output;
@@ -463,6 +473,10 @@ bool apply_superset_style(
 		target->border_radius.bottom =
 			max(style->border_radius.bottom, target->border_radius.bottom);
 		target->border_radius.left = max(style->border_radius.left, target->border_radius.left);
+		target->border_cut.top = max(style->border_cut.top, target->border_cut.top);
+		target->border_cut.right = max(style->border_cut.right, target->border_cut.right);
+		target->border_cut.bottom = max(style->border_cut.bottom, target->border_cut.bottom);
+		target->border_cut.left = max(style->border_cut.left, target->border_cut.left);
 		target->border_size = max(style->border_size, target->border_size);
 		target->icons = style->icons || target->icons;
 		target->max_icon_size = max(style->max_icon_size, target->max_icon_size);
@@ -656,6 +670,8 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 			style->padding.right = max(style->border_radius.right, style->padding.right);
 		}
 		return spec->border_radius;
+	} else if (strcmp(name, "border-cut") == 0) {
+		return spec->border_cut = parse_directional(value, &style->border_cut);
 	} else if (strcmp(name, "max-visible") == 0) {
 		return style->spec.max_visible = parse_int(value, &style->max_visible);
 	} else if (strcmp(name, "output") == 0) {
@@ -907,6 +923,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"border-size", required_argument, 0, 0},
 		{"border-color", required_argument, 0, 0},
 		{"border-radius", required_argument, 0, 0},
+		{"border-cut", required_argument, 0, 0},
 		{"progress-color", required_argument, 0, 0},
 		{"icons", required_argument, 0, 0},
 		{"icon-location", required_argument, 0, 0},

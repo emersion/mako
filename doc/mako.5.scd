@@ -182,6 +182,12 @@ Supported actions:
 
 	Default: 0
 
+*border-cut*=_directional_
+	Set popup corner rounding style to diagonal cut if not zero. See
+	*DIRECTIONAL VALUES* for more information.
+
+	Default: 0
+
 *progress-color*=[over|source] _color_
 	Set popup progress indicator color to _color_. See *COLOR* for more
 	information. To draw the progress indicator on top of the background
