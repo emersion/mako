@@ -487,6 +487,8 @@ void notify_notification_closed(struct mako_notification *notif,
 
 	sd_bus_emit_signal(state->bus, service_path, service_interface,
 		"NotificationClosed", "uu", notif->id, reason);
+		
+	notification_execute_binding(notif, &notif->style.closed_binding, NULL);
 }
 
 void notify_action_invoked(struct mako_action *action,
