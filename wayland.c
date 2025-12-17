@@ -234,6 +234,18 @@ static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
 static void pointer_handle_leave(void *data, struct wl_pointer *wl_pointer,
 		uint32_t serial, struct wl_surface *wl_surface) {
 	struct mako_seat *seat = data;
+	struct mako_state *state = seat->state;
+
+	struct mako_notification *notif;
+	wl_list_for_each(notif, &state->notifications, link) {
+		if (hotspot_at_offset(&notif->hotspot, seat->pointer.x, seat->pointer.y, 10)) {
+			struct mako_surface *surface = notif->surface;
+			close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, true);
+			set_dirty(surface);			
+			break;
+		}
+	}
+
 	seat->pointer.surface = NULL;
 }
 
