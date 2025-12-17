@@ -202,7 +202,7 @@ static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
 		destroy_timer(state->hover_dismiss_timer);
 		state->hover_dismiss_timer = NULL;
 	}
-	
+
 	seat->pointer.x = wl_fixed_to_int(surface_x);
 	seat->pointer.y = wl_fixed_to_int(surface_y);
 	seat->pointer.surface = get_surface(state, wl_surface);
@@ -236,6 +236,18 @@ static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
 	}
 }
 
+static void handle_notification_hover_dismiss_timer(void *data) {
+	struct mako_notification *notif = data;
+	struct mako_surface *surface = notif->surface;
+
+	if (notif->state->hover_dismiss_timer != NULL) {
+		notif->state->hover_dismiss_timer = NULL;
+	}
+
+	close_notification(notif, MAKO_NOTIFICATION_CLOSE_EXPIRED, true);
+	set_dirty(surface);
+}
+
 static void pointer_handle_leave(void *data, struct wl_pointer *wl_pointer,
 		uint32_t serial, struct wl_surface *wl_surface) {
 	struct mako_seat *seat = data;
@@ -244,9 +256,8 @@ static void pointer_handle_leave(void *data, struct wl_pointer *wl_pointer,
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (hotspot_at_offset(&notif->hotspot, seat->pointer.x, seat->pointer.y, 10)) {
-			struct mako_surface *surface = notif->surface;
-			close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, true);
-			set_dirty(surface);			
+			notif->state->hover_dismiss_timer = add_event_loop_timer(&notif->state->event_loop, 500,
+				handle_notification_hover_dismiss_timer, notif);	
 			break;
 		}
 	}
