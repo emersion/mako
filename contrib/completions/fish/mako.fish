@@ -32,6 +32,7 @@ complete -c mako -l max-history -d 'Max size of history buffer' -x
 complete -c mako -l history -d 'Add expired notifications to history' -xa "1 0"
 complete -c mako -l sort -d 'Set notification sorting method' -x
 complete -c mako -l default-timeout -d 'Notification timeout in ms' -x
+complete -c mako -l hover-to-dismiss-timeout -d 'Default hover-to-dismiss timeout in milliseconds.' -x
 complete -c mako -l ignore-timeout -d 'Enable notification timeout or not' -xa "1 0"
 complete -c mako -l output -d 'Show notifications on this output' -xa '(complete_outputs)'
 complete -c mako -l layer -d 'Show notifications on this layer' -x
