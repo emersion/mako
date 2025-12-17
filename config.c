@@ -109,6 +109,7 @@ void init_default_style(struct mako_style *style) {
 
 	style->actions = true;
 	style->default_timeout = 0;
+	style->hover_to_dismiss_timeout = 0;
 	style->ignore_timeout = false;
 
 	style->colors.background = 0x285577FF;
@@ -306,6 +307,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		target->spec.default_timeout = true;
 	}
 
+	if (style->spec.hover_to_dismiss_timeout) {
+		target->hover_to_dismiss_timeout = style->hover_to_dismiss_timeout;
+		target->spec.hover_to_dismiss_timeout = true;
+	}
+
 	if (style->spec.ignore_timeout) {
 		target->ignore_timeout = style->ignore_timeout;
 		target->spec.ignore_timeout = true;
@@ -421,6 +427,7 @@ bool apply_superset_style(
 	target->spec.icons = true;
 	target->spec.max_icon_size = true;
 	target->spec.default_timeout = true;
+	target->spec.hover_to_dismiss_timeout = true;
 	target->spec.markup = true;
 	target->spec.actions = true;
 	target->spec.history = true;
@@ -468,6 +475,8 @@ bool apply_superset_style(
 		target->max_icon_size = max(style->max_icon_size, target->max_icon_size);
 		target->default_timeout =
 			max(style->default_timeout, target->default_timeout);
+		target->hover_to_dismiss_timeout =
+			max(style->hover_to_dismiss_timeout, target->hover_to_dismiss_timeout);
 
 		target->markup |= style->markup;
 		target->actions |= style->actions;
@@ -639,6 +648,9 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "default-timeout") == 0) {
 		return spec->default_timeout =
 			parse_int_ge(value, &style->default_timeout, 0);
+	} else if (strcmp(name, "hover-to-dismiss-timeout") == 0) {
+		return spec->hover_to_dismiss_timeout =
+			parse_int_ge(value, &style->hover_to_dismiss_timeout, 0);
 	} else if (strcmp(name, "ignore-timeout") == 0) {
 		return spec->ignore_timeout =
 			parse_boolean(value, &style->ignore_timeout);
@@ -920,6 +932,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"max-history", required_argument, 0, 0},
 		{"history", required_argument, 0, 0},
 		{"default-timeout", required_argument, 0, 0},
+		{"hover-to-dismiss-timeout", required_argument, 0, 0},
 		{"ignore-timeout", required_argument, 0, 0},
 		{"output", required_argument, 0, 0},
 		{"layer", required_argument, 0, 0},

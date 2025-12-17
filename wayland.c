@@ -252,13 +252,17 @@ static void pointer_handle_leave(void *data, struct wl_pointer *wl_pointer,
 		uint32_t serial, struct wl_surface *wl_surface) {
 	struct mako_seat *seat = data;
 	struct mako_state *state = seat->state;
+	struct mako_style *style = &state->config.superstyle;
 
 	struct mako_notification *notif;
 	wl_list_for_each(notif, &state->notifications, link) {
-		if (hotspot_at_offset(&notif->hotspot, seat->pointer.x, seat->pointer.y, 10)) {
-			notif->state->hover_dismiss_timer = add_event_loop_timer(&notif->state->event_loop, 500,
-				handle_notification_hover_dismiss_timer, notif);	
-			break;
+		if (style->hover_to_dismiss_timeout > 0) {
+			if (hotspot_at_offset(&notif->hotspot, seat->pointer.x, seat->pointer.y, 10)) {
+				notif->state->hover_dismiss_timer = add_event_loop_timer(
+					&notif->state->event_loop, style->hover_to_dismiss_timeout,
+					handle_notification_hover_dismiss_timer, notif);
+				break;
+			}
 		}
 	}
 

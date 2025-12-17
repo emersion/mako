@@ -268,6 +268,12 @@ Default when grouped: (%g) <b>%s</b>\\n%b
 
 	Default: 0
 
+*hover-to-dismiss-timeout*=_timeout_
+	Set the default hover-to-dismiss timeout to _timeout_ in milliseconds. To disable the
+	timeout, set it to zero.
+
+	Default: 0
+
 *ignore-timeout*=0|1
 	If set, mako will ignore the expire timeout sent by notifications and use
 	the one provided by _default-timeout_ instead.
