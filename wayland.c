@@ -198,6 +198,11 @@ static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
 	struct mako_seat *seat = data;
 	struct mako_state *state = seat->state;
 
+	if (state->hover_dismiss_timer != NULL) {
+		destroy_timer(state->hover_dismiss_timer);
+		state->hover_dismiss_timer = NULL;
+	}
+	
 	seat->pointer.x = wl_fixed_to_int(surface_x);
 	seat->pointer.y = wl_fixed_to_int(surface_y);
 	seat->pointer.surface = get_surface(state, wl_surface);
