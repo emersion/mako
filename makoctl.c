@@ -280,6 +280,207 @@ static bool is_empty_str(const char *str) {
 	return str == NULL || str[0] == '\0';
 }
 
+static void escape_and_print_json_string(const char *s) {
+	putchar('"');
+
+	for (; *s; ++s) {
+		switch (*s) {
+			case '\"': printf("\\\""); break;
+			case '\\': printf("\\\\"); break;
+			case '\b': printf("\\b");  break;
+			case '\f': printf("\\f");  break;
+			case '\n': printf("\\n");  break;
+			case '\r': printf("\\r");  break;
+			case '\t': printf("\\t");  break;
+			default:
+				// control characters
+				if ((unsigned char) *s < 0x20) {
+					printf("\\u%04x", (unsigned char)*s);
+				} else {
+					putchar(*s);
+				}
+		}
+	}
+
+	putchar('"');
+}
+
+static int print_json_object(sd_bus_message *reply);
+
+static int print_json_value(sd_bus_message *message) {
+	int ret;
+	char type;
+	const char *signature;
+
+	ret = sd_bus_message_peek_type(message, &type, &signature);
+	if (ret < 0) {
+		return ret;
+	}
+
+	switch ((char) type) {
+		case SD_BUS_TYPE_STRING: {
+			const char *value;
+			ret = sd_bus_message_read_basic(message, 's', &value);
+			if (ret < 0) {
+				return ret;
+			}
+			escape_and_print_json_string(value);
+			return ret;
+		}
+		case SD_BUS_TYPE_BOOLEAN: {
+			bool value;
+			ret = sd_bus_message_read_basic(message, 'b', &value);
+			if (ret < 0) {
+				return ret;
+			}
+			printf(value ? "true" : "false");
+			return ret;
+		}
+		case SD_BUS_TYPE_BYTE: {
+			uint8_t value;
+			ret = sd_bus_message_read_basic(message, 'y', &value);
+			if (ret < 0) {
+				return ret;
+			}
+			printf("%u", value);
+			return ret;
+		}
+		case SD_BUS_TYPE_UINT32: {
+			uint32_t value;
+			ret = sd_bus_message_read_basic(message, 'u', &value);
+			if (ret < 0) {
+				return ret;
+			}
+			printf("%u", value);
+			return ret;
+		}
+		case SD_BUS_TYPE_INT32: {
+			int32_t value;
+			ret = sd_bus_message_read_basic(message, 'i', &value);
+			if (ret < 0) {
+				return ret;
+			}
+			printf("%d", value);
+			return ret;
+		}
+		case SD_BUS_TYPE_VARIANT: {
+			ret = sd_bus_message_enter_container(message, 'v', NULL);
+			if (ret < 0) {
+				return ret;
+			}
+			ret = print_json_value(message);
+			if (ret < 0) {
+				return ret;
+			}
+			return sd_bus_message_exit_container(message);  // 'v'
+		}
+		case SD_BUS_TYPE_ARRAY: {
+			bool outer_first = true;
+
+			printf("[");
+
+			if (strcmp(signature, "{sv}") == 0) {
+				while ((ret = sd_bus_message_enter_container(message, 'a', "{sv}")) > 0) {
+					if (!outer_first) {
+						printf(",");
+					}
+					outer_first = false;
+
+					print_json_object(message);  // {sv}
+					sd_bus_message_exit_container(message);
+				}
+			} else if (strcmp(signature, "{ss}") == 0) {
+				while ((ret = sd_bus_message_enter_container(message, 'a', "{ss}")) > 0) {
+					bool inner_first = true;
+
+					if (!outer_first) {
+						printf(",");
+					}
+					outer_first = false;
+
+					printf("{");
+
+					while ((ret = sd_bus_message_enter_container(message, 'e', NULL)) > 0) {
+						const char *key, *value;
+
+						ret = sd_bus_message_read(message, "ss", &key, &value);
+						if (ret < 0) {
+							return ret;
+						}
+
+						if (!inner_first) {
+							printf(",");
+						}
+						inner_first = false;
+
+						escape_and_print_json_string(key);
+						printf(":");
+						escape_and_print_json_string(value);
+
+						sd_bus_message_exit_container(message);  // e
+					}
+					printf("}");
+
+					sd_bus_message_exit_container(message);  // a{ss}
+				}
+			} else {
+				while ((ret = print_json_value(message)) > 0) {
+					if (!outer_first) {
+						printf(",");
+					}
+					outer_first = false;
+				}
+			}
+
+			printf("]");
+
+			break;
+		}
+		default: {
+			// skip unknown
+			sd_bus_message_skip(message, NULL);
+			printf("null");
+		}
+	}
+
+	return 1;
+}
+
+static int print_json_object(sd_bus_message *reply) {
+	int ret;
+	bool is_first = true;
+
+	printf("{");
+
+	while ((ret = sd_bus_message_enter_container(reply, 'e', "sv")) > 0) {
+		const char *key;
+
+		ret = sd_bus_message_read_basic(reply, 's', &key);
+		if (ret < 0) {
+			return ret;
+		}
+
+		if (!is_first) {
+			printf(",");
+		}
+		is_first = false;
+
+		escape_and_print_json_string(key);
+		printf(":");
+
+		ret = print_json_value(reply);
+		if (ret < 0) {
+			return ret;
+		}
+
+		sd_bus_message_exit_container(reply);  // e{sv}
+	}
+
+	printf("}");
+
+	return 1;
+}
+
 static int print_notification(sd_bus_message *reply) {
 	uint32_t id = 0;
 	const char *summary = NULL, *app_name = NULL, *category = NULL,
@@ -371,29 +572,32 @@ static int print_notification(sd_bus_message *reply) {
 	return 0;
 }
 
-static int print_notification_list(sd_bus_message *reply) {
+static int print_notification_list(sd_bus_message *reply, bool json_output) {
 	int ret = sd_bus_message_enter_container(reply, 'a', "a{sv}");
 	if (ret < 0) {
 		return ret;
 	}
 
-	while (true) {
-		ret = sd_bus_message_enter_container(reply, 'a', "{sv}");
-		if (ret < 0) {
-			return ret;
-		} else if (ret == 0) {
-			break;
+	bool is_first = true;
+	if (json_output) {
+		printf("[");
+	}
+
+	while ((ret = sd_bus_message_enter_container(reply, 'a', "{sv}")) > 0) {
+		if (json_output) {
+			if (!is_first)
+				printf(",");
+			is_first = false;
+			ret = print_json_object(reply);
+		} else {
+			ret = print_notification(reply);
 		}
 
-		ret = print_notification(reply);
-		if (ret < 0) {
-			return ret;
-		}
+		sd_bus_message_exit_container(reply);  // a{sv}
+	}
 
-		ret = sd_bus_message_exit_container(reply);
-		if (ret < 0) {
-			return ret;
-		}
+	if (json_output) {
+		printf("]");
 	}
 
 	return sd_bus_message_exit_container(reply);
@@ -401,24 +605,42 @@ static int print_notification_list(sd_bus_message *reply) {
 
 static int run_history(sd_bus *bus, int argc, char *argv[]) {
 	sd_bus_message *reply = NULL;
+	bool json_output = false;
+
+	for (int i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "-j") == 0) {
+			json_output = true;
+			break;
+		}
+	}
+
 	int ret = call_method(bus, "ListHistory", &reply, "");
 	if (ret < 0) {
 		return ret;
 	}
 
-	ret = print_notification_list(reply);
+	ret = print_notification_list(reply, json_output);
 	sd_bus_message_unref(reply);
 	return ret;
 }
 
+
 static int run_list(sd_bus *bus, int argc, char *argv[]) {
-	sd_bus_message *reply = NULL;
+	sd_bus_message *reply = NULL;	bool json_output = false;
+
+	for (int i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "-j") == 0) {
+			json_output = true;
+			break;
+		}
+	}
+
 	int ret = call_method(bus, "ListNotifications", &reply, "");
 	if (ret < 0) {
 		return ret;
 	}
 
-	ret = print_notification_list(reply);
+	ret = print_notification_list(reply, json_output);
 	sd_bus_message_unref(reply);
 	return ret;
 }
