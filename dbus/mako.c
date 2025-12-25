@@ -10,6 +10,7 @@
 #include "mode.h"
 #include "notification.h"
 #include "wayland.h"
+#include "styling.h"
 
 static const char *service_path = "/fr/emersion/Mako";
 static const char *service_interface = "fr.emersion.Mako";
@@ -441,9 +442,9 @@ static int handle_set_modes(sd_bus_message *msg, void *data,
 }
 
 static int get_modes(sd_bus *bus, const char *path,
-		     const char *interface, const char *property,
-		     sd_bus_message *reply, void *data,
-		     sd_bus_error *ret_error) {
+		const char *interface, const char *property,
+		sd_bus_message *reply, void *data,
+		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
 
 	int ret = sd_bus_message_open_container(reply, 'a', "s");
@@ -473,9 +474,9 @@ void emit_modes_changed(struct mako_state *state) {
 
 
 static int get_notifications(sd_bus *bus, const char *path,
-		     const char *interface, const char *property,
-		     sd_bus_message *reply, void *data,
-		     sd_bus_error *ret_error) {
+		const char *interface, const char *property,
+		sd_bus_message *reply, void *data,
+		sd_bus_error *ret_error) {
 	struct mako_state *state = data;
 
 	int ret = handle_list_for_each(reply, &state->notifications);
