@@ -39,6 +39,7 @@ struct mako_notification {
 	int32_t requested_timeout;
 	struct wl_list actions; // mako_action::link
 
+	bool transient;
 	enum mako_notification_urgency urgency;
 	char *category;
 	char *desktop_entry;
@@ -85,12 +86,11 @@ struct mako_notification *create_notification(struct mako_state *state);
 void destroy_notification(struct mako_notification *notif);
 
 void close_notification(struct mako_notification *notif,
-	enum mako_notification_close_reason reason,
-	bool add_to_history);
+	enum mako_notification_close_reason reason);
 void close_group_notifications(struct mako_notification *notif,
-	enum mako_notification_close_reason reason, bool add_to_history);
+	enum mako_notification_close_reason reason);
 void close_all_notifications(struct mako_state *state,
-	enum mako_notification_close_reason reason, bool add_to_history);
+	enum mako_notification_close_reason reason);
 char *format_hidden_text(char variable, bool *markup, void *data);
 char *format_notif_text(char variable, bool *markup, void *data);
 size_t format_text(const char *format, char *buf, mako_format_func_t func, void *data);
