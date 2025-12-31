@@ -309,9 +309,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 		cairo_restore(cairo);
 	}
 
-	if (icon_vertical) {
-		text_x = (notif_width - text_width - border_size) / 2;
-	} else {
+	if (!icon_vertical) {
 		text_y = (notif_height - text_height - border_size) / 2;
 	}
 
