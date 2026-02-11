@@ -106,6 +106,9 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	struct mako_notification *notif = NULL;
 	if (replaces_id > 0) {
 		notif = get_notification(state, replaces_id);
+		if (notif && notif->style.ignore_replace) {
+			notif = NULL;
+		}
 	}
 
 	if (notif) {
@@ -362,7 +365,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	if (notif->tag) {
 		// Find and replace the existing notfication with a matching tag
 		struct mako_notification *replace_notif = get_tagged_notification(state, notif->tag, app_name);
-		if (replace_notif) {
+		if (replace_notif && !replace_notif->style.ignore_replace) {
 			notif->id = replace_notif->id;
 			wl_list_insert(&replace_notif->link, &notif->link);
 			destroy_notification(replace_notif);
@@ -446,7 +449,7 @@ static int handle_close_notification(sd_bus_message *msg, void *data,
 
 	// TODO: check client
 	struct mako_notification *notif = get_notification(state, id);
-	if (notif) {
+	if (notif && !notif->style.ignore_replace) {
 		struct mako_surface *surface = notif->surface;
 		close_notification(notif, MAKO_NOTIFICATION_CLOSE_REQUEST, true);
 		set_dirty(surface);
