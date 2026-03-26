@@ -280,12 +280,136 @@ static bool is_empty_str(const char *str) {
 	return str == NULL || str[0] == '\0';
 }
 
-static int print_notification(sd_bus_message *reply) {
-	uint32_t id = 0;
-	const char *summary = NULL, *app_name = NULL, *category = NULL,
-		*desktop_entry = NULL;
-	uint8_t urgency = -1;
-	char **actions = NULL;
+static const char *urgency_name(uint8_t urgency) {
+	switch (urgency) {
+	case 0:
+		return "low";
+	case 1:
+		return "normal";
+	case 2:
+		return "critical";
+	}
+	return NULL;
+}
+
+struct notification_metadata {
+	uint32_t id;
+	const char *app_name, *app_icon, *category, *desktop_entry, *summary, *body;
+	uint8_t urgency;
+	char **actions;
+};
+
+static void print_notification_as_text(const struct notification_metadata *notif) {
+	printf("Notification %" PRIu32 ":", notif->id);
+	if (!is_empty_str(notif->summary)) {
+		printf(" %s", notif->summary);
+	}
+	printf("\n");
+
+	if (!is_empty_str(notif->app_name)) {
+		printf("  App name: %s\n", notif->app_name);
+	}
+	if (!is_empty_str(notif->category)) {
+		printf("  Category: %s\n", notif->category);
+	}
+	if (!is_empty_str(notif->desktop_entry)) {
+		printf("  Desktop entry: %s\n", notif->desktop_entry);
+	}
+
+	const char *urgency_desc = urgency_name(notif->urgency);
+	if (urgency_desc != NULL) {
+		printf("  Urgency: %s\n", urgency_desc);
+	}
+
+	if (notif->actions != NULL) {
+		printf("  Actions:\n");
+		for (size_t i = 0; notif->actions[i] != NULL; i += 2) {
+			const char *key = notif->actions[i], *title = notif->actions[i + 1];
+			printf("    %s: %s\n", key, title);
+		}
+	}
+}
+
+static void print_json_str(const char *str) {
+	if (str == NULL) {
+		printf("null");
+		return;
+	}
+
+	printf("\"");
+	for (size_t i = 0; str[i] != '\0'; i++) {
+		char ch = str[i];
+		switch (ch) {
+		case '"':
+			printf("\\\"");
+			break;
+		case '\\':
+			printf("\\\\");
+			break;
+		case '\b':
+			printf("\\b");
+			break;
+		case '\f':
+			printf("\\f");
+			break;
+		case '\n':
+			printf("\\n");
+			break;
+		case '\r':
+			printf("\\r");
+			break;
+		case '\t':
+			printf("\\t");
+			break;
+		default:
+			if (ch > 0 && ch < 0x20) {
+				printf("\\u%04x", ch);
+			} else {
+				printf("%c", ch);
+			}
+		}
+	}
+	printf("\"");
+}
+
+static void print_json_key_value_str(const char *key, const char *value) {
+	printf("    ");
+	print_json_str(key);
+	printf(": ");
+	print_json_str(is_empty_str(value) ? NULL : value);
+	printf(",\n");
+}
+
+static void print_notification_as_json(const struct notification_metadata *notif) {
+	printf("  {\n");
+	printf("    \"id\": %" PRIu32 ",\n", notif->id);
+	print_json_key_value_str("app_name", notif->app_name);
+	print_json_key_value_str("app_icon", notif->app_icon);
+	print_json_key_value_str("category", notif->category);
+	print_json_key_value_str("desktop_entry", notif->desktop_entry);
+	print_json_key_value_str("summary", notif->summary);
+	print_json_key_value_str("body", notif->body);
+	print_json_key_value_str("urgency", urgency_name(notif->urgency));
+	printf("    \"actions\": {");
+	if (notif->actions != NULL) {
+		bool first = true;
+		for (size_t i = 0; notif->actions[i] != NULL; i += 2) {
+			const char *key = notif->actions[i], *title = notif->actions[i + 1];
+			if (!first) {
+				printf(", ");
+			}
+			first = false;
+			print_json_str(key);
+			printf(": ");
+			print_json_str(title);
+		}
+	}
+	printf("}\n");
+	printf("  }");
+}
+
+static int print_notification(sd_bus_message *reply, bool json) {
+	struct notification_metadata notif = { .urgency = -1 };
 	while (true) {
 		int ret = sd_bus_message_enter_container(reply, 'e', "sv");
 		if (ret < 0) {
@@ -301,19 +425,23 @@ static int print_notification(sd_bus_message *reply) {
 		}
 
 		if (strcmp(key, "id") == 0) {
-			ret = sd_bus_message_read(reply, "v", "u", &id);
+			ret = sd_bus_message_read(reply, "v", "u", &notif.id);
 		} else if (strcmp(key, "actions") == 0) {
-			ret = read_actions(reply, &actions);
+			ret = read_actions(reply, &notif.actions);
 		} else if (strcmp(key, "summary") == 0) {
-			ret = sd_bus_message_read(reply, "v", "s", &summary);
+			ret = sd_bus_message_read(reply, "v", "s", &notif.summary);
+		} else if (strcmp(key, "body") == 0) {
+			ret = sd_bus_message_read(reply, "v", "s", &notif.body);
 		} else if (strcmp(key, "app-name") == 0) {
-			ret = sd_bus_message_read(reply, "v", "s", &app_name);
+			ret = sd_bus_message_read(reply, "v", "s", &notif.app_name);
+		} else if (strcmp(key, "app-icon") == 0) {
+			ret = sd_bus_message_read(reply, "v", "s", &notif.app_icon);
 		} else if (strcmp(key, "category") == 0) {
-			ret = sd_bus_message_read(reply, "v", "s", &category);
+			ret = sd_bus_message_read(reply, "v", "s", &notif.category);
 		} else if (strcmp(key, "desktop-entry") == 0) {
-			ret = sd_bus_message_read(reply, "v", "s", &desktop_entry);
+			ret = sd_bus_message_read(reply, "v", "s", &notif.desktop_entry);
 		} else if (strcmp(key, "urgency") == 0) {
-			ret = sd_bus_message_read(reply, "v", "y", &urgency);
+			ret = sd_bus_message_read(reply, "v", "y", &notif.urgency);
 		} else {
 			ret = sd_bus_message_skip(reply, "v");
 		}
@@ -327,56 +455,43 @@ static int print_notification(sd_bus_message *reply) {
 		}
 	}
 
-	printf("Notification %" PRIu32 ":", id);
-	if (!is_empty_str(summary)) {
-		printf(" %s", summary);
-	}
-	printf("\n");
-
-	if (!is_empty_str(app_name)) {
-		printf("  App name: %s\n", app_name);
-	}
-	if (!is_empty_str(category)) {
-		printf("  Category: %s\n", category);
-	}
-	if (!is_empty_str(desktop_entry)) {
-		printf("  Desktop entry: %s\n", desktop_entry);
+	if (json) {
+		print_notification_as_json(&notif);
+	} else {
+		print_notification_as_text(&notif);
 	}
 
-	const char *urgency_desc = NULL;
-	switch (urgency) {
-	case 0:
-		urgency_desc = "low";
-		break;
-	case 1:
-		urgency_desc = "normal";
-		break;
-	case 2:
-		urgency_desc = "critical";
-		break;
-	}
-	if (urgency_desc != NULL) {
-		printf("  Urgency: %s\n", urgency_desc);
-	}
-
-	if (actions != NULL) {
-		printf("  Actions:\n");
-		for (size_t i = 0; actions[i] != NULL; i += 2) {
-			const char *key = actions[i], *title = actions[i + 1];
-			printf("    %s: %s\n", key, title);
-		}
-	}
-
-	free_strv(actions);
+	free_strv(notif.actions);
 	return 0;
 }
 
-static int print_notification_list(sd_bus_message *reply) {
+static int print_notification_list(sd_bus_message *reply, int argc, char *argv[]) {
+	bool json = false;
+	while (true) {
+		int opt = getopt(argc, argv, "j");
+		if (opt == -1) {
+			break;
+		}
+
+		switch (opt) {
+		case 'j':
+			json = true;
+			break;
+		default:
+			return -EINVAL;
+		}
+	}
+
 	int ret = sd_bus_message_enter_container(reply, 'a', "a{sv}");
 	if (ret < 0) {
 		return ret;
 	}
 
+	if (json) {
+		printf("[");
+	}
+
+	bool first = true;
 	while (true) {
 		ret = sd_bus_message_enter_container(reply, 'a', "{sv}");
 		if (ret < 0) {
@@ -385,7 +500,15 @@ static int print_notification_list(sd_bus_message *reply) {
 			break;
 		}
 
-		ret = print_notification(reply);
+		if (json) {
+			if (!first) {
+				printf(",");
+			}
+			printf("\n");
+		}
+		first = false;
+
+		ret = print_notification(reply, json);
 		if (ret < 0) {
 			return ret;
 		}
@@ -394,6 +517,10 @@ static int print_notification_list(sd_bus_message *reply) {
 		if (ret < 0) {
 			return ret;
 		}
+	}
+
+	if (json) {
+		printf("\n]\n");
 	}
 
 	return sd_bus_message_exit_container(reply);
@@ -406,7 +533,7 @@ static int run_history(sd_bus *bus, int argc, char *argv[]) {
 		return ret;
 	}
 
-	ret = print_notification_list(reply);
+	ret = print_notification_list(reply, argc, argv);
 	sd_bus_message_unref(reply);
 	return ret;
 }
@@ -418,7 +545,7 @@ static int run_list(sd_bus *bus, int argc, char *argv[]) {
 		return ret;
 	}
 
-	ret = print_notification_list(reply);
+	ret = print_notification_list(reply, argc, argv);
 	sd_bus_message_unref(reply);
 	return ret;
 }
@@ -803,8 +930,8 @@ static const char usage[] =
 	"                                 action to be invoked on the notification\n"
 	"                                 with the given id, or the last\n"
 	"                                 notification if none is given\n"
-	"  list                           List notifications\n"
-	"  history                        List history\n"
+	"  list [-j]                      List notifications\n"
+	"  history [-j]                   List history\n"
 	"  reload                         Reload the configuration file\n"
 	"  mode                           List modes\n"
 	"  mode [-a mode]... [-r mode]... Add/remove modes\n"

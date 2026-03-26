@@ -70,8 +70,18 @@ Sends IPC commands to the running mako daemon via dbus.
 *list*
 	Retrieve a list of current notifications.
 
+	Options:
+
+	*-j*
+		Use JSON output.
+
 *history*
 	Retrieve a list of dismissed notifications.
+
+	Options:
+
+	*-j*
+		Use JSON output.
 
 *reload*
 	Reloads the configuration file.
