@@ -8,6 +8,7 @@ packages:
   - pango-dev
   - gdk-pixbuf-dev
   - scdoc
+  - libsfdo-dev
 sources:
   - https://github.com/emersion/mako
 tasks:
