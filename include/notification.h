@@ -79,6 +79,7 @@ struct mako_binding_context {
 typedef char *(*mako_format_func_t)(char variable, bool *markup, void *data);
 
 bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y);
+bool hotspot_at_offset(struct mako_hotspot *hotspot, int32_t x, int32_t y, int32_t offset);
 
 void reset_notification(struct mako_notification *notif);
 struct mako_notification *create_notification(struct mako_state *state);

@@ -52,6 +52,7 @@ static const char usage[] =
 	"                                      and/or priority in ascending(+) or\n"
 	"                                      descending(-) order.\n"
 	"      --default-timeout <timeout>     Default timeout in milliseconds.\n"
+	"      --hover-to-dismiss-timeout <timeout>     Default hover-to-dismiss timeout in milliseconds.\n"
 	"      --ignore-timeout <0|1>          Enable/disable notification timeout.\n"
 	"      --output <name>                 Show notifications on this output.\n"
 	"      --layer <layer>                 Arrange notifications at this layer.\n"
