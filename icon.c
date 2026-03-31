@@ -294,11 +294,13 @@ struct mako_icon *create_icon(struct mako_notification *notif) {
 #endif
 
 void draw_icon(cairo_t *cairo, struct mako_icon *icon,
-		double xpos, double ypos, double scale) {
+		double xpos, double ypos) {
 	cairo_save(cairo);
-	cairo_scale(cairo, scale*icon->scale, scale*icon->scale);
-	cairo_set_source_surface(cairo, icon->image, xpos/icon->scale, ypos/icon->scale);
-	cairo_paint(cairo);
+	cairo_translate(cairo, xpos, ypos);
+	cairo_scale(cairo,icon->scale, icon->scale);
+	cairo_set_source_surface(cairo, icon->image, 0, 0);
+	// cairo_paint(cairo);
+	cairo_mask_surface(cairo, icon->image, 0, 0);
 	cairo_restore(cairo);
 }
 
