@@ -651,6 +651,10 @@ static void send_frame(struct mako_surface *surface) {
 			zwlr_layer_surface_v1_destroy(surface->layer_surface);
 			surface->layer_surface = NULL;
 		}
+		if (surface->frame_callback != NULL) {
+			wl_callback_destroy(surface->frame_callback);
+			surface->frame_callback = NULL;
+		}
 		if (surface->surface != NULL) {
 			wl_surface_destroy(surface->surface);
 			surface->surface = NULL;

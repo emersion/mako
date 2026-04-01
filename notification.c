@@ -139,6 +139,7 @@ void close_notification(struct mako_notification *notif,
 	notif->timer = NULL;
 
 	if (add_to_history) {
+		notif->surface = NULL;
 		wl_list_insert(&state->history, &notif->link);
 		while (wl_list_length(&state->history) > state->config.max_history) {
 			struct mako_notification *n =
