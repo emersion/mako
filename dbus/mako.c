@@ -129,6 +129,10 @@ static int handle_restore_action(sd_bus_message *msg, void *data,
 		wl_container_of(state->history.next, notif, link);
 	wl_list_remove(&notif->link);
 
+	finish_style(&notif->style);
+	init_empty_style(&notif->style);
+	apply_each_criteria(&state->config.criteria, notif);
+
 	insert_notification(state, notif);
 	set_dirty(notif->surface);
 
