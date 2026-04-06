@@ -84,7 +84,8 @@ static void set_font_options(cairo_t *cairo, struct mako_surface *surface) {
 	}
 
 	cairo_font_options_t *fo = cairo_font_options_create();
-	if (surface->surface_output->subpixel == WL_OUTPUT_SUBPIXEL_NONE) {
+	if (surface->surface_output->subpixel == WL_OUTPUT_SUBPIXEL_NONE ||
+	    surface->surface_output->subpixel == WL_OUTPUT_SUBPIXEL_UNKNOWN) {
 		cairo_font_options_set_antialias(fo, CAIRO_ANTIALIAS_GRAY);
 	} else {
 		cairo_font_options_set_antialias(fo, CAIRO_ANTIALIAS_SUBPIXEL);
@@ -446,33 +447,35 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
 
 		struct mako_style *style = &hidden_notif->style;
 
-		if (style->margin.top > pending_bottom_margin) {
-			total_height += style->margin.top;
-		} else {
-			total_height += pending_bottom_margin;
+		if (!style->invisible) {
+			if (style->margin.top > pending_bottom_margin) {
+				total_height += style->margin.top;
+			} else {
+				total_height += pending_bottom_margin;
+			}
+
+			struct mako_hidden_format_data data = {
+				.hidden = hidden_count,
+				.count = total_notifications,
+			};
+
+			size_t text_ln =
+				format_text(style->format, NULL, format_hidden_text, &data);
+			char *text = malloc(text_ln + 1);
+			if (text == NULL) {
+				fprintf(stderr, "allocation failed");
+				return;
+			}
+
+			format_text(style->format, text, format_hidden_text, &data);
+
+			int hidden_height = render_notification(
+				cairo, state, surface, style, text, NULL, total_height, scale, NULL, 0);
+			free(text);
+
+			total_height += hidden_height;
+			pending_bottom_margin = style->margin.bottom;
 		}
-
-		struct mako_hidden_format_data data = {
-			.hidden = hidden_count,
-			.count = total_notifications,
-		};
-
-		size_t text_ln =
-			format_text(style->format, NULL, format_hidden_text, &data);
-		char *text = malloc(text_ln + 1);
-		if (text == NULL) {
-			fprintf(stderr, "allocation failed");
-			return;
-		}
-
-		format_text(style->format, text, format_hidden_text, &data);
-
-		int hidden_height = render_notification(
-			cairo, state, surface, style, text, NULL, total_height, scale, NULL, 0);
-		free(text);
-
-		total_height += hidden_height;
-		pending_bottom_margin = style->margin.bottom;
 		destroy_notification(hidden_notif);
 	}
 
