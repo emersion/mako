@@ -110,6 +110,7 @@ void init_default_style(struct mako_style *style) {
 	style->actions = true;
 	style->default_timeout = 0;
 	style->ignore_timeout = false;
+	style->timeout_nodismiss = false;
 
 	style->colors.background = 0x285577FF;
 	style->colors.text = 0xFFFFFFFF;
@@ -309,6 +310,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.ignore_timeout) {
 		target->ignore_timeout = style->ignore_timeout;
 		target->spec.ignore_timeout = true;
+	}
+
+	if (style->spec.timeout_nodismiss) {
+		target->timeout_nodismiss = style->timeout_nodismiss;
+		target->spec.timeout_nodismiss = true;
 	}
 
 	if (style->spec.colors.background) {
@@ -642,6 +648,9 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "ignore-timeout") == 0) {
 		return spec->ignore_timeout =
 			parse_boolean(value, &style->ignore_timeout);
+	} else if (strcmp(name, "timeout-nodismiss") == 0) {
+		return spec->timeout_nodismiss =
+			parse_boolean(value, &style->timeout_nodismiss);
 	} else if (strcmp(name, "group-by") == 0) {
 		return spec->group_criteria_spec =
 			parse_criteria_spec(value, &style->group_criteria_spec);

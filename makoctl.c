@@ -296,6 +296,7 @@ struct notification_metadata {
 	uint32_t id;
 	const char *app_name, *app_icon, *category, *desktop_entry, *summary, *body;
 	uint8_t urgency;
+	int unread;
 	char **actions;
 };
 
@@ -404,7 +405,11 @@ static void print_notification_as_json(const struct notification_metadata *notif
 			print_json_str(title);
 		}
 	}
-	printf("}\n");
+	printf("}");
+	if (notif->unread) {
+		printf(",\n    \"unread\": true");
+	}
+	printf("\n");
 	printf("  }");
 }
 
@@ -442,6 +447,8 @@ static int print_notification(sd_bus_message *reply, bool json) {
 			ret = sd_bus_message_read(reply, "v", "s", &notif.desktop_entry);
 		} else if (strcmp(key, "urgency") == 0) {
 			ret = sd_bus_message_read(reply, "v", "y", &notif.urgency);
+		} else if (strcmp(key, "unread") == 0) {
+			ret = sd_bus_message_read(reply, "v", "b", &notif.unread);
 		} else {
 			ret = sd_bus_message_skip(reply, "v");
 		}
@@ -524,6 +531,76 @@ static int print_notification_list(sd_bus_message *reply, int argc, char *argv[]
 	}
 
 	return sd_bus_message_exit_container(reply);
+}
+
+static int run_mark_read(sd_bus *bus, int argc, char *argv[]) {
+	uint32_t id = 0;
+	bool all = false;
+	while (true) {
+		const struct option options[] = {
+			{ "all", no_argument, 0, 'a' },
+			{0},
+		};
+		int opt = getopt_long(argc, argv, "an:", options, NULL);
+		if (opt == -1) {
+			break;
+		}
+
+		switch (opt) {
+		case 'a':
+			all = true;
+			break;
+		case 'n':;
+			int ret = parse_uint32(&id, optarg);
+			if (ret < 0) {
+				log_neg_errno(ret, "invalid notification ID");
+				return 1;
+			}
+			break;
+		default:
+			return -EINVAL;
+		}
+	}
+
+	if (all && id != 0) {
+		fprintf(stderr, "-n cannot be used with -a\n");
+		return -EINVAL;
+	}
+
+	if (!all && id == 0) {
+		fprintf(stderr, "must specify -n <id> or -a\n");
+		return -EINVAL;
+	}
+
+	sd_bus_message *msg = NULL;
+	int ret = new_method_call(bus, &msg, "MarkRead");
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_open_container(msg, 'a', "{sv}");
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_append(msg, "{sv}", "id", "u", id);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_append(msg, "{sv}", "all", "b", (int)all);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = sd_bus_message_close_container(msg);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = call(bus, msg, NULL);
+	sd_bus_message_unref(msg);
+	return ret;
 }
 
 static int run_history(sd_bus *bus, int argc, char *argv[]) {
@@ -932,6 +1009,8 @@ static const char usage[] =
 	"                                 notification if none is given\n"
 	"  list [-j]                      List notifications\n"
 	"  history [-j]                   List history\n"
+	"  mark-read [-n id]              Mark a history notification as read\n"
+	"            [-a|--all]           Mark all history notifications as read\n"
 	"  reload                         Reload the configuration file\n"
 	"  mode                           List modes\n"
 	"  mode [-a mode]... [-r mode]... Add/remove modes\n"
@@ -975,6 +1054,8 @@ int main(int argc, char *argv[]) {
 		ret = run_mode(bus, cmd_argc, cmd_argv);
 	} else if (strcmp(cmd, "reload") == 0) {
 		ret = call_method(bus, "Reload", NULL, "");
+	} else if (strcmp(cmd, "mark-read") == 0) {
+		ret = run_mark_read(bus, cmd_argc, cmd_argv);
 	} else if (strcmp(cmd, "restore") == 0) {
 		ret = call_method(bus, "RestoreNotification", NULL, "");
 	} else {

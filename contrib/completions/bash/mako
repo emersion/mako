@@ -34,6 +34,7 @@ _mako()
     '--sort'
     '--default-timeout'
     '--ignore-timeout'
+    '--timeout-nodismiss'
     '--output'
     '--layer'
     '--anchor'
@@ -44,7 +45,7 @@ _mako()
       COMPREPLY=($(compgen -f -- "$cur"))
       return
       ;;
-    --icons|--markup|--actions|--history|--ignore-timeout)
+    --icons|--markup|--actions|--history|--ignore-timeout|--timeout-nodismiss)
       COMPREPLY=($(compgen -W "0 1" -- "$cur"))
       return
       ;;

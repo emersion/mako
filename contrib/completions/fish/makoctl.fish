@@ -1,6 +1,6 @@
 function __fish_makoctl_complete_no_subcommand
 	for i in (commandline -opc)
-		if contains -- $i dismiss restore invoke menu list reload mode help
+		if contains -- $i dismiss restore invoke menu list history mark-read reload mode help
 			return 1
 		end
 	end
@@ -24,6 +24,9 @@ complete -c makoctl -n '__fish_seen_subcommand_from dismiss' -s n -d "Dismiss th
 complete -c makoctl -n '__fish_seen_subcommand_from invoke' -s n -d "Invoke an action on the notification with the given id" -x
 complete -c makoctl -n '__fish_seen_subcommand_from menu' -s n -d "Use a program to select one action on the notification with the given id" -x
 complete -c makoctl -n '__fish_seen_subcommand_from menu' -a "(__fish_complete_command)" -x
+complete -c makoctl -n '__fish_makoctl_complete_no_subcommand' -a mark-read -d 'Mark history notifications as read' -x
+complete -c makoctl -n '__fish_seen_subcommand_from mark-read' -s a -l all -d "Mark all as read" -x
+complete -c makoctl -n '__fish_seen_subcommand_from mark-read' -s n -d "Mark notification with given id as read" -x
 complete -c makoctl -n '__fish_seen_subcommand_from mode' -s a -d "Add mode" -x
 complete -c makoctl -n '__fish_seen_subcommand_from mode' -s r -d "Remove mode" -x
 complete -c makoctl -n '__fish_seen_subcommand_from mode' -s t -d "Toggle mode" -x

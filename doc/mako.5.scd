@@ -274,6 +274,15 @@ Default when grouped: (%g) <b>%s</b>\\n%b
 
 	Default: 0
 
+*timeout-nodismiss*=0|1
+	If set, notifications that expire via timeout will be moved to history
+	with an _unread_ flag. Notifications dismissed explicitly by the user
+	(e.g. via click or _makoctl dismiss_) will not have this flag. The flag
+	is visible in _makoctl history -j_ output and can be cleared with
+	_makoctl mark-read_.
+
+	Default: 0
+
 *group-by*=_field[,field,...]_
 	A comma-separated list of criteria fields that will be compared to other
 	visible notifications to determine if this one should form a group with

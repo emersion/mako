@@ -128,6 +128,7 @@ static int handle_restore_action(sd_bus_message *msg, void *data,
 	struct mako_notification *notif =
 		wl_container_of(state->history.next, notif, link);
 	wl_list_remove(&notif->link);
+	notif->unread = false;
 
 	finish_style(&notif->style);
 	init_empty_style(&notif->style);
@@ -137,6 +138,62 @@ static int handle_restore_action(sd_bus_message *msg, void *data,
 	set_dirty(notif->surface);
 
 done:
+	return sd_bus_reply_method_return(msg, "");
+}
+
+static int handle_mark_read(sd_bus_message *msg, void *data,
+		sd_bus_error *ret_error) {
+	struct mako_state *state = data;
+
+	uint32_t id = 0;
+	int all = 0;
+
+	int ret = sd_bus_message_enter_container(msg, 'a', "{sv}");
+	if (ret < 0) {
+		return ret;
+	}
+
+	while (true) {
+		ret = sd_bus_message_enter_container(msg, 'e', "sv");
+		if (ret < 0) {
+			return ret;
+		} else if (ret == 0) {
+			break;
+		}
+
+		const char *key = NULL;
+		ret = sd_bus_message_read(msg, "s", &key);
+		if (ret < 0) {
+			return ret;
+		}
+
+		if (strcmp(key, "id") == 0) {
+			ret = sd_bus_message_read(msg, "v", "u", &id);
+		} else if (strcmp(key, "all") == 0) {
+			ret = sd_bus_message_read(msg, "v", "b", &all);
+		} else {
+			ret = sd_bus_message_skip(msg, "v");
+		}
+		if (ret < 0) {
+			return ret;
+		}
+
+		ret = sd_bus_message_exit_container(msg);
+		if (ret < 0) {
+			return ret;
+		}
+	}
+
+	struct mako_notification *notif;
+	wl_list_for_each(notif, &state->history, link) {
+		if (all || notif->id == id) {
+			notif->unread = false;
+			if (!all) {
+				break;
+			}
+		}
+	}
+
 	return sd_bus_reply_method_return(msg, "");
 }
 
@@ -200,6 +257,14 @@ static int handle_list_for_each(sd_bus_message *reply, struct wl_list *list) {
 			"y", notif->urgency);
 		if (ret < 0) {
 			return ret;
+		}
+
+		if (notif->unread) {
+			ret = sd_bus_message_append(reply, "{sv}", "unread",
+				"b", (int)notif->unread);
+			if (ret < 0) {
+				return ret;
+			}
 		}
 
 		ret = sd_bus_message_open_container(reply, 'e', "sv");
@@ -501,6 +566,7 @@ static const sd_bus_vtable service_vtable[] = {
 	SD_BUS_METHOD("RestoreNotification", "", "", handle_restore_action, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("ListNotifications", "", "aa{sv}", handle_list_notifications, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("ListHistory", "", "aa{sv}", handle_list_history, SD_BUS_VTABLE_UNPRIVILEGED),
+	SD_BUS_METHOD("MarkRead", "a{sv}", "", handle_mark_read, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("Reload", "", "", handle_reload, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("SetMode", "s", "", handle_set_mode, SD_BUS_VTABLE_UNPRIVILEGED),
 	SD_BUS_METHOD("ListModes", "", "as", handle_list_modes, SD_BUS_VTABLE_UNPRIVILEGED),
