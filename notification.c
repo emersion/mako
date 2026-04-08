@@ -131,6 +131,11 @@ void close_notification(struct mako_notification *notif,
 	destroy_timer(notif->timer);
 	notif->timer = NULL;
 
+	if (reason == MAKO_NOTIFICATION_CLOSE_EXPIRED &&
+			notif->style.timeout_nodismiss) {
+		notif->unread = true;
+	}
+
 	if (add_to_history) {
 		notif->surface = NULL;
 		wl_list_insert(&state->history, &notif->link);

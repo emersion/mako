@@ -9,6 +9,7 @@ makoctl_cmds=(
 	'menu:Use a program to select one action to be invoked on the notification'
 	'list:Retrieve a list of current notifications'
 	'history:Retrieve a list of dismissed notifications'
+	'mark-read:Mark history notifications as read'
 	'reload:Reload the configuration file'
 	'mode:List, activate, or deactivate modes'
 	'help:Show help message and quit'
@@ -39,6 +40,11 @@ else
 				_arguments -s \
 						   '-n[Use a program to select one action on the notification with the given id]:id:' \
 						   '*:prog and args:_command_names -e'
+				;;
+			mark-read)
+				_arguments -s \
+						   '(-a --all)'{-a,--all}'[Mark all as read]' \
+						   '-n[Mark notification with given id as read]:id:'
 				;;
 			mode)
 				_arguments -s \

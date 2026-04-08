@@ -31,6 +31,7 @@ struct mako_notification {
 	int group_index;
 	int group_count;
 	bool hidden;
+	bool unread;
 
 	char *app_name;
 	char *app_icon;

@@ -12,6 +12,7 @@ _makoctl()
     'menu'
     'list'
     'history'
+    'mark-read'
     'reload'
     'mode'
     'help'
@@ -39,6 +40,10 @@ _makoctl()
       ;;
     mode)
       COMPREPLY=($(compgen -W "-a -r -t -s" -- "$cur"))
+      return
+      ;;
+    mark-read)
+      COMPREPLY=($(compgen -W "-a --all -n" -- "$cur"))
       return
       ;;
   esac

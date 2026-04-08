@@ -83,6 +83,18 @@ Sends IPC commands to the running mako daemon via dbus.
 	*-j*
 		Use JSON output.
 
+*mark-read* [-a|--all] [-n <id>]
+	Marks notifications in history as read, clearing the _unread_ flag set by
+	_timeout-nodismiss_.
+
+	Options:
+
+	*-a, --all*
+		Mark all history notifications as read.
+
+	*-n* <id>
+		Mark the notification with the given id as read.
+
 *reload*
 	Reloads the configuration file.
 
