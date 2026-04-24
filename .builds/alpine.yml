@@ -6,11 +6,16 @@ packages:
   - wayland-protocols
   - cairo-dev
   - pango-dev
-  - gdk-pixbuf-dev
   - scdoc
 sources:
   - https://github.com/emersion/mako
+  - https://gitlab.freedesktop.org/emersion/keulim.git
 tasks:
+  - keulim: |
+      cd keulim
+      meson setup build/
+      ninja -C build/
+      sudo ninja -C build/ install
   - setup: |
       cd mako
       meson build/ -Dauto_features=enabled -Dsd-bus-provider=libelogind

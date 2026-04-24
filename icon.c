@@ -16,8 +16,7 @@
 
 #ifdef HAVE_ICONS
 
-#include <gdk-pixbuf/gdk-pixbuf.h>
-#include "cairo-pixbuf.h"
+#include <keulim.h>
 
 static bool validate_icon_name(const char* icon_name) {
 	int icon_len = strlen(icon_name);
@@ -40,29 +39,160 @@ static bool validate_icon_name(const char* icon_name) {
 	return true;
 }
 
-static GdkPixbuf *load_image(const char *path) {
+static uint8_t to_premult(uint8_t x, uint8_t a) {
+	return (uint8_t)roundf((float)x * (float)a / 0xFF);
+}
+
+/**
+ * Create a cairo surface from 8-bit unpacked RGB(A) pixel data, with straight
+ * alpha.
+ */
+static cairo_surface_t *create_surface_from_data(const uint8_t *src_pixels,
+		size_t width, size_t height, size_t src_stride, bool has_alpha) {
+	size_t src_bytes_per_pixel = has_alpha ? 4 : 3;
+	cairo_format_t format = has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
+
+	cairo_surface_t *surface = cairo_image_surface_create(format, width, height);
+	if (cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS) {
+		fprintf(stderr, "Failed to create cairo surface\n");
+		cairo_surface_destroy(surface);
+		return NULL;
+	}
+
+	cairo_surface_flush(surface);
+
+	uint8_t *dst_pixels = cairo_image_surface_get_data(surface);
+	int dst_stride = cairo_image_surface_get_stride(surface);
+	for (size_t y = 0; y < height; y++) {
+		for (size_t x = 0; x < width; x++) {
+			const uint8_t *src = &src_pixels[y * src_stride + x * src_bytes_per_pixel];
+			uint8_t *dst = &dst_pixels[y * dst_stride + x * sizeof(uint32_t)];
+
+			uint8_t r = src[0];
+			uint8_t g = src[1];
+			uint8_t b = src[2];
+			uint8_t a = has_alpha ? src[3] : 0;
+
+			// Convert from straight alpha to pre-multiplied alpha
+			r = to_premult(r, a);
+			g = to_premult(g, a);
+			b = to_premult(b, a);
+
+			// Convert from unpacked RGBA to native-endian packed ARGB
+			uint32_t packed = 0;
+			packed |= (uint32_t)r << 16;
+			packed |= (uint32_t)g << 8;
+			packed |= b;
+			packed |= (uint32_t)a << 24;
+
+			memcpy(dst, &packed, sizeof(packed));
+		}
+	}
+
+	cairo_surface_mark_dirty(surface);
+
+	return surface;
+}
+
+static cairo_surface_t *load_image(const char *path) {
 	if (strlen(path) == 0) {
 		return NULL;
 	}
-	GError *err = NULL;
-	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(path, &err);
-	if (!pixbuf) {
-		fprintf(stderr, "Failed to load icon (%s)\n", err->message);
-		g_error_free(err);
-		return NULL;
+
+	FILE *f = fopen(path, "r");
+	if (f == NULL) {
+		fprintf(stderr, "Failed to open icon\n");
+		goto error;
 	}
-	return pixbuf;
+
+	struct klm_decoder *dec = klm_decoder_create_with_file(f);
+	if (dec == NULL) {
+		fprintf(stderr, "Failed to create icon decoder\n");
+		fclose(f);
+		goto error;
+	}
+
+	struct klm_info info;
+	if (!klm_decoder_read_info(dec, &info)) {
+		fprintf(stderr, "Failed to decode icon info\n");
+		goto error_dec;
+	}
+
+	enum klm_format format;
+	size_t bytes_per_pixel = 0;
+	bool has_alpha = false;
+	for (size_t i = 0; i < info.formats_len; i++) {
+		format = info.formats[i];
+		if (format == KLM_FORMAT_R8G8B8) {
+			bytes_per_pixel = 3;
+			break;
+		} else if (format == KLM_FORMAT_R8G8B8A8) {
+			bytes_per_pixel = 4;
+			has_alpha = true;
+			break;
+		}
+	}
+	if (bytes_per_pixel == 0) {
+		fprintf(stderr, "Unsupported icon pixel format\n");
+		goto error_dec;
+	}
+
+	size_t stride = bytes_per_pixel * info.width;
+	size_t size = stride * info.height;
+	uint8_t *buffer = malloc(size);
+	if (buffer == NULL) {
+		perror("Failed to allocate buffer");
+		goto error_buffer;
+	}
+
+	struct klm_decoder_read_frame_options options = {
+		.format = format,
+		.buffer = buffer,
+		.size = size,
+		.stride = stride,
+	};
+	if (!klm_decoder_read_frame(dec, &options)) {
+		fprintf(stderr, "Failed to decode icon frame\n");
+		goto error_buffer;
+	}
+
+	cairo_surface_t *surface = create_surface_from_data(buffer,
+		info.width, info.height, stride, has_alpha);
+	if (surface == NULL) {
+		goto error_buffer;
+	}
+
+	free(buffer);
+	klm_decoder_destroy(dec);
+	return surface;
+
+error_buffer:
+	free(buffer);
+error_dec:
+	klm_decoder_destroy(dec);
+error:
+	fprintf(stderr, "Failed to load icon from %s\n", path);
+	return NULL;
 }
 
-static GdkPixbuf *load_image_data(struct mako_image_data *image_data) {
-	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(image_data->data, GDK_COLORSPACE_RGB,
-			image_data->has_alpha, image_data->bits_per_sample, image_data->width,
-			image_data->height, image_data->rowstride, NULL, NULL);
-	if (!pixbuf) {
-		fprintf(stderr, "Failed to load icon\n");
+static cairo_surface_t *load_image_data(struct mako_image_data *image_data) {
+	if (image_data->bits_per_sample != 8) {
+		fprintf(stderr, "Unsupported number of bits per sample\n");
 		return NULL;
 	}
-	return pixbuf;
+	if ((image_data->has_alpha && image_data->channels != 4) ||
+			(!image_data->has_alpha && image_data->channels != 3)) {
+		fprintf(stderr, "Unsupported number of channels\n");
+		return NULL;
+	}
+
+	cairo_surface_t *surface = create_surface_from_data(image_data->data,
+		image_data->width, image_data->height, image_data->rowstride, image_data->has_alpha);
+	if (surface == NULL) {
+		return NULL;
+	}
+
+	return surface;
 }
 
 static double fit_to_square(int width, int height, int square_size) {
@@ -251,40 +381,32 @@ static char *resolve_icon(struct mako_notification *notif) {
 }
 
 struct mako_icon *create_icon(struct mako_notification *notif) {
-	GdkPixbuf *image = NULL;
+	cairo_surface_t *surface = NULL;
 	if (notif->image_data != NULL) {
-		image = load_image_data(notif->image_data);
+		surface = load_image_data(notif->image_data);
 	}
 
-	if (image == NULL) {
+	if (surface == NULL) {
 		char *path = resolve_icon(notif);
 		if (path == NULL) {
 			return NULL;
 		}
 
-		image = load_image(path);
+		surface = load_image(path);
 		free(path);
-		if (image == NULL) {
+		if (surface == NULL) {
 			return NULL;
 		}
 	}
 
-	int image_width = gdk_pixbuf_get_width(image);
-	int image_height = gdk_pixbuf_get_height(image);
+	int image_width = cairo_image_surface_get_width(surface);
+	int image_height = cairo_image_surface_get_height(surface);
 
 	struct mako_icon *icon = calloc(1, sizeof(struct mako_icon));
-	icon->scale = fit_to_square(
-			image_width, image_height, notif->style.max_icon_size);
+	icon->scale = fit_to_square(image_width, image_height, notif->style.max_icon_size);
 	icon->width = image_width * icon->scale;
 	icon->height = image_height * icon->scale;
-
-	icon->image = create_cairo_surface_from_gdk_pixbuf(image);
-	g_object_unref(image);
-	if (icon->image == NULL) {
-		free(icon);
-		return NULL;
-	}
-
+	icon->image = surface;
 	return icon;
 }
 #else
