@@ -8,6 +8,7 @@ project(
 		'c_std=c11',
 		'warning_level=2',
 		'werror=true',
+		'wrap_mode=nodownload',
 	],
 )
 
@@ -48,8 +49,8 @@ else
 endif
 add_project_arguments('-DHAVE_' + sdbus.name().to_upper(), language: 'c')
 
-gdk_pixbuf = dependency('gdk-pixbuf-2.0', required: get_option('icons'))
-if gdk_pixbuf.found()
+keulim = dependency('keulim', required: get_option('icons'), fallback: 'keulim')
+if keulim.found()
 	add_project_arguments('-DHAVE_ICONS', language: 'c')
 endif
 
@@ -75,17 +76,13 @@ src_files = [
 	'string-util.c',
 ]
 
-if gdk_pixbuf.found()
-	src_files += 'cairo-pixbuf.c'
-endif
-
 executable(
 	'mako',
 	files(src_files) + protocols_src,
 	dependencies: [
 		cairo,
 		epoll,
-		gdk_pixbuf,
+		keulim,
 		sdbus,
 		pango,
 		pangocairo,
@@ -120,6 +117,6 @@ subdir('doc')
 
 summary({
 	'sd-bus provider': sdbus.name(),
-	'Icons': gdk_pixbuf.found(),
+	'Icons': keulim.found(),
 	'Man pages': scdoc.found(),
 }, bool_yn: true)

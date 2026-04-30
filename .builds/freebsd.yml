@@ -2,7 +2,6 @@ image: freebsd/latest
 packages:
   - basu
   - evdev-proto
-  - gdk-pixbuf2
   - libepoll-shim
   - meson
   - pango
@@ -12,7 +11,13 @@ packages:
   - wayland-protocols
 sources:
   - https://github.com/emersion/mako
+  - https://gitlab.freedesktop.org/emersion/keulim.git
 tasks:
+  - keulim: |
+      cd keulim
+      meson setup build/
+      ninja -C build/
+      sudo ninja -C build/ install
   - setup: |
       cd mako
       meson build/ -Dauto_features=enabled -Dsd-bus-provider=basu
