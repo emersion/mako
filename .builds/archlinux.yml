@@ -13,11 +13,11 @@ sources:
 tasks:
   - setup: |
       cd mako
-      meson build -Dauto_features=enabled -Dsd-bus-provider=libsystemd
+      meson setup build/ -Dauto_features=enabled -Dsd-bus-provider=libsystemd
   - build: |
       cd mako
-      ninja -C build
+      ninja -C build/
   - build-no-icons: |
       cd mako
-      meson configure build -Dicons=disabled
-      ninja -C build
+      meson configure build/ -Dicons=disabled
+      ninja -C build/
