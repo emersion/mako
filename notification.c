@@ -378,6 +378,24 @@ static void try_invoke_action(struct mako_notification *notif,
 	close_notification(notif, MAKO_NOTIFICATION_CLOSE_DISMISSED, true);
 }
 
+bool notification_handle_action_at(struct mako_notification *notif,
+		int32_t x, int32_t y, const struct mako_binding_context *ctx) {
+	if (!notif->style.actions) {
+		return false;
+	}
+	struct mako_action *action;
+	wl_list_for_each(action, &notif->actions, link) {
+		// A zero-sized hotspot means no button is currently drawn for this
+		// action, so it can't be clicked.
+		if (action->hotspot.width > 0 && action->hotspot.height > 0 &&
+				hotspot_at(&action->hotspot, x, y)) {
+			try_invoke_action(notif, action->key, ctx);
+			return true;
+		}
+	}
+	return false;
+}
+
 void notification_execute_binding(struct mako_notification *notif,
 		const struct mako_binding *binding,
 		const struct mako_binding_context *ctx) {

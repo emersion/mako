@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <errno.h>
+#include <linux/input-event-codes.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -144,7 +145,12 @@ static void touch_handle_up(void *data, struct wl_touch *wl_touch,
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (hotspot_at(&notif->hotspot, seat->touch.pts[id].x, seat->touch.pts[id].y)) {
 			struct mako_surface *surface = notif->surface;
-			notification_handle_touch(notif, &ctx);
+			// A tap on an action button invokes that action; otherwise fall
+			// back to the configured touch binding.
+			if (!notification_handle_action_at(notif, seat->touch.pts[id].x,
+					seat->touch.pts[id].y, &ctx)) {
+				notification_handle_touch(notif, &ctx);
+			}
 			set_dirty(surface);
 			break;
 		}
@@ -260,7 +266,14 @@ static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer,
 	wl_list_for_each(notif, &state->notifications, link) {
 		if (hotspot_at(&notif->hotspot, seat->pointer.x, seat->pointer.y)) {
 			struct mako_surface *surface = notif->surface;
-			notification_handle_button(notif, button, button_state, &ctx);
+			// A left click on an action button invokes that action; anything
+			// else falls back to the configured button binding.
+			if (!(button == BTN_LEFT &&
+					button_state == WL_POINTER_BUTTON_STATE_PRESSED &&
+					notification_handle_action_at(notif, seat->pointer.x,
+						seat->pointer.y, &ctx))) {
+				notification_handle_button(notif, button, button_state, &ctx);
+			}
 			set_dirty(surface);
 			break;
 		}

@@ -55,6 +55,10 @@ struct mako_action {
 	struct wl_list link; // mako_notification::actions
 	char *key;
 	char *title;
+
+	// Clickable region of this action's button, in surface-local
+	// coordinates. Set during rendering; zeroed when no button is drawn.
+	struct mako_hotspot hotspot;
 };
 
 enum mako_notification_close_reason {
@@ -98,6 +102,8 @@ struct mako_notification *get_notification(struct mako_state *state, uint32_t id
 struct mako_notification *get_tagged_notification(struct mako_state *state, const char *tag, const char *app_name);
 size_t format_notification(struct mako_notification *notif, const char *format,
 	char *buf);
+bool notification_handle_action_at(struct mako_notification *notif,
+	int32_t x, int32_t y, const struct mako_binding_context *ctx);
 void notification_handle_button(struct mako_notification *notif, uint32_t button,
 	enum wl_pointer_button_state state, const struct mako_binding_context *ctx);
 void notification_handle_touch(struct mako_notification *notif,

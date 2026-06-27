@@ -42,9 +42,15 @@ Bindings allow one to perform an action when an event is triggered.
 Supported options:
 
 *on-button-left*=_action_
-	Performs the action when the left pointer button is pressed.
+	Performs the action when the left pointer button is pressed, unless the
+	press lands on one of the inline action buttons (see *actions*), in which
+	case that action is invoked instead.
 
-	Default: invoke-default-action
+	Binding this to *invoke-default-action* suppresses the inline action
+	buttons, restoring the older behaviour where the whole notification body
+	activates the default action.
+
+	Default: none
 
 *on-button-middle*=_action_
 	Performs the action when the middle pointer button is pressed.
@@ -239,6 +245,13 @@ Supported actions:
 *actions*=0|1
 	Applications may request an action to be associated with activating a
 	notification. Disabling this will cause mako to ignore these requests.
+
+	When enabled, each requested action is drawn as a clickable button beneath
+	the notification body. A left click on a button invokes that action; a
+	right click anywhere on the notification dismisses it (per the default
+	*on-button-right* binding). The buttons are not drawn when *on-button-left*
+	is bound to *invoke-default-action*, since the body itself then activates
+	the default action.
 
 	Default: 1
 

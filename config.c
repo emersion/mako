@@ -129,8 +129,10 @@ void init_default_style(struct mako_style *style) {
 	style->anchor =
 		ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
 
-	style->button_bindings.left.action = MAKO_BINDING_INVOKE_ACTION;
-	style->button_bindings.left.action_name = strdup(DEFAULT_ACTION_KEY);
+	// Left click does nothing by default: action buttons are drawn instead and
+	// handle their own clicks. Binding the left button to invoke-default-action
+	// restores the old click-to-invoke behaviour and suppresses the buttons.
+	style->button_bindings.left.action = MAKO_BINDING_NONE;
 	style->button_bindings.right.action = MAKO_BINDING_DISMISS;
 	style->button_bindings.middle.action = MAKO_BINDING_NONE;
 	style->touch_binding.action = MAKO_BINDING_DISMISS;

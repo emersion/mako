@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <cairo/cairo.h>
 #include <pango/pangocairo.h>
 
@@ -96,9 +97,44 @@ static void set_font_options(cairo_t *cairo, struct mako_surface *surface) {
 	cairo_font_options_destroy(fo);
 }
 
+// Spacing (in surface-local pixels) for the inline action buttons.
+#define MAKO_BUTTON_PAD_X 8
+#define MAKO_BUTTON_PAD_Y 3
+#define MAKO_BUTTON_GAP 4
+#define MAKO_BUTTON_RADIUS 4
+
+// Create a Pango layout for a single action button label and report its size
+// in surface-local pixels. Action titles are always plain text, never markup.
+static PangoLayout *create_button_layout(cairo_t *cairo,
+		struct mako_style *style, int scale, const char *label,
+		int *width, int *height) {
+	PangoLayout *layout = pango_cairo_create_layout(cairo);
+	PangoFontDescription *desc =
+		pango_font_description_from_string(style->font);
+	pango_layout_set_font_description(layout, desc);
+	pango_font_description_free(desc);
+
+	PangoAttrList *attrs = pango_attr_list_new();
+	pango_attr_list_insert(attrs, pango_attr_scale_new(scale));
+	pango_layout_set_attributes(layout, attrs);
+	pango_attr_list_unref(attrs);
+
+	pango_layout_set_text(layout, label, -1);
+
+	int w = 0, h = 0;
+	pango_layout_get_pixel_size(layout, &w, &h);
+	if (width != NULL) {
+		*width = w / scale;
+	}
+	if (height != NULL) {
+		*height = h / scale;
+	}
+	return layout;
+}
+
 static int render_notification(cairo_t *cairo, struct mako_state *state, struct mako_surface *surface,
 		struct mako_style *style, const char *text, struct mako_icon *icon, int offset_y, int scale,
-		struct mako_hotspot *hotspot, int progress) {
+		struct mako_hotspot *hotspot, int progress, struct wl_list *actions) {
 	int border_size = 2 * style->border_size;
 	int padding_height = style->padding.top + style->padding.bottom;
 	int padding_width = style->padding.left + style->padding.right;
@@ -205,6 +241,71 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	if (icon != NULL && ! icon_vertical && icon->height > text_height) {
 		notif_height = icon->height + border_size + padding_height;
 	}
+
+	// Lay out the clickable action buttons in a horizontal, wrapping row
+	// beneath the body. We compute their geometry (and per-action hotspots)
+	// here so the notification can grow to fit them before the background is
+	// drawn; the buttons themselves are drawn after the text below.
+	// When the left button is bound to invoke-default-action the notification
+	// is meant to be activated by clicking its body, so the inline buttons are
+	// suppressed to avoid two competing ways to trigger an action.
+	bool default_action_bound =
+		style->button_bindings.left.action == MAKO_BINDING_INVOKE_ACTION &&
+		style->button_bindings.left.action_name != NULL &&
+		strcmp(style->button_bindings.left.action_name, DEFAULT_ACTION_KEY) == 0;
+	bool show_actions = actions != NULL && style->actions &&
+		!default_action_bound && !wl_list_empty(actions);
+
+	// Clear stale hotspots so actions without a drawn button can't be clicked.
+	if (actions != NULL) {
+		struct mako_action *action;
+		wl_list_for_each(action, actions, link) {
+			action->hotspot.x = action->hotspot.y = 0;
+			action->hotspot.width = action->hotspot.height = 0;
+		}
+	}
+
+	if (show_actions) {
+		int body_content_height = notif_height - border_size - padding_height;
+		int button_gap_top = style->padding.top;
+
+		int content_left = offset_x + style->border_size + style->padding.left;
+		int avail_width = notif_width - border_size - padding_width;
+		int buttons_top = offset_y + style->border_size + style->padding.top +
+			body_content_height + button_gap_top;
+
+		int cur_x = 0, cur_y = 0, row_height = 0;
+		struct mako_action *action;
+		wl_list_for_each_reverse(action, actions, link) {
+			int label_w = 0, label_h = 0;
+			PangoLayout *blayout = create_button_layout(
+				cairo, style, scale, action->title, &label_w, &label_h);
+			g_object_unref(blayout);
+
+			int bw = label_w + 2 * MAKO_BUTTON_PAD_X + 2 * style->border_size;
+			int bh = label_h + 2 * MAKO_BUTTON_PAD_Y + 2 * style->border_size;
+
+			if (cur_x > 0 && cur_x + bw > avail_width) {
+				// Wrap to a new row.
+				cur_x = 0;
+				cur_y += row_height + MAKO_BUTTON_GAP;
+				row_height = 0;
+			}
+
+			action->hotspot.x = content_left + cur_x;
+			action->hotspot.y = buttons_top + cur_y;
+			action->hotspot.width = bw;
+			action->hotspot.height = bh;
+
+			cur_x += bw + MAKO_BUTTON_GAP;
+			if (bh > row_height) {
+				row_height = bh;
+			}
+		}
+
+		notif_height += button_gap_top + cur_y + row_height;
+	}
+
 	if (notif_height < radius_top_left + radius_bottom_left) {
 		notif_height = radius_top_left + radius_bottom_left + border_size;
 	}
@@ -311,7 +412,9 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 
 	if (icon_vertical) {
 		text_x = (notif_width - text_width - border_size) / 2;
-	} else {
+	} else if (!show_actions) {
+		// With buttons present the body stays top-aligned so the buttons can
+		// sit directly beneath it.
 		text_y = (notif_height - text_height - border_size) / 2;
 	}
 
@@ -323,6 +426,42 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 		scale);
 	pango_cairo_update_layout(cairo, layout);
 	pango_cairo_show_layout(cairo, layout);
+
+	// Render the action buttons using the geometry computed earlier.
+	if (show_actions) {
+		struct mako_action *action;
+		wl_list_for_each_reverse(action, actions, link) {
+			struct mako_hotspot *hs = &action->hotspot;
+
+			// Button outline. The stroke is centered on the path edge, so
+			// inset by half the border like the notification border.
+			cairo_save(cairo);
+			set_rounded_rectangle(cairo,
+				hs->x + style->border_size / 2.0,
+				hs->y + style->border_size / 2.0,
+				hs->width - style->border_size,
+				hs->height - style->border_size,
+				scale, MAKO_BUTTON_RADIUS, MAKO_BUTTON_RADIUS,
+				MAKO_BUTTON_RADIUS, MAKO_BUTTON_RADIUS);
+			set_source_u32(cairo, style->colors.border);
+			cairo_set_line_width(cairo, style->border_size * scale);
+			cairo_stroke(cairo);
+			cairo_restore(cairo);
+
+			// Button label, centered within the button.
+			int label_w = 0, label_h = 0;
+			PangoLayout *blayout = create_button_layout(
+				cairo, style, scale, action->title, &label_w, &label_h);
+			set_source_u32(cairo, style->colors.text);
+			move_to(cairo,
+				hs->x + (hs->width - label_w) / 2.0,
+				hs->y + (hs->height - label_h) / 2.0,
+				scale);
+			pango_cairo_update_layout(cairo, blayout);
+			pango_cairo_show_layout(cairo, blayout);
+			g_object_unref(blayout);
+		}
+	}
 
 	// Update hotspot with calculated location
 	if (hotspot != NULL) {
@@ -418,7 +557,7 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
 		struct mako_icon *icon = (style->icons) ? notif->icon : NULL;
 		int notif_height = render_notification(
 			cairo, state, surface, style, text, icon, total_height, scale,
-			&notif->hotspot, notif->progress);
+			&notif->hotspot, notif->progress, &notif->actions);
 		free(text);
 
 		int notif_width =
@@ -470,7 +609,7 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
 			format_text(style->format, text, format_hidden_text, &data);
 
 			int hidden_height = render_notification(
-				cairo, state, surface, style, text, NULL, total_height, scale, NULL, 0);
+				cairo, state, surface, style, text, NULL, total_height, scale, NULL, 0, NULL);
 			free(text);
 
 			total_height += hidden_height;
