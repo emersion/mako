@@ -274,6 +274,20 @@ Default when grouped: (%g) <b>%s</b>\\n%b
 
 	Default: 0
 
+*ignore-replace*=0|1
+	If set, mako will ignore requests from applications to replace an existing
+	notification. The replacement notification will be shown as a new, separate
+	notification. Note that some apps replace their notifications by closing
+	the previous one; in that case use _ignore-close_ instead.
+
+	Default: 0
+
+*ignore-close*=0|1
+	If set, mako will ignore requests from applications to close a notification
+	via a D-Bus call.
+
+	Default: 0
+
 *group-by*=_field[,field,...]_
 	A comma-separated list of criteria fields that will be compared to other
 	visible notifications to determine if this one should form a group with

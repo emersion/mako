@@ -40,7 +40,7 @@ enum mako_icon_location {
 // structs are also mirrored.
 struct mako_style_spec {
 	bool width, height, outer_margin, margin, padding, border_size, border_radius, font,
-		markup, format, text_alignment, actions, default_timeout, ignore_timeout, ignore_replace,
+		markup, format, text_alignment, actions, default_timeout, ignore_timeout, ignore_replace, ignore_close,
 		icons, max_icon_size, icon_path, icon_border_radius, group_criteria_spec, invisible, history,
 		icon_location, max_visible, layer, output, anchor;
 	struct {
@@ -78,6 +78,7 @@ struct mako_style {
 	int default_timeout; // in ms
 	bool ignore_timeout;
 	bool ignore_replace;
+	bool ignore_close;
 
 	struct {
 		uint32_t background;
