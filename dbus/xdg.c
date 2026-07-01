@@ -100,7 +100,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	ret = sd_bus_message_read(msg, "susss", &app_name, &replaces_id, &app_icon,
 		&summary, &body);
 	if (ret < 0) {
-		return ret;
+		goto error;
 	}
 
 	struct mako_notification *notif = NULL;
@@ -118,8 +118,10 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	}
 
 	if (notif == NULL) {
-		return -1;
+		goto error;
 	}
+
+	// From now on notif is allocated (use goto error_free_notif)
 
 	free(notif->app_name);
 	free(notif->app_icon);
@@ -132,21 +134,21 @@ static int handle_notify(sd_bus_message *msg, void *data,
 
 	ret = sd_bus_message_enter_container(msg, 'a', "s");
 	if (ret < 0) {
-		return ret;
+		goto error_free_notif;
 	}
 
 	while (1) {
 		const char *action_key, *action_title;
 		ret = sd_bus_message_read(msg, "ss", &action_key, &action_title);
 		if (ret < 0) {
-			return ret;
+			goto error_free_notif;
 		} else if (ret == 0) {
 			break;
 		}
 
 		struct mako_action *action = calloc(1, sizeof(struct mako_action));
 		if (action == NULL) {
-			return -1;
+			goto error_free_notif;
 		}
 		action->notification = notif;
 		action->key = strdup(action_key);
@@ -156,18 +158,18 @@ static int handle_notify(sd_bus_message *msg, void *data,
 
 	ret = sd_bus_message_exit_container(msg);
 	if (ret < 0) {
-		return ret;
+		goto error_free_notif;
 	}
 
 	ret = sd_bus_message_enter_container(msg, 'a', "{sv}");
 	if (ret < 0) {
-		return ret;
+		goto error_free_notif;
 	}
 
 	while (1) {
 		ret = sd_bus_message_enter_container(msg, 'e', "sv");
 		if (ret < 0) {
-			return ret;
+			goto error_free_notif;
 		} else if (ret == 0) {
 			break;
 		}
@@ -175,7 +177,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		const char *hint = NULL;
 		ret = sd_bus_message_read(msg, "s", &hint);
 		if (ret < 0) {
-			return ret;
+			goto error_free_notif;
 		}
 
 		if (strcmp(hint, "urgency") == 0) {
@@ -183,39 +185,39 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			const char *contents = NULL;
 			ret = sd_bus_message_peek_type(msg, NULL, &contents);
 			if (ret < 0) {
-				return ret;
+				goto error_free_notif;
 			}
 
 			if (strcmp(contents, "u") == 0) {
 				uint32_t urgency = 0;
 				ret = sd_bus_message_read(msg, "v", "u", &urgency);
 				if (ret < 0) {
-					return ret;
+					goto error_free_notif;
 				}
 				notif->urgency = urgency;
 			} else if (strcmp(contents, "y") == 0) {
 				uint8_t urgency = 0;
 				ret = sd_bus_message_read(msg, "v", "y", &urgency);
 				if (ret < 0) {
-					return ret;
+					goto error_free_notif;
 				}
 				notif->urgency = urgency;
 			} else if (strcmp(contents, "i") == 0) {
 				int32_t urgency = 0;
 				ret = sd_bus_message_read(msg, "v", "i", &urgency);
 				if (ret < 0) {
-					return ret;
+					goto error_free_notif;
 				}
 				notif->urgency = urgency;
 			} else {
 				fprintf(stderr, "Unsupported variant type for \"urgency\": \"%s\"\n", contents);
-				return -1;
+				goto error_free_notif;
 			}
 		} else if (strcmp(hint, "category") == 0) {
 			const char *category = NULL;
 			ret = sd_bus_message_read(msg, "v", "s", &category);
 			if (ret < 0) {
-				return ret;
+				goto error_free_notif;
 			}
 			free(notif->category);
 			notif->category = strdup(category);
@@ -223,7 +225,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			const char *desktop_entry = NULL;
 			ret = sd_bus_message_read(msg, "v", "s", &desktop_entry);
 			if (ret < 0) {
-				return ret;
+				goto error_free_notif;
 			}
 			free(notif->desktop_entry);
 			notif->desktop_entry = strdup(desktop_entry);
@@ -231,7 +233,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			int32_t progress = 0;
 			ret = sd_bus_message_read(msg, "v", "i", &progress);
 			if (ret < 0) {
-				return ret;
+				goto error_free_notif;
 			}
 			notif->progress = progress;
 		} else if (strcmp(hint, "image-path") == 0 ||
@@ -239,7 +241,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			const char *image_path = NULL;
 			ret = sd_bus_message_read(msg, "v", "s", &image_path);
 			if (ret < 0) {
-				return ret;
+				goto error_free_notif;
 			}
 			// image-path is higher priority than app_icon, so just overwrite
 			// it. We're guaranteed to be doing this after reading the "real"
@@ -252,7 +254,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			const char *tag = NULL;
 			ret = sd_bus_message_read(msg, "v", "s", &tag);
 			if (ret < 0) {
-				return ret;
+				goto error_free_notif;
 			}
 			notif->tag = strdup(tag);
 		} else if (strcmp(hint, "image-data") == 0 ||
@@ -260,17 +262,17 @@ static int handle_notify(sd_bus_message *msg, void *data,
 				strcmp(hint, "icon_data") == 0) {  // Even more deprecated.
 			ret = sd_bus_message_enter_container(msg, 'v', "(iiibiiay)");
 			if (ret < 0) {
-				return ret;
+				goto error_free_notif;
 			}
 
 			ret = sd_bus_message_enter_container(msg, 'r', "iiibiiay");
 			if (ret < 0) {
-				return ret;
+				goto error_free_notif;
 			}
 
 			struct mako_image_data *image_data = calloc(1, sizeof(struct mako_image_data));
 			if (image_data == NULL) {
-				return -1;
+				goto error_free_notif;
 			}
 
 			ret = sd_bus_message_read(msg, "iiibii", &image_data->width,
@@ -279,7 +281,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 					&image_data->channels);
 			if (ret < 0) {
 				free(image_data);
-				return ret;
+				goto error_free_notif;
 			}
 
 			// Calculate the expected useful data length without padding in last row
@@ -291,14 +293,14 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			uint8_t *data = calloc(image_len, sizeof(uint8_t));
 			if (data == NULL) {
 				free(image_data);
-				return -1;
+				goto error_free_notif;
 			}
 
 			ret = sd_bus_message_enter_container(msg, 'a', "y");
 			if (ret < 0) {
 				free(data);
 				free(image_data);
-				return ret;
+				goto error_free_notif;
 			}
 
 			// Ignore the extra padding bytes in the last row if exist
@@ -308,7 +310,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 				if (ret < 0){
 					free(data);
 					free(image_data);
-					return ret;
+					goto error_free_notif;
 				}
 				data[index] = tmp;
 			}
@@ -322,40 +324,40 @@ static int handle_notify(sd_bus_message *msg, void *data,
 
 			ret = sd_bus_message_exit_container(msg);
 			if (ret < 0) {
-				return ret;
+				goto error_free_notif;
 			}
 
 			ret = sd_bus_message_exit_container(msg);
 			if (ret < 0) {
-				return ret;
+				goto error_free_notif;
 			}
 
 			ret = sd_bus_message_exit_container(msg);
 			if (ret < 0) {
-				return ret;
+				goto error_free_notif;
 			}
 		} else {
 			ret = sd_bus_message_skip(msg, "v");
 			if (ret < 0) {
-				return ret;
+				goto error_free_notif;
 			}
 		}
 
 		ret = sd_bus_message_exit_container(msg);
 		if (ret < 0) {
-			return ret;
+			goto error_free_notif;
 		}
 	}
 
 	ret = sd_bus_message_exit_container(msg);
 	if (ret < 0) {
-		return ret;
+		goto error_free_notif;
 	}
 
 	int32_t requested_timeout;
 	ret = sd_bus_message_read(msg, "i", &requested_timeout);
 	if (ret < 0) {
-		return ret;
+		goto error_free_notif;
 	}
 	notif->requested_timeout = requested_timeout;
 
@@ -388,14 +390,12 @@ static int handle_notify(sd_bus_message *msg, void *data,
 		// criteria. The notification may be partially matched, but the worst
 		// case is that it has an empty style, so bail.
 		fprintf(stderr, "Failed to apply criteria\n");
-		destroy_notification(notif);
-		return -1;
+		goto error_free_notif;
 	} else if (match_count == 0) {
 		// This should be impossible, since the global criteria is always
 		// present in a mako_config and matches everything.
 		fprintf(stderr, "Notification matched zero criteria?!\n");
-		destroy_notification(notif);
-		return -1;
+		goto error_free_notif;
 	}
 
 	int32_t expire_timeout = notif->requested_timeout;
@@ -421,8 +421,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	struct mako_criteria *notif_criteria = create_criteria_from_notification(
 			notif, &notif->style.group_criteria_spec);
 	if (!notif_criteria) {
-		destroy_notification(notif);
-		return -1;
+		goto error_free_notif;
 	}
 	group_notifications(state, notif_criteria);
 	destroy_criteria(notif_criteria);
@@ -432,6 +431,13 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	set_dirty(notif->surface);
 
 	return sd_bus_reply_method_return(msg, "u", notif->id);
+
+error_free_notif:
+	destroy_notification(notif);
+error:
+	if (ret >= 0)
+		ret = -1;
+	return ret;
 }
 
 static int handle_close_notification(sd_bus_message *msg, void *data,
