@@ -42,7 +42,7 @@ Install dependencies:
 * pango
 * cairo
 * systemd, elogind or [basu] (for the sd-bus library)
-* gdk-pixbuf (optional, for icons support)
+* [keulim] (optional, for icons support)
 * dbus (runtime dependency, user-session support is required)
 * scdoc (optional, for man pages)
 
@@ -69,3 +69,4 @@ MIT
 [irc]: https://web.libera.chat/gamja/#emersion
 [spec]: https://specifications.freedesktop.org/notification-spec/latest/
 [basu]: https://github.com/emersion/basu
+[keulim]: https://gitlab.freedesktop.org/emersion/keulim
