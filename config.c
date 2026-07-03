@@ -111,6 +111,8 @@ void init_default_style(struct mako_style *style) {
 	style->default_timeout = 0;
 	style->ignore_timeout = false;
 
+	style->max_urgency = MAKO_NOTIFICATION_URGENCY_CRITICAL;
+
 	style->colors.background = 0x285577FF;
 	style->colors.text = 0xFFFFFFFF;
 	style->colors.border = 0x4C7899FF;
@@ -309,6 +311,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.ignore_timeout) {
 		target->ignore_timeout = style->ignore_timeout;
 		target->spec.ignore_timeout = true;
+	}
+
+	if (style->spec.max_urgency) {
+		target->max_urgency = style->max_urgency;
+		target->spec.max_urgency = true;
 	}
 
 	if (style->spec.colors.background) {
@@ -642,6 +649,9 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "ignore-timeout") == 0) {
 		return spec->ignore_timeout =
 			parse_boolean(value, &style->ignore_timeout);
+	} else if (strcmp(name, "max-urgency") == 0) {
+		return spec->max_urgency =
+	 		parse_urgency(value, &style->max_urgency);
 	} else if (strcmp(name, "group-by") == 0) {
 		return spec->group_criteria_spec =
 			parse_criteria_spec(value, &style->group_criteria_spec);
@@ -921,6 +931,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"history", required_argument, 0, 0},
 		{"default-timeout", required_argument, 0, 0},
 		{"ignore-timeout", required_argument, 0, 0},
+		{"max-urgency", required_argument, 0, 0},
 		{"output", required_argument, 0, 0},
 		{"layer", required_argument, 0, 0},
 		{"anchor", required_argument, 0, 0},

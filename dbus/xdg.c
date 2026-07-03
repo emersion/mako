@@ -408,6 +408,10 @@ static int handle_notify(sd_bus_message *msg, void *data,
 			handle_notification_timer, notif);
 	}
 
+	if (notif->style.spec.max_urgency && notif->urgency > notif->style.max_urgency) {
+		notif->urgency = notif->style.max_urgency;
+	}
+
 	if (notif->style.icons) {
 		notif->icon = create_icon(notif);
 	}

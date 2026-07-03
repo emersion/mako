@@ -27,6 +27,7 @@ _arguments \
     '--history[Add expired notification to history.]:history:' \
     '--default-timeout[Default timeout in milliseconds.]:timeout (ms):' \
     '--ignore-timeout[If set, mako will ignore the expire timeout sent by notifications and use the one provided by default-timeout instead.]:Use default timeout:(0 1)' \
+    '--max-urgency[Maximum allowed notification urgency.]:urgency:(low normal critical)' \
     '--output[Show notifications on this output.]:name:' \
     '--layer[Arrange notifications at this layer.]:layer:(background bottom top overlay)' \
     '--anchor[Position on output to put notifications.]:position:(top-right bottom-right bottom-center bottom-left top-left top-center center-right center-left center)' \
