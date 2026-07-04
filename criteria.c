@@ -418,15 +418,38 @@ struct mako_criteria *global_criteria(struct mako_config *config) {
 	return criteria;
 }
 
-// Iterate through `criteria_list`, applying the style from each matching
+static void timespec_add(struct timespec *t, int delta_ms) {
+	static const long ms = 1000000, s = 1000000000;
+
+	int delta_ms_low = delta_ms % 1000;
+	int delta_s_high = delta_ms / 1000;
+
+	t->tv_sec += delta_s_high;
+
+	t->tv_nsec += (long)delta_ms_low * ms;
+	if (t->tv_nsec >= s) {
+		t->tv_nsec -= s;
+		++t->tv_sec;
+	}
+}
+
+static void handle_notification_timer(void *data) {
+	struct mako_notification *notif = data;
+	struct mako_surface *surface = notif->surface;
+	notif->timer = NULL;
+
+	close_notification(notif, MAKO_NOTIFICATION_CLOSE_EXPIRED, true);
+	set_dirty(surface);
+}
+
+// Iterate through the criteria list, applying the style from each matching
 // criteria to `notif`. Returns the number of criteria that matched, or -1 if
 // a failure occurs.
-ssize_t apply_each_criteria(struct wl_list *criteria_list,
-		struct mako_notification *notif) {
+ssize_t apply_each_criteria(struct mako_state *state, struct mako_notification *notif) {
 	ssize_t match_count = 0;
 
 	struct mako_criteria *criteria;
-	wl_list_for_each(criteria, criteria_list, link) {
+	wl_list_for_each(criteria, &state->config.criteria, link) {
 		if (!match_criteria(criteria, notif)) {
 			continue;
 		}
@@ -445,6 +468,25 @@ ssize_t apply_each_criteria(struct wl_list *criteria_list,
 			notif->surface = surface;
 			break;
 		}
+	}
+
+	int32_t expire_timeout = notif->requested_timeout;
+	if (expire_timeout < 0 || notif->style.ignore_timeout) {
+		expire_timeout = notif->style.default_timeout;
+	}
+
+	if (expire_timeout > 0) {
+		struct timespec at = notif->at;
+		timespec_add(&at, expire_timeout);
+		if (notif->timer) {
+			notif->timer->at = at;
+		} else {
+			notif->timer = add_event_loop_timer(&state->event_loop, &at,
+				handle_notification_timer, notif);
+		}
+	} else if (notif->timer) {
+		destroy_timer(notif->timer);
+		notif->timer = NULL;
 	}
 
 	if (!notif->surface) {
