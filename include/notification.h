@@ -30,6 +30,7 @@ struct mako_notification {
 	uint32_t id;
 	int group_index;
 	int group_count;
+	int group_focus_index;
 	bool hidden;
 
 	char *app_name;
@@ -100,6 +101,8 @@ size_t format_notification(struct mako_notification *notif, const char *format,
 	char *buf);
 void notification_handle_button(struct mako_notification *notif, uint32_t button,
 	enum wl_pointer_button_state state, const struct mako_binding_context *ctx);
+void notification_handle_axis(struct mako_notification *notif, uint32_t axis,
+	wl_fixed_t value, const struct mako_binding_context *ctx);
 void notification_handle_touch(struct mako_notification *notif,
 	const struct mako_binding_context *ctx);
 void notification_execute_binding(struct mako_notification *notif,
