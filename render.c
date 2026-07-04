@@ -60,6 +60,53 @@ static void set_rounded_rectangle(cairo_t *cairo, double x, double y, double wid
 	cairo_close_path(cairo);
 }
 
+static void set_rounded_or_cut_rectangle(cairo_t *cairo, double x, double y, double width, double height,
+																				 int scale, int radius_top_left, int radius_top_right, int radius_bottom_right, int radius_bottom_left,
+																				 int cut_top_left, int cut_top_right, int cut_bottom_right, int cut_bottom_left) {
+	if (width == 0 || height == 0) {
+		return;
+	}
+	x *= scale;
+	y *= scale;
+	width *= scale;
+	height *= scale;
+	radius_top_left *= scale;
+	radius_top_right *= scale;
+	radius_bottom_right *= scale;
+	radius_bottom_left *= scale;
+	double degrees = M_PI / 180.0;
+
+	cairo_new_sub_path(cairo);
+	if (cut_top_left) {
+		cairo_line_to(cairo, x, y + radius_top_left);
+		cairo_line_to(cairo, x + radius_top_left, y);
+	} else {
+		cairo_arc(cairo, x + radius_top_left, y + radius_top_left, radius_top_left, 180 * degrees, 270 * degrees);
+	}
+
+	if (cut_top_right) {
+		cairo_line_to(cairo, x + width - radius_top_right, y);
+		cairo_line_to(cairo, x + width, y + radius_top_right);
+	} else {
+		cairo_arc(cairo, x + width - radius_top_right, y + radius_top_right, radius_top_right, -90 * degrees, 0 * degrees);
+	}
+
+	if (cut_bottom_right) {
+		cairo_line_to(cairo, x + width, y + height - radius_bottom_right);
+		cairo_line_to(cairo, x + width - radius_bottom_right, y + height);
+	} else {
+		cairo_arc(cairo, x + width - radius_bottom_right, y + height - radius_bottom_right, radius_bottom_right, 0 * degrees, 90 * degrees);
+	}
+
+	if (cut_bottom_left) {
+		cairo_line_to(cairo, x + radius_bottom_left, y + height);
+		cairo_line_to(cairo, x, y + height - radius_bottom_left);
+	} else {
+		cairo_arc(cairo, x + radius_bottom_left, y + height - radius_bottom_left, radius_bottom_left, 90 * degrees, 180 * degrees);
+	}
+
+  cairo_close_path(cairo);
+}
 static cairo_subpixel_order_t get_cairo_subpixel_order(
 		enum wl_output_subpixel subpixel) {
 	switch (subpixel) {
@@ -106,6 +153,10 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	int radius_top_right = style->border_radius.right;
 	int radius_bottom_right = style->border_radius.bottom;
 	int radius_bottom_left = style->border_radius.left;
+	int cut_top_left = style->border_cut.top;
+	int cut_top_right = style->border_cut.right;
+	int cut_bottom_right = style->border_cut.bottom;
+	int cut_bottom_left = style->border_cut.left;
 	int icon_radius = style->icon_border_radius;
 	bool icon_vertical = style->icon_location == MAKO_ICON_LOCATION_TOP ||
 		style->icon_location == MAKO_ICON_LOCATION_BOTTOM;
@@ -217,12 +268,13 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	// Define the shape of the notification. The stroke is drawn centered on
 	// the edge of the fill, so we need to inset the shape by half the
 	// border_size.
-	set_rounded_rectangle(cairo,
+	set_rounded_or_cut_rectangle(cairo,
 		offset_x + style->border_size / 2.0,
 		offset_y + style->border_size / 2.0,
 		notif_background_width,
 		notif_height - style->border_size,
-		scale, radius_top_left, radius_top_right, radius_bottom_right, radius_bottom_left);
+		scale, radius_top_left, radius_top_right, radius_bottom_right, radius_bottom_left,
+		cut_top_left, cut_top_right, cut_bottom_right, cut_bottom_left);
 
 	// Render background, keeping the path.
 	set_source_u32(cairo, style->colors.background);
