@@ -66,6 +66,11 @@ Supported options:
 
 	Default: none
 
+*on-closed*=_action_
+	Performs the action when the notification is closed.
+
+	Default: none
+
 Supported actions:
 
 *none*
