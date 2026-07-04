@@ -11,6 +11,14 @@
 struct mako_config;
 struct mako_notification;
 
+enum operator { OP_NONE, OP_EQUALS, OP_REGEX_MATCHES, OP_NOT_EQUALS, OP_TRUTHY, OP_FALSEY };
+
+struct mako_condition {
+	enum operator operator;
+	char *value;
+	regex_t pattern;
+};
+
 struct mako_criteria {
 	struct mako_criteria_spec spec;
 	struct wl_list link; // mako_config::criteria
@@ -21,17 +29,15 @@ struct mako_criteria {
 	struct mako_style style;
 
 	// Fields that can be matched:
-	char *app_name;
-	char *app_icon;
+	struct mako_condition app_name;
+	struct mako_condition app_icon;
 	bool actionable;  // Whether mako_notification.actions is nonempty
 	bool expiring;  // Whether mako_notification.requested_timeout is non-zero
 	enum mako_notification_urgency urgency;
-	char *category;
-	char *desktop_entry;
-	char *summary;
-	regex_t summary_pattern;
-	char *body;
-	regex_t body_pattern;
+	struct mako_condition category;
+	struct mako_condition desktop_entry;
+	struct mako_condition summary;
+	struct mako_condition body;
 
 	char *mode;
 
