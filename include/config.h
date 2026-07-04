@@ -7,6 +7,7 @@
 #include <pango/pango.h>
 #include "types.h"
 
+
 enum mako_binding_action {
 	MAKO_BINDING_NONE,
 	MAKO_BINDING_DISMISS,
@@ -21,6 +22,17 @@ struct mako_binding {
 	enum mako_binding_action action;
 	char *command;     // for MAKO_BINDING_EXEC
 	char *action_name; // for MAKO_BINDING_INVOKE_ACTION
+};
+
+struct mako_override {
+	char *app_name;
+	char *app_icon;
+	char *category;
+	char *desktop_entry;
+	char *summary;
+	char *body;
+	enum mako_notification_urgency urgency;
+	int32_t timeout;
 };
 
 enum mako_sort_criteria {
@@ -50,6 +62,9 @@ struct mako_style_spec {
 		bool left, right, middle;
 	} button_bindings;
 	bool touch_binding, notify_binding;
+	struct {
+		bool app_name, app_icon, category, desktop_entry, summary, body, urgency, timeout;
+	} override;
 };
 
 
@@ -100,6 +115,8 @@ struct mako_style {
 		struct mako_binding left, right, middle;
 	} button_bindings;
 	struct mako_binding touch_binding, notify_binding;
+
+	struct mako_override override;
 };
 
 struct mako_config {
@@ -116,13 +133,6 @@ struct mako_config {
 
 void init_default_config(struct mako_config *config);
 void finish_config(struct mako_config *config);
-
-void init_default_style(struct mako_style *style);
-void init_empty_style(struct mako_style *style);
-void finish_style(struct mako_style *style);
-bool apply_style(struct mako_style *target, const struct mako_style *style);
-bool apply_superset_style(
-		struct mako_style *target, struct mako_config *config);
 
 int parse_config_arguments(struct mako_config *config, int argc, char **argv);
 int load_config_file(struct mako_config *config, char *config_arg);

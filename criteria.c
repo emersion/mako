@@ -14,6 +14,7 @@
 #include "notification.h"
 #include "surface.h"
 #include "wayland.h"
+#include "styling.h"
 
 struct mako_criteria *create_criteria(struct mako_config *config) {
 	struct mako_criteria *criteria = calloc(1, sizeof(struct mako_criteria));
@@ -432,7 +433,7 @@ ssize_t apply_each_criteria(struct wl_list *criteria_list,
 		}
 		++match_count;
 
-		if (!apply_style(&notif->style, &criteria->style)) {
+		if (!apply_style(notif, &criteria->style)) {
 			return -1;
 		}
 	}

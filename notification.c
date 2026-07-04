@@ -19,6 +19,7 @@
 #include "icon.h"
 #include "string-util.h"
 #include "wayland.h"
+#include "styling.h"
 
 bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y) {
 	return x >= hotspot->x &&
