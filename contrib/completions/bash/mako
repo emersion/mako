@@ -23,6 +23,7 @@ _mako()
     '--icons'
     '--icon-path'
     '--max-icon-size'
+    '--min-icon-size'
     '--icon-border-radius'
     '--markup'
     '--actions'
