@@ -47,6 +47,7 @@ struct mako_surface {
 struct mako_state {
 	struct mako_config config;
 	struct mako_event_loop event_loop;
+	struct mako_timer *hover_dismiss_timer;
 
 	sd_bus *bus;
 	sd_bus_slot *xdg_slot, *mako_slot;

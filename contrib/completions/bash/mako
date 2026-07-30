@@ -33,6 +33,7 @@ _mako()
     '--history'
     '--sort'
     '--default-timeout'
+    '--hover-to-dismiss-timeout'
     '--ignore-timeout'
     '--output'
     '--layer'

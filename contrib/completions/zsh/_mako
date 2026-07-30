@@ -26,6 +26,7 @@ _arguments \
     '--max-history[Max size of history buffer.]:historical notifications:' \
     '--history[Add expired notification to history.]:history:' \
     '--default-timeout[Default timeout in milliseconds.]:timeout (ms):' \
+    '--hover-to-dismiss-timeout[Default hover-to-dismiss timeout in milliseconds.]:timeout (ms):' \
     '--ignore-timeout[If set, mako will ignore the expire timeout sent by notifications and use the one provided by default-timeout instead.]:Use default timeout:(0 1)' \
     '--output[Show notifications on this output.]:name:' \
     '--layer[Arrange notifications at this layer.]:layer:(background bottom top overlay)' \

@@ -27,6 +27,13 @@ bool hotspot_at(struct mako_hotspot *hotspot, int32_t x, int32_t y) {
 		y < hotspot->y + hotspot->height;
 }
 
+bool hotspot_at_offset(struct mako_hotspot *hotspot, int32_t x, int32_t y, int32_t offset) {
+	return x >= hotspot->x - offset &&
+		y >= hotspot->y - offset &&
+		x < hotspot->x + hotspot->width + offset &&
+		y < hotspot->y + hotspot->height + offset;
+}
+
 void reset_notification(struct mako_notification *notif) {
 	struct mako_action *action, *tmp;
 	wl_list_for_each_safe(action, tmp, &notif->actions, link) {
