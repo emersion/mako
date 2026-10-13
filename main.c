@@ -104,8 +104,6 @@ static void finish(struct mako_state *state) {
 	finish_dbus(state);
 }
 
-static struct mako_event_loop *event_loop = NULL;
-
 int main(int argc, char *argv[]) {
 	struct mako_state state = {0};
 
@@ -131,8 +129,6 @@ int main(int argc, char *argv[]) {
 		finish_config(&state.config);
 		return EXIT_FAILURE;
 	}
-
-	event_loop = &state.event_loop;
 
 	ret = run_event_loop(&state.event_loop);
 
