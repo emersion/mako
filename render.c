@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdlib.h>
 #include <cairo/cairo.h>
 #include <pango/pangocairo.h>
@@ -26,17 +27,17 @@ static void set_source_u32(cairo_t *cairo, uint32_t color) {
 }
 
 static void set_layout_size(PangoLayout *layout, int width, int height,
-		int scale) {
-	pango_layout_set_width(layout, width * scale * PANGO_SCALE);
-	pango_layout_set_height(layout, height * scale * PANGO_SCALE);
+		double scale) {
+	pango_layout_set_width(layout, (int)(width * scale * PANGO_SCALE));
+	pango_layout_set_height(layout, (int)(height * scale * PANGO_SCALE));
 }
 
-static void move_to(cairo_t *cairo, double x, double y, int scale) {
+static void move_to(cairo_t *cairo, double x, double y, double scale) {
 	cairo_move_to(cairo, x * scale, y * scale);
 }
 
 static void set_rounded_rectangle(cairo_t *cairo, double x, double y, double width, double height,
-		int scale, int radius_top_left, int radius_top_right, int radius_bottom_right, int radius_bottom_left) {
+		double scale, double radius_top_left, double radius_top_right, double radius_bottom_right, double radius_bottom_left) {
 	if (width == 0 || height == 0) {
 		return;
 	}
@@ -97,7 +98,7 @@ static void set_font_options(cairo_t *cairo, struct mako_surface *surface) {
 }
 
 static int render_notification(cairo_t *cairo, struct mako_state *state, struct mako_surface *surface,
-		struct mako_style *style, const char *text, struct mako_icon *icon, int offset_y, int scale,
+		struct mako_style *style, const char *text, struct mako_icon *icon, int offset_y, double scale,
 		struct mako_hotspot *hotspot, int progress) {
 	int border_size = 2 * style->border_size;
 	int padding_height = style->padding.top + style->padding.bottom;
@@ -189,8 +190,8 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	if (pango_layout_get_character_count(layout) > 0) {
 		pango_layout_get_pixel_size(layout, &buffer_text_width, &buffer_text_height);
 	}
-	int text_height = buffer_text_height / scale;
-	int text_width = buffer_text_width / scale;
+	int text_height = (int)ceil(buffer_text_height / scale);
+	int text_width = (int)ceil(buffer_text_width / scale);
 
 	if (text_height > text_layout_height) {
 		text_height = text_layout_height;
@@ -337,7 +338,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	return notif_height;
 }
 
-void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
+void render(struct mako_surface *surface, struct pool_buffer *buffer, double scale,
 		int *rendered_width, int *rendered_height) {
 	struct mako_state *state = surface->state;
 	cairo_t *cairo = buffer->cairo;

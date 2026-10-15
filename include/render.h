@@ -4,7 +4,7 @@
 struct mako_state;
 struct mako_surface;
 
-void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
+void render(struct mako_surface *surface, struct pool_buffer *buffer, double scale,
 	int *width, int *height);
 
 #endif

@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <errno.h>
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -406,6 +407,32 @@ static void layer_surface_handle_closed(void *data,
 	}
 }
 
+static void fractional_scale_handle_preferred_scale(void *data,
+		struct wp_fractional_scale_v1 *fractional_scale, uint32_t scale) {
+	struct mako_surface *surface = data;
+	if (surface->preferred_scale == scale) {
+		return;
+	}
+	surface->preferred_scale = scale;
+	set_dirty(surface);
+}
+
+static const struct wp_fractional_scale_v1_listener fractional_scale_listener = {
+	.preferred_scale = fractional_scale_handle_preferred_scale,
+};
+
+static void destroy_fractional_scale(struct mako_surface *surface) {
+	if (surface->viewport != NULL) {
+		wp_viewport_destroy(surface->viewport);
+		surface->viewport = NULL;
+	}
+	if (surface->fractional_scale != NULL) {
+		wp_fractional_scale_v1_destroy(surface->fractional_scale);
+		surface->fractional_scale = NULL;
+	}
+	surface->preferred_scale = 0;
+}
+
 static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
 	.configure = layer_surface_handle_configure,
 	.closed = layer_surface_handle_closed,
@@ -439,6 +466,12 @@ static void handle_global(void *data, struct wl_registry *registry,
 	} else if (strcmp(interface, wp_cursor_shape_manager_v1_interface.name) == 0) {
 		state->cursor_shape_manager = wl_registry_bind(registry, name,
 			&wp_cursor_shape_manager_v1_interface, 1);
+	} else if (strcmp(interface, wp_fractional_scale_manager_v1_interface.name) == 0) {
+		state->fractional_scale_manager = wl_registry_bind(registry, name,
+			&wp_fractional_scale_manager_v1_interface, 1);
+	} else if (strcmp(interface, wp_viewporter_interface.name) == 0) {
+		state->viewporter = wl_registry_bind(registry, name,
+			&wp_viewporter_interface, 1);
 	}
 }
 
@@ -595,14 +628,22 @@ static void send_frame(struct mako_surface *surface) {
 		return;
 	}
 
-	int scale = 1;
+	// Integer scale from wl_output, unless the compositor announced a
+	// fractional one: then draw at the exact physical size and let the
+	// viewport map it back to the logical size, instead of drawing at the
+	// next integer scale and having the compositor downscale (blurry text).
+	double scale = 1;
 	if (surface->surface_output != NULL) {
 		scale = surface->surface_output->scale;
+	}
+	bool fractional = surface->viewport != NULL && surface->preferred_scale != 0;
+	if (fractional) {
+		scale = surface->preferred_scale / 120.0;
 	}
 
 	surface->current_buffer =
 		get_next_buffer(state->shm, surface->buffers,
-		surface->width * scale, surface->height * scale);
+		(int)lround(surface->width * scale), (int)lround(surface->height * scale));
 	if (surface->current_buffer == NULL) {
 		fprintf(stderr, "no buffer available\n");
 		return;
@@ -623,6 +664,7 @@ static void send_frame(struct mako_surface *surface) {
 			wl_callback_destroy(surface->frame_callback);
 			surface->frame_callback = NULL;
 		}
+		destroy_fractional_scale(surface);
 		if (surface->surface != NULL) {
 			wl_surface_destroy(surface->surface);
 			surface->surface = NULL;
@@ -651,6 +693,16 @@ static void send_frame(struct mako_surface *surface) {
 
 		surface->surface = wl_compositor_create_surface(state->compositor);
 		wl_surface_add_listener(surface->surface, &surface_listener, surface);
+
+		if (state->fractional_scale_manager != NULL && state->viewporter != NULL) {
+			surface->fractional_scale =
+				wp_fractional_scale_manager_v1_get_fractional_scale(
+					state->fractional_scale_manager, surface->surface);
+			wp_fractional_scale_v1_add_listener(surface->fractional_scale,
+				&fractional_scale_listener, surface);
+			surface->viewport =
+				wp_viewporter_get_viewport(state->viewporter, surface->surface);
+		}
 
 		surface->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
 			state->layer_shell, surface->surface, wl_output,
@@ -706,7 +758,13 @@ static void send_frame(struct mako_surface *surface) {
 	wl_surface_set_input_region(surface->surface, input_region);
 	wl_region_destroy(input_region);
 
-	wl_surface_set_buffer_scale(surface->surface, scale);
+	if (fractional) {
+		wl_surface_set_buffer_scale(surface->surface, 1);
+		wp_viewport_set_destination(surface->viewport,
+			surface->width, surface->height);
+	} else {
+		wl_surface_set_buffer_scale(surface->surface, (int)scale);
+	}
 	wl_surface_damage_buffer(surface->surface, 0, 0, INT32_MAX, INT32_MAX);
 	wl_surface_attach(surface->surface, surface->current_buffer->buffer, 0, 0);
 	surface->current_buffer->busy = true;

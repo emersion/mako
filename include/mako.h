@@ -16,6 +16,8 @@
 #include "event-loop.h"
 #include "pool-buffer.h"
 #include "cursor-shape-v1-client-protocol.h"
+#include "fractional-scale-v1-client-protocol.h"
+#include "viewporter-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "xdg-activation-v1-client-protocol.h"
 
@@ -31,6 +33,10 @@ struct mako_surface {
 	struct zwlr_layer_surface_v1 *layer_surface;
 	struct mako_output *layer_surface_output;
 	struct wl_callback *frame_callback;
+	// Fractional scaling: preferred scale * 120 (0 = not announced yet).
+	struct wp_fractional_scale_v1 *fractional_scale;
+	struct wp_viewport *viewport;
+	uint32_t preferred_scale;
 	bool configured;
 	bool dirty; // Do we need to redraw?
 	int32_t scale;
@@ -58,6 +64,8 @@ struct mako_state {
 	struct zwlr_layer_shell_v1 *layer_shell;
 	struct xdg_activation_v1 *xdg_activation;
 	struct wp_cursor_shape_manager_v1 *cursor_shape_manager;
+	struct wp_fractional_scale_manager_v1 *fractional_scale_manager;
+	struct wp_viewporter *viewporter;
 	struct wl_list outputs; // mako_output::link
 	struct wl_list seats; // mako_seat::link
 

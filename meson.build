@@ -30,6 +30,7 @@ pangocairo = dependency('pangocairo')
 glib = dependency('glib-2.0')
 gobject = dependency('gobject-2.0')
 realtime = cc.find_library('rt')
+math = cc.find_library('m')
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.32')
 wayland_cursor = dependency('wayland-cursor')
@@ -92,6 +93,7 @@ executable(
 		glib,
 		gobject,
 		realtime,
+		math,
 		wayland_client,
 		wayland_cursor,
 	],
