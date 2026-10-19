@@ -480,5 +480,5 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
 	}
 
 	*rendered_width = max_width;
-	*rendered_height = total_height;
+	*rendered_height = total_height + pending_bottom_margin;
 }

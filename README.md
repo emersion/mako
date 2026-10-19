@@ -49,7 +49,7 @@ Install dependencies:
 Then run:
 
 ```shell
-meson build
+meson setup build
 ninja -C build
 build/mako
 ```
