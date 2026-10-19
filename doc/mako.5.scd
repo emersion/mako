@@ -204,6 +204,11 @@ Supported actions:
 
 	Default: 64
 
+*min-icon-size*=_px_
+	Set minimum icon size to _px_ pixels.
+
+	Default: 8
+
 *icon-path*=_path_\[:_path_...\]
 	Paths to search for icons when a notification specifies a name instead
 	of a full path. Colon-delimited. This approximates the search algorithm
