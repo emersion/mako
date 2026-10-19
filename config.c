@@ -10,6 +10,7 @@
 #include "criteria.h"
 #include "string-util.h"
 #include "types.h"
+#include "styling.h"
 
 static int32_t max(int32_t a, int32_t b) {
 	return (a > b) ? a : b;
@@ -135,8 +136,10 @@ void init_default_style(struct mako_style *style) {
 	style->button_bindings.middle.action = MAKO_BINDING_NONE;
 	style->touch_binding.action = MAKO_BINDING_DISMISS;
 
-	// Everything in the default config is explicitly specified.
+	// Everything in the default config is explicitly specified ...
 	memset(&style->spec, true, sizeof(struct mako_style_spec));
+	// ... except override.
+	memset(&style->spec.override, false, sizeof(style->spec.override));
 }
 
 void init_empty_style(struct mako_style *style) {
@@ -148,12 +151,22 @@ static void finish_binding(struct mako_binding *binding) {
 	free(binding->action_name);
 }
 
+static void finish_override(struct mako_override *override) {
+	free(override->app_name);
+	free(override->app_icon);
+	free(override->category);
+	free(override->desktop_entry);
+	free(override->summary);
+	free(override->body);
+}
+
 void finish_style(struct mako_style *style) {
 	finish_binding(&style->button_bindings.left);
 	finish_binding(&style->button_bindings.middle);
 	finish_binding(&style->button_bindings.right);
 	finish_binding(&style->touch_binding);
 	finish_binding(&style->notify_binding);
+	finish_override(&style->override);
 	free(style->icon_path);
 	free(style->font);
 	free(style->format);
@@ -175,7 +188,7 @@ static void copy_binding(struct mako_binding *dst,
 
 // Update `target` with the values specified in `style`. If a failure occurs,
 // `target` will remain unchanged.
-bool apply_style(struct mako_style *target, const struct mako_style *style) {
+bool apply_style(struct mako_notification *notif, const struct mako_style *style) {
 	// Try to duplicate strings up front in case allocation fails and we have
 	// to bail without changing `target`.
 	char *new_font = NULL;
@@ -222,6 +235,8 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	}
 
 	// Now on to actually setting things!
+
+	struct mako_style *target = &notif->style;
 
 	if (style->spec.width) {
 		target->width = style->width;
@@ -398,6 +413,47 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 	if (style->spec.notify_binding) {
 		copy_binding(&target->notify_binding, &style->notify_binding);
 		target->spec.notify_binding = true;
+	}
+
+	if (style->spec.override.app_name) {
+		target->override.app_name = style->override.app_name;
+		target->spec.override.app_name = true;
+		notif->app_name = strdup(style->override.app_name);
+	}
+	if (style->spec.override.app_icon) {
+		target->override.app_icon = style->override.app_icon;
+		target->spec.override.app_icon = true;
+		notif->app_icon = strdup(style->override.app_icon);
+	}
+	if (style->spec.override.category) {
+		target->override.category = style->override.category;
+		target->spec.override.category = true;
+		notif->category = strdup(style->override.category);
+	}
+	if (style->spec.override.desktop_entry) {
+		target->override.desktop_entry = style->override.desktop_entry;
+		target->spec.override.desktop_entry = true;
+		notif->desktop_entry = strdup(style->override.desktop_entry);
+	}
+	if (style->spec.override.summary) {
+		target->override.summary = style->override.summary;
+		target->spec.override.summary = true;
+		notif->summary = strdup(style->override.summary);
+	}
+	if (style->spec.override.body) {
+		target->override.body = style->override.body;
+		target->spec.override.body = true;
+		notif->body = strdup(style->override.body);
+	}
+	if (style->spec.override.urgency) {
+		target->override.urgency = style->override.urgency;
+		target->spec.override.urgency = true;
+		notif->urgency = style->override.urgency;
+	}
+	if (style->spec.override.timeout) {
+		target->override.timeout = style->override.timeout;
+		target->spec.override.timeout = true;
+		notif->requested_timeout = style->override.timeout;
 	}
 
 	return true;
@@ -724,6 +780,36 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 		}
 
 		return true;
+	} else if (has_prefix(name, "override.")) {
+		if (strcmp(name, "override.urgency") == 0) {
+			return spec->override.urgency =
+				parse_urgency(value, &style->override.timeout);
+		} else if (strcmp(name, "override.timeout") == 0) {
+			return spec->override.timeout =
+				parse_int_ge(value, &style->override.timeout, 0);
+		} else if (strcmp(name, "override.app-name") == 0) {
+			style->override.app_name = strdup(value);
+			spec->override.app_name = true;
+		} else if (strcmp(name, "override.app-icon") == 0) {
+			style->override.app_icon = strdup(value);
+			spec->override.app_icon = true;
+		} else if (strcmp(name, "override.category") == 0) {
+			style->override.category = strdup(value);
+			spec->override.category = true;
+		} else if (strcmp(name, "override.desktop-entry") == 0) {
+			style->override.desktop_entry = strdup(value);
+			spec->override.desktop_entry = true;
+		} else if (strcmp(name, "override.summary") == 0) {
+			style->override.summary = strdup(value);
+			spec->override.summary = true;
+		} else if (strcmp(name, "override.body") == 0) {
+			style->override.body = strdup(value);
+			spec->override.body = true;
+		} else {
+			return false;
+		}
+
+		return true;
 	}
 
 	return false;
@@ -930,6 +1016,14 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"on-button-right", required_argument, 0, 0},
 		{"on-button-middle", required_argument, 0, 0},
 		{"on-touch", required_argument, 0, 0},
+		{"override.app-name", required_argument, 0, 0},
+		{"override.app-icon", required_argument, 0, 0},
+		{"override.category", required_argument, 0, 0},
+		{"override.desktop-entry", required_argument, 0, 0},
+		{"override.summary", required_argument, 0, 0},
+		{"override.body", required_argument, 0, 0},
+		{"override.urgency", required_argument, 0, 0},
+		{"override.timeout", required_argument, 0, 0},
 		{0},
 	};
 
