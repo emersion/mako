@@ -197,15 +197,26 @@ int run_event_loop(struct mako_event_loop *loop) {
 	while (loop->running) {
 		errno = 0;
 
-		// Wayland requests can be generated while handling non-Wayland events.
-		// We need to flush these.
-		do {
+		// Wayland events can be queued up and requests can be generated while
+		// handling non-Wayland events. We need to dispatch and flush these
+		// before blocking.
+		while (wl_display_prepare_read(loop->display) != 0) {
 			ret = wl_display_dispatch_pending(loop->display);
-			wl_display_flush(loop->display);
-		} while (ret > 0);
+			if (ret < 0) {
+				fprintf(stderr, "failed to dispatch pending Wayland events\n");
+				return ret;
+			}
+		}
 
-		if (ret < 0) {
-			fprintf(stderr, "failed to dispatch pending Wayland events\n");
+		// From here on, every path that leaves the loop body without reading
+		// Wayland events must call wl_display_cancel_read().
+		loop->fds[MAKO_EVENT_WAYLAND].events = POLLIN;
+		ret = wl_display_flush(loop->display);
+		if (ret < 0 && errno == EAGAIN) {
+			loop->fds[MAKO_EVENT_WAYLAND].events |= POLLOUT;
+		} else if (ret < 0 && errno != EPIPE) {
+			wl_display_cancel_read(loop->display);
+			fprintf(stderr, "failed to flush Wayland events\n");
 			break;
 		}
 
@@ -214,10 +225,12 @@ int run_event_loop(struct mako_event_loop *loop) {
 
 		ret = poll(loop->fds, MAKO_EVENT_COUNT, -1);
 		if (!loop->running) {
+			wl_display_cancel_read(loop->display);
 			ret = 0;
 			break;
 		}
 		if (ret < 0) {
+			wl_display_cancel_read(loop->display);
 			fprintf(stderr, "failed to poll(): %s\n", strerror(errno));
 			break;
 		}
@@ -234,7 +247,18 @@ int run_event_loop(struct mako_event_loop *loop) {
 			}
 		}
 		if (!loop->running || ret < 0) {
+			wl_display_cancel_read(loop->display);
 			break;
+		}
+
+		if (loop->fds[MAKO_EVENT_WAYLAND].revents & POLLIN) {
+			ret = wl_display_read_events(loop->display);
+			if (ret < 0) {
+				fprintf(stderr, "failed to read Wayland events\n");
+				break;
+			}
+		} else {
+			wl_display_cancel_read(loop->display);
 		}
 
 		if (loop->fds[MAKO_EVENT_SIGNAL].revents & POLLIN) {
@@ -262,15 +286,15 @@ int run_event_loop(struct mako_event_loop *loop) {
 		}
 
 		if (loop->fds[MAKO_EVENT_WAYLAND].revents & POLLIN) {
-			ret = wl_display_dispatch(loop->display);
+			ret = wl_display_dispatch_pending(loop->display);
 			if (ret < 0) {
-				fprintf(stderr, "failed to read Wayland events\n");
+				fprintf(stderr, "failed to dispatch Wayland events\n");
 				break;
 			}
 		}
 		if (loop->fds[MAKO_EVENT_WAYLAND].revents & POLLOUT) {
 			ret = wl_display_flush(loop->display);
-			if (ret < 0) {
+			if (ret < 0 && errno != EAGAIN) {
 				fprintf(stderr, "failed to flush Wayland events\n");
 				break;
 			}
