@@ -277,7 +277,7 @@ static int handle_list(sd_bus_message *msg, struct wl_list *list) {
 	}
 
 	sd_bus_message_unref(reply);
-	return 0;
+	return 1;
 }
 
 static int handle_list_notifications(sd_bus_message *msg, void *data,
@@ -401,7 +401,7 @@ static int handle_list_modes(sd_bus_message *msg, void *data,
 	}
 
 	sd_bus_message_unref(reply);
-	return 0;
+	return 1;
 }
 
 static int handle_set_modes(sd_bus_message *msg, void *data,
