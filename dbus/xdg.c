@@ -78,7 +78,7 @@ static int handle_get_capabilities(sd_bus_message *msg, void *data,
 	}
 
 	sd_bus_message_unref(reply);
-	return 0;
+	return 1;
 }
 
 static void handle_notification_timer(void *data) {
