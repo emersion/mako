@@ -40,6 +40,7 @@ struct mako_surface {
 	uint32_t anchor;
 
 	int32_t width, height;
+	bool fill_width; // Did we ask the compositor to pick our width?
 	struct pool_buffer buffers[2];
 	struct pool_buffer *current_buffer;
 };

@@ -567,7 +567,7 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "text-color") == 0) {
 		return spec->colors.text = parse_color(value, &style->colors.text);
 	} else if (strcmp(name, "width") == 0) {
-		return spec->width = parse_int_ge(value, &style->width, 1);
+		return spec->width = parse_int_ge(value, &style->width, 0);
 	} else if (strcmp(name, "height") == 0) {
 		return spec->height = parse_int_ge(value, &style->height, 1);
 	} else if (strcmp(name, "outer-margin") == 0) {

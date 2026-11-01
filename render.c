@@ -110,9 +110,12 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 	bool icon_vertical = style->icon_location == MAKO_ICON_LOCATION_TOP ||
 		style->icon_location == MAKO_ICON_LOCATION_BOTTOM;
 
-	// If the compositor has forced us to shrink down, do so.
-	int notif_width =
-		(style->width <= surface->width) ? style->width : surface->width;
+	// A width of 0 fills the surface. Also, if the compositor has forced us to
+	// shrink down, do so.
+	int max_notif_width =
+		surface->width - style->margin.left - style->margin.right;
+	int notif_width = (style->width != 0 && style->width <= max_notif_width) ?
+		style->width : max_notif_width;
 
 	// offset_x is for the entire draw operation inside the surface
 	int offset_x;
@@ -359,6 +362,7 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
 	size_t hidden_count = 0;
 	int total_height = 0;
 	int max_width = 0;
+	bool fill_width = false;
 	int pending_bottom_margin = 0;
 	struct mako_notification *notif;
 	size_t total_notifications = 0;
@@ -428,6 +432,7 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
 		if (max_width < notif_width) {
 			max_width = notif_width;
 		}
+		fill_width |= style->width == 0;
 		pending_bottom_margin = style->margin.bottom;
 
 		if (notif->group_index < 1) {
@@ -479,6 +484,7 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
 		destroy_notification(hidden_notif);
 	}
 
-	*rendered_width = max_width;
+	// 0 asks the compositor to pick the width, see send_frame.
+	*rendered_width = fill_width ? 0 : max_width;
 	*rendered_height = total_height + pending_bottom_margin;
 }
