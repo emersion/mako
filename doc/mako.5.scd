@@ -134,7 +134,8 @@ Supported actions:
 	Default: #FFFFFFFF
 
 *width*=_px_
-	Set width of notification popups.
+	Set width of notification popups. If set to 0, popups fill the width of the
+	output, minus any _margin_ and _outer-margin_.
 
 	Default: 300
 

@@ -674,11 +674,22 @@ static void send_frame(struct mako_surface *surface) {
 	// surface is brand new, it doesn't even have a size yet. If it already
 	// exists, we might need to resize if the list of notifications has changed
 	// since the last time we drew.
-	if (surface->height != height || surface->width != width) {
+	bool fill_width = width == 0;
+	if (surface->height != height || surface->fill_width != fill_width ||
+			(!fill_width && surface->width != width)) {
 		struct mako_style *style = &state->config.superstyle;
 
+		uint32_t anchor = surface->anchor;
+		if (fill_width) {
+			// The protocol requires opposite anchors for a size of 0. render
+			// still positions notifications using surface->anchor.
+			anchor |= ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
+				ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+		}
+		surface->fill_width = fill_width;
+
 		zwlr_layer_surface_v1_set_size(surface->layer_surface, width, height);
-		zwlr_layer_surface_v1_set_anchor(surface->layer_surface, surface->anchor);
+		zwlr_layer_surface_v1_set_anchor(surface->layer_surface, anchor);
 		zwlr_layer_surface_v1_set_margin(surface->layer_surface,
 			style->outer_margin.top, style->outer_margin.right,
 			style->outer_margin.bottom, style->outer_margin.left);
