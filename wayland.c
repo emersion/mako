@@ -711,8 +711,14 @@ static void send_frame(struct mako_surface *surface) {
 	wl_surface_attach(surface->surface, surface->current_buffer->buffer, 0, 0);
 	surface->current_buffer->busy = true;
 
-	// Schedule a frame in case the state becomes dirty again
-	schedule_frame_and_commit(surface);
+	if (surface->frame_callback != NULL) {
+		// A configure can get here while a frame callback is pending. The
+		// buffer still has to be committed, or it stays busy forever.
+		wl_surface_commit(surface->surface);
+	} else {
+		// Schedule a frame in case the state becomes dirty again
+		schedule_frame_and_commit(surface);
+	}
 
 	surface->dirty = false;
 }
