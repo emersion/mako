@@ -480,5 +480,8 @@ void render(struct mako_surface *surface, struct pool_buffer *buffer, int scale,
 	}
 
 	*rendered_width = max_width;
-	*rendered_height = total_height + pending_bottom_margin;
+	// A negative margin overlaps the next notification, but there's nothing
+	// after the last one, and shrinking the surface would clip its border.
+	*rendered_height = total_height +
+		(pending_bottom_margin > 0 ? pending_bottom_margin : 0);
 }
