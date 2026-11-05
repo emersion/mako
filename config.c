@@ -15,6 +15,10 @@ static int32_t max(int32_t a, int32_t b) {
 	return (a > b) ? a : b;
 }
 
+static int32_t min(int32_t a, int32_t b) {
+	return (a < b) ? a : b;
+}
+
 void init_default_config(struct mako_config *config) {
 	wl_list_init(&config->criteria);
 	struct mako_criteria *new_criteria = create_criteria(config);
@@ -99,6 +103,7 @@ void init_default_style(struct mako_style *style) {
 	style->icons = false;
 #endif
 	style->max_icon_size = 64;
+	style->min_icon_size = 8;
 	style->icon_path = strdup("");  // hicolor and pixmaps are implicit.
 	style->icon_border_radius = 0;
 
@@ -263,6 +268,11 @@ bool apply_style(struct mako_style *target, const struct mako_style *style) {
 		target->spec.max_icon_size = true;
 	}
 
+	if (style->spec.min_icon_size) {
+		target->min_icon_size = style->min_icon_size;
+		target->spec.min_icon_size = true;
+	}
+
 	if (style->spec.icon_path) {
 		free(target->icon_path);
 		target->icon_path = new_icon_path;
@@ -420,6 +430,7 @@ bool apply_superset_style(
 	target->spec.border_radius = true;
 	target->spec.icons = true;
 	target->spec.max_icon_size = true;
+	target->spec.min_icon_size = true;
 	target->spec.default_timeout = true;
 	target->spec.markup = true;
 	target->spec.actions = true;
@@ -466,6 +477,7 @@ bool apply_superset_style(
 		target->border_size = max(style->border_size, target->border_size);
 		target->icons = style->icons || target->icons;
 		target->max_icon_size = max(style->max_icon_size, target->max_icon_size);
+		target->min_icon_size = min(style->min_icon_size, target->min_icon_size);
 		target->default_timeout =
 			max(style->default_timeout, target->default_timeout);
 
@@ -611,6 +623,9 @@ static bool apply_style_option(struct mako_style *style, const char *name,
 	} else if (strcmp(name, "max-icon-size") == 0) {
 		return spec->max_icon_size =
 			parse_int_ge(value, &style->max_icon_size, 1);
+	} else if (strcmp(name, "min-icon-size") == 0) {
+		return spec->min_icon_size =
+			parse_int_ge(value, &style->min_icon_size, 1);
 	} else if (strcmp(name, "icon-path") == 0) {
 		free(style->icon_path);
 		return spec->icon_path = !!(style->icon_path = strdup(value));
@@ -912,6 +927,7 @@ int parse_config_arguments(struct mako_config *config, int argc, char **argv) {
 		{"icon-location", required_argument, 0, 0},
 		{"icon-path", required_argument, 0, 0},
 		{"max-icon-size", required_argument, 0, 0},
+		{"min-icon-size", required_argument, 0, 0},
 		{"icon-border-radius", required_argument, 0, 0},
 		{"markup", required_argument, 0, 0},
 		{"actions", required_argument, 0, 0},
