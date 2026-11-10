@@ -190,7 +190,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 		pango_layout_get_pixel_size(layout, &buffer_text_width, &buffer_text_height);
 	}
 	int text_height = buffer_text_height / scale;
-	int text_width = buffer_text_width / scale;
+	// int text_width = buffer_text_width / scale;
 
 	if (text_height > text_layout_height) {
 		text_height = text_layout_height;
@@ -309,9 +309,7 @@ static int render_notification(cairo_t *cairo, struct mako_state *state, struct 
 		cairo_restore(cairo);
 	}
 
-	if (icon_vertical) {
-		text_x = (notif_width - text_width - border_size) / 2;
-	} else {
+	if (!icon_vertical) {
 		text_y = (notif_height - text_height - border_size) / 2;
 	}
 
