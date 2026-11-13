@@ -72,6 +72,7 @@ src_files = [
 	'types.c',
 	'surface.c',
 	'icon.c',
+	'image-data.c',
 	'string-util.c',
 ]
 
@@ -105,6 +106,14 @@ executable(
 	dependencies: [sdbus],
 	install: true,
 )
+
+test_image_data_size = executable(
+	'test-image-data-size',
+	['image-data.c', 'test/image-data-size.c'],
+	include_directories: mako_inc,
+)
+
+test('image-data-size', test_image_data_size)
 
 conf_data = configuration_data()
 conf_data.set('bindir', get_option('prefix') / get_option('bindir'))

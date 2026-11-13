@@ -10,6 +10,7 @@
 #include "wayland.h"
 
 #include "icon.h"
+#include "image-data.h"
 
 static const char *service_path = "/org/freedesktop/Notifications";
 static const char *service_interface = "org.freedesktop.Notifications";
@@ -282,36 +283,34 @@ static int handle_notify(sd_bus_message *msg, void *data,
 				return ret;
 			}
 
-			// Calculate the expected useful data length without padding in last row
-			// len = size before last row + size of last row
-			//     = (height - 1) * rowstride + width * ceil(channels * bits_pre_sample / 8.0)
-			size_t image_len = (image_data->height - 1) * image_data->rowstride +
-				image_data->width * ((image_data->channels *
-				image_data->bits_per_sample + 7) / 8);
-			uint8_t *data = calloc(image_len, sizeof(uint8_t));
-			if (data == NULL) {
-				free(image_data);
-				return -1;
-			}
-
-			ret = sd_bus_message_enter_container(msg, 'a', "y");
+			const void *pixels;
+			size_t pixels_len;
+			ret = sd_bus_message_read_array(msg, 'y', &pixels, &pixels_len);
 			if (ret < 0) {
-				free(data);
 				free(image_data);
 				return ret;
 			}
 
-			// Ignore the extra padding bytes in the last row if exist
-			for (size_t index = 0; index < image_len; index++) {
-				uint8_t tmp;
-				ret = sd_bus_message_read(msg, "y", &tmp);
-				if (ret < 0){
-					free(data);
-					free(image_data);
-					return ret;
-				}
-				data[index] = tmp;
+			// Calculate the expected useful data length without padding in last row
+			// len = size before last row + size of last row
+			//     = (height - 1) * rowstride + width * ceil(channels * bits_pre_sample / 8.0)
+			// Reject malformed geometry and make sure the length cannot
+			// wrap around and under-allocate the pixel buffer.
+			size_t image_len;
+			if (!image_data_size(image_data->width, image_data->height,
+					image_data->rowstride, image_data->channels,
+					image_data->bits_per_sample, pixels_len, &image_len)) {
+				free(image_data);
+				return -1;
 			}
+
+			uint8_t *data = malloc(image_len);
+			if (data == NULL) {
+				free(image_data);
+				return -1;
+			}
+			// Ignore the extra padding bytes in the last row if exist
+			memcpy(data, pixels, image_len);
 
 			image_data->data = data;
 			if (notif->image_data != NULL) {
