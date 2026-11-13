@@ -362,7 +362,7 @@ static int handle_notify(sd_bus_message *msg, void *data,
 	if (notif->tag) {
 		// Find and replace the existing notfication with a matching tag
 		struct mako_notification *replace_notif = get_tagged_notification(state, notif->tag, app_name);
-		if (replace_notif) {
+		if (replace_notif && replace_notif != notif) {
 			notif->id = replace_notif->id;
 			wl_list_insert(&replace_notif->link, &notif->link);
 			destroy_notification(replace_notif);
